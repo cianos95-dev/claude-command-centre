@@ -1,0 +1,95 @@
+# Option C: API + Actions Review (Anthropic API)
+#
+# Triggers on spec file merge to main. Runs 3 parallel reviewer jobs
+# using claude-code-action, then a synthesizer consolidates findings.
+#
+# Prerequisites:
+#   - ANTHROPIC_API_KEY added to repo secrets
+#   - Directory: docs/specs/reviews/
+#
+# Cost: ~$2-8 per spec review (API usage)
+#
+# Customize:
+#   - Change model in claude_args (e.g., claude-sonnet-4-5-20250929 for lower cost)
+#   - Adjust max-turns based on spec complexity
+#   - Add project-specific context to prompts
+
+name: Adversarial Spec Review
+on:
+  push:
+    paths: ['docs/specs/**/*.md']
+    branches: ['main']  # Only on merge to main
+
+jobs:
+  challenger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            You are a Spec Challenger. Review every changed file in docs/specs/.
+            Find gaps, ambiguities, missing requirements, contradictions, and
+            unstated assumptions. Be adversarial. Create an issue titled
+            "Spec Review: Challenger Findings" with your analysis.
+
+            Categorize findings as:
+            - Critical: Must address before implementation
+            - Important: Should address before implementation
+            - Consider: Nice to have
+          claude_args: "--model claude-opus-4-6 --max-turns 15"
+
+  security-reviewer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            You are a Security Reviewer. Review every changed file in docs/specs/.
+            Identify security implications, privacy concerns, attack vectors,
+            data handling risks, and compliance considerations. Create an issue
+            titled "Spec Review: Security Findings" with your analysis.
+
+            Categorize findings as:
+            - Critical: Must address before implementation
+            - Important: Should address before implementation
+            - Consider: Nice to have
+          claude_args: "--model claude-opus-4-6 --max-turns 15"
+
+  devils-advocate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            You are a Devil's Advocate. Review every changed file in docs/specs/.
+            Argue that the entire approach is wrong. Propose fundamentally
+            different alternatives. Challenge the core assumptions. Create an
+            issue titled "Spec Review: Alternative Approaches" with your analysis.
+
+            Categorize findings as:
+            - Critical: Must address before implementation
+            - Important: Should address before implementation
+            - Consider: Nice to have
+          claude_args: "--model claude-opus-4-6 --max-turns 15"
+
+  synthesizer:
+    needs: [challenger, security-reviewer, devils-advocate]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Three reviewers have analyzed the specs in docs/specs/.
+            Read the three most recent issues titled "Spec Review: *".
+            Synthesize their findings into a single consolidated review.
+            Categorize by: Critical (must address), Important (should address),
+            and Consider (nice to have). Create a PR that adds a
+            docs/specs/reviews/ file with the consolidated findings.
+
+            Flag any disagreements between reviewers.
+            End with a recommendation: APPROVE, REVISE, or RETHINK.
+          claude_args: "--model claude-opus-4-6 --max-turns 20"

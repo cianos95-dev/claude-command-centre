@@ -1,0 +1,156 @@
+---
+name: context-window-management
+description: Context window management strategies for multi-tool AI agents. Covers a 3-tier delegation model for controlling what enters the main conversation, context budget thresholds, subagent return discipline, and model mixing recommendations. Prevents context exhaustion during complex sessions.
+---
+
+# Context Window Management
+
+The context window is a finite, non-renewable resource within a session. Every token consumed by tool output, file content, or verbose responses reduces the agent's capacity for reasoning about the actual task. Disciplined context management is the difference between completing a complex task in one session and hitting compaction mid-flight.
+
+## Core Principle
+
+**Never let raw tool output flow into the main conversation when a summary will do.** The main context is for reasoning, planning, and communicating with the human. Data retrieval, scanning, and bulk operations belong in subagents that return concise summaries.
+
+## 3-Tier Delegation Model
+
+Every tool call should be evaluated against these tiers before execution:
+
+### Tier 1: Always Delegate
+
+Any tool call expected to return more than ~1KB of content must be delegated to a subagent. The subagent processes the output and returns a summary to the main conversation.
+
+| Operation | Why Delegate |
+|-----------|-------------|
+| Web page scrapes | Pages routinely produce 10-50KB of markdown |
+| File reads (large files) | Source files can be thousands of lines |
+| PR diffs and file change lists | Diffs scale with change size |
+| Bulk search results | Search returns multiple full-text matches |
+| API responses with nested data | JSON payloads from list endpoints are large |
+| Documentation lookups | Library docs pages are content-heavy |
+
+**Rule of thumb:** If the tool is _reading_ something, it probably belongs in Tier 1.
+
+### Tier 2: Delegate for Bulk
+
+Single-item operations are fine in the main context. But when the operation fans out to multiple items, delegate.
+
+| Operation | Direct OK | Delegate |
+|-----------|-----------|----------|
+| Issue lookup | Single issue by ID | List of 10+ issues |
+| Project items | Single project metadata | All items in a project |
+| Collection contents | Single item metadata | Full collection listing |
+| Commit history | Latest commit | Full branch history |
+| User lookups | Single user | Team member listing |
+
+**Threshold:** If the list endpoint could return more than 10 items, delegate. When using list operations directly, always set explicit limits (e.g., `limit: 10`).
+
+### Tier 3: Direct in Main Context
+
+Small-output operations that return structured, predictable responses. These are safe to execute directly.
+
+| Operation | Typical Output Size |
+|-----------|-------------------|
+| Create/update operations | Confirmation + ID (~100 bytes) |
+| Metadata lookups | Single object (~200-500 bytes) |
+| Single item get | One issue/page/document (~500 bytes-1KB) |
+| Status checks | Boolean or enum (~50 bytes) |
+| Label operations | Confirmation (~100 bytes) |
+
+## Context Budget Protocol
+
+Monitor context usage throughout the session and take action at defined thresholds:
+
+### Under 50%: Normal Operation
+
+Work freely. Use subagents for Tier 1 and Tier 2 operations. Keep tool output concise.
+
+### 50% to 70%: Caution Zone
+
+- **Warn the human.** Explicitly state context usage level and remaining capacity.
+- **Consider checkpointing.** If the task has natural break points, suggest splitting the session.
+- **Tighten delegation.** Move Tier 2 operations into subagents even for smaller counts.
+- **Summarize aggressively.** Reduce inline explanations. Reference previous context instead of restating.
+
+### Above 70%: Critical Zone
+
+- **Insist on session split.** Do not continue hoping it will fit. Tell the human clearly that context is running low and a new session is needed.
+- **Never silently let compaction happen.** Compaction loses context in unpredictable ways. A deliberate session split with a handoff note preserves continuity.
+- **Write a handoff file** if splitting: summarize current state, remaining tasks, decisions made, and open questions. The next session starts by reading this file.
+
+### Compaction Prevention
+
+If compaction is imminent and cannot be avoided:
+1. Write all in-progress work to files immediately
+2. Summarize the session state in a handoff note
+3. Tell the human what was saved and where
+4. The next session reads the handoff to resume
+
+## Subagent Return Discipline
+
+Subagents must follow strict output constraints. Unbounded subagent returns defeat the purpose of delegation.
+
+### Return Format Rules
+
+- **Summary length:** 3-5 sentences, maximum 200 words
+- **Structure:** Lead with the answer, follow with supporting details
+- **Tables:** Use markdown tables for structured data (compact, scannable)
+- **No raw content:** Never return raw scraped markdown, full file contents, or unprocessed API responses
+- **Large content:** Write to a file and return the file path, not the content itself
+
+### Example: Good vs. Bad Returns
+
+**Bad return** (wastes context):
+> Here is the full content of the page... [2000 words of scraped markdown]
+
+**Good return** (preserves context):
+> The documentation page covers 3 authentication methods: API key, OAuth 2.0, and JWT. API key is recommended for server-to-server. OAuth is required for user-facing flows. JWT is supported but deprecated. Key setup steps are in the "Getting Started" section. Full content written to `/tmp/auth-docs.md`.
+
+**Bad return** (unstructured dump):
+> Issue 1: Title is "Fix login bug", status is In Progress, assigned to... Issue 2: Title is "Update API docs"...
+
+**Good return** (structured summary):
+> Found 8 open issues in the project. 3 are In Progress, 5 are Todo. Summary:
+>
+> | ID | Title | Status | Assignee |
+> |----|-------|--------|----------|
+> | ~~PREFIX-101~~ | Fix login bug | In Progress | Agent |
+> | ~~PREFIX-102~~ | Update API docs | Todo | Unassigned |
+> | ... | ... | ... | ... |
+
+## Model Mixing for Subagents
+
+Not all subagent tasks require the same reasoning capability. Match the model tier to the cognitive demand of the subtask:
+
+| Model Tier | Characteristics | Best For |
+|------------|----------------|----------|
+| **Fast/cheap** (e.g., haiku) | Lowest cost, highest throughput, adequate for structured tasks | File scanning, data retrieval, search queries, bulk reads, simple transformations |
+| **Balanced** (e.g., sonnet) | Good quality-to-cost ratio, strong analysis | Code review synthesis, PR summaries, test analysis, documentation review, multi-source reconciliation |
+| **Highest quality** (e.g., opus) | Maximum reasoning capability, highest cost | Critical implementation, architectural decisions, complex debugging, spec writing, adversarial review |
+
+### Routing Guidelines
+
+- **Default to fast/cheap** for read-only operations. Most data retrieval does not need deep reasoning.
+- **Use balanced** when the subagent needs to synthesize, compare, or evaluate across multiple inputs.
+- **Reserve highest quality** for tasks where incorrect output has high cost (wrong implementation, missed security issue, flawed architecture).
+- **Never use highest quality for scanning.** It is wasteful and slower. A fast model reading 20 files and returning summaries is better than an expensive model reading 3 files deeply.
+
+### Anti-Patterns
+
+- Running all subagents at the highest quality tier (wasteful, slow)
+- Running implementation subagents at the fast tier (too many errors, net negative)
+- Not delegating at all (context exhaustion, compaction risk)
+- Delegating everything (overhead of subagent coordination exceeds benefit for small tasks)
+
+## Practical Integration
+
+When working in a multi-tool environment with `~~project-tracker~~`, `~~version-control~~`, and web tools:
+
+1. **Before any tool call,** classify it by tier
+2. **Tier 1 calls** go to a subagent with explicit return format instructions
+3. **Tier 2 calls** with small counts execute directly; large counts get delegated
+4. **Tier 3 calls** execute directly in the main context
+5. **After every major section of work,** mentally assess context usage
+6. **At 50%,** tell the human and adjust strategy
+7. **At 70%,** stop and plan a session split
+
+This discipline compounds. A session that delegates properly can accomplish 3-5x more work than one that lets raw output flood the context window.

@@ -1,0 +1,77 @@
+# Option A: CI Agent Review (Copilot)
+#
+# Triggers on spec file merge to main. Creates 3 review issues
+# auto-assigned to @copilot (or your CI-tier coding agent).
+#
+# Prerequisites:
+#   - Copilot coding agent enabled for repo
+#   - Labels created: spec-review, challenger, security, alternative
+#
+# Cost: $0 additional (uses included premium requests + Actions minutes)
+#
+# Customize:
+#   - Change assignees to your CI agent (e.g., ['copilot'], ['claude'])
+#   - Adjust paths trigger to match your spec directory
+#   - Add labels for routing (e.g., project-specific labels)
+
+name: Create Spec Review Issues
+on:
+  push:
+    paths: ['docs/specs/**/*.md']
+    branches: ['main']  # Only on merge to main
+
+jobs:
+  create-reviews:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get changed spec files
+        id: specs
+        run: |
+          echo "files=$(git diff --name-only HEAD~1 -- docs/specs/)" >> $GITHUB_OUTPUT
+
+      - name: Create challenger review issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Spec Review: Challenger - ${process.env.SPEC_FILES}`,
+              body: `## Challenger Review\n\nReview the following spec(s) as an adversarial challenger. Find gaps, ambiguities, contradictions, and unstated assumptions. Be thorough and adversarial.\n\n**Files:** ${process.env.SPEC_FILES}\n\n**Output format:**\n- Critical: Must address before implementation\n- Important: Should address\n- Consider: Nice to have`,
+              assignees: ['copilot'],
+              labels: ['spec-review', 'challenger']
+            });
+        env:
+          SPEC_FILES: ${{ steps.specs.outputs.files }}
+
+      - name: Create security review issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Spec Review: Security - ${process.env.SPEC_FILES}`,
+              body: `## Security Review\n\nReview the following spec(s) for security implications. Identify attack vectors, data handling risks, privacy concerns, and compliance gaps.\n\n**Files:** ${process.env.SPEC_FILES}\n\n**Output format:**\n- Critical: Must address before implementation\n- Important: Should address\n- Consider: Nice to have`,
+              assignees: ['copilot'],
+              labels: ['spec-review', 'security']
+            });
+        env:
+          SPEC_FILES: ${{ steps.specs.outputs.files }}
+
+      - name: Create devil's advocate issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Spec Review: Alternative Approaches - ${process.env.SPEC_FILES}`,
+              body: `## Devil's Advocate\n\nChallenge the fundamental approach of the following spec(s). Propose completely different alternatives. Question core assumptions.\n\n**Files:** ${process.env.SPEC_FILES}\n\n**Output format:**\n- Critical: Must address before implementation\n- Important: Should address\n- Consider: Nice to have`,
+              assignees: ['copilot'],
+              labels: ['spec-review', 'alternative']
+            });
+        env:
+          SPEC_FILES: ${{ steps.specs.outputs.files }}
