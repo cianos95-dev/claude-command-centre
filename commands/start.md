@@ -1,5 +1,8 @@
 ---
-description: Begin implementation of a task with automatic execution mode routing and status tracking
+description: |
+  Begin implementation of a task with automatic execution mode routing and status tracking.
+  Use when starting work on a specific issue, picking up the next unblocked task, or beginning a coding session with proper status tracking and context loading.
+  Trigger with phrases like "start working on", "begin implementation of", "pick up the next task", "implement this issue", "start coding", "what should I work on next".
 argument-hint: "<issue ID or --next for next unblocked task>"
 ---
 

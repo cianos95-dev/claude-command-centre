@@ -1,5 +1,8 @@
 ---
-description: Trigger an adversarial review of a spec using one of four review architecture options
+description: |
+  Trigger an adversarial review of a spec using one of four review architecture options.
+  Use when a spec is ready for critical evaluation, you want structured pushback before implementation, or you need multi-perspective analysis of assumptions and risks.
+  Trigger with phrases like "review this spec", "challenge my proposal", "adversarial review of", "is this spec solid", "find weaknesses in this plan", "stress test this design".
 argument-hint: "<spec file path or issue ID>"
 ---
 

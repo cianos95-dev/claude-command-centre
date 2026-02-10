@@ -1,6 +1,9 @@
 ---
 name: issue-lifecycle-ownership
-description: Agent/human ownership model for issue management. Defines who owns which actions on issues (status, labels, priority, estimates, closure), closure rules matrix, session hygiene protocols, and spec lifecycle labels. The most critical skill for agent autonomy boundaries.
+description: |
+  Agent/human ownership model for issue management. Defines who owns which actions on issues (status, labels, priority, estimates, closure), closure rules matrix, session hygiene protocols, and spec lifecycle labels. The most critical skill for agent autonomy boundaries.
+  Use when determining what the agent can change vs what requires human approval, closing issues, updating issue status, managing labels, or handling session-end cleanup.
+  Trigger with phrases like "can I close this issue", "who owns priority", "issue ownership rules", "session cleanup protocol", "what labels should I set", "closure evidence requirements".
 ---
 
 # Issue Lifecycle Ownership
@@ -105,3 +108,42 @@ When working with `~~project-tracker~~`:
 5. **Session end:** Run the normalization protocol across all touched issues
 
 The ownership model scales from solo agent work to multi-agent teams. In multi-agent setups, each agent follows these same rules for issues assigned to it, and proposes closure for issues assigned to other agents.
+
+## Scope Limitation Handoff Protocol
+
+When the agent encounters an action it cannot perform due to OAuth scope limitations, API restrictions, or ownership rules that require human execution, follow this protocol instead of silently skipping the action:
+
+### When This Applies
+
+- API operations requiring scopes the agent token does not have (e.g., creating initiatives, modifying workspace settings)
+- Actions explicitly owned by humans per the ownership table (e.g., setting priority, assigning to cycles)
+- Platform operations that require UI interaction (e.g., enabling integrations, configuring webhooks)
+- Any destructive or irreversible action the agent is not authorized to perform
+
+### The Handoff Pattern
+
+1. **Output the exact content needed.** Write the complete text, configuration, or values the human needs to enter. Do not summarize or abbreviate -- provide copy-paste-ready content.
+2. **State the specific action required.** Name the platform, the UI location, and the exact steps (e.g., "In Linear > Settings > Initiatives > Create New").
+3. **Document what was output.** Add a comment to the relevant `~~project-tracker~~` issue recording that a handoff was made, what content was provided, and what action the human needs to take.
+4. **Do not block on completion.** Continue with other tasks. The handoff is asynchronous -- the human will complete it when they can.
+
+### Example
+
+```
+## Scope Limitation Handoff
+
+**Action needed:** Create a Linear initiative (requires OAuth scope `initiative:read/write` which the agent token does not have)
+
+**Where:** Linear > Initiatives > Create New
+
+**Content to enter:**
+- Name: [exact name]
+- Status: Active
+- Owner: [person]
+- Description: [exact text]
+- Projects linked: [project names]
+
+**Documented on:** [issue ID] — comment added with handoff details
+```
+
+This pattern ensures no work is lost when the agent hits a capability boundary. The human receives a complete, actionable handoff rather than a vague request.

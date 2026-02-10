@@ -10,10 +10,50 @@ This plugin provides a complete methodology for spec-driven development with AI 
 
 ## What Makes This Different
 
-1. **Agent ownership model** -- Clear rules for when the AI agent closes issues vs. proposes closure vs. defers to the human. No more guessing about agent autonomy boundaries.
-2. **Adversarial review architecture** -- 4 concrete options (from free CI agents to Opus API pipelines) with ready-to-use GitHub Actions workflows.
-3. **Execution mode routing** -- Tasks are tagged with one of 5 modes (quick/tdd/pair/checkpoint/swarm) that determine ceremony level, review cadence, and agent autonomy.
-4. **Working Backwards PR/FAQ** -- Amazon-style templates with built-in adversarial prompts (pre-mortem, inversion analysis) and research grounding requirements.
+1. **Agent ownership model** -- The only plugin that formalizes who closes issues, who sets priorities, and when the agent acts autonomously vs. defers to the human. A clear matrix prevents the common failure mode of agents either doing too little (asking permission for everything) or too much (closing issues prematurely).
+2. **Adversarial review architecture** -- 4 architecture options from free CI agents to Opus API pipelines, with cost/quality/automation trade-off analysis and ready-to-use GitHub Actions workflows. For teams wanting multi-model debate execution, pairs well with dedicated review tools.
+3. **Execution mode routing** -- Tasks are tagged with one of 5 modes (quick/tdd/pair/checkpoint/swarm) that determine ceremony level, review cadence, and agent autonomy. Not just workflow types -- implementation strategy routing with explicit autonomy levels per mode.
+4. **Working Backwards PR/FAQ** -- The only plugin combining Amazon-style Working Backwards methodology with adversarial spec techniques (pre-mortem failure scenarios, inversion analysis, research grounding requirements). Problem statements must not mention the solution.
+
+## Design Philosophy
+
+This is a **methodology plugin**, not an execution plugin. The distinction matters:
+
+- **Execution plugins** ship scripts, runtime tools, and automation that work with specific models, CLIs, or platforms. When the platform changes, the automation breaks.
+- **Methodology plugins** teach the agent *how to work*: when to act autonomously, when to defer, how to structure reviews, how to select implementation strategies. The methodology transfers across tools.
+
+The `~~placeholder~~` convention makes this explicit. Every tool reference (project tracker, CI/CD, deployment platform) is a placeholder you replace with your stack. The 9-stage funnel, ownership model, and review architecture work whether you use Linear or Jira, GitHub or GitLab, Vercel or AWS.
+
+**Principles:**
+1. **Ownership before autonomy** -- Define who owns what before defining what the agent can do
+2. **Methodology over tooling** -- Portable practices that survive platform changes
+3. **Adversarial before implementation** -- Stress-test specs before writing code
+4. **Evidence over ceremony** -- Close with proof, not process
+
+## How This Compares
+
+The spec-driven development space for AI coding agents is active, with 30+ plugins addressing various aspects. Here's how this plugin fits:
+
+**What we focus on that others don't:**
+- Agent/human ownership boundaries with explicit closure rules
+- Execution mode selection (not just "what to build" but "how to build it")
+- PR/FAQ methodology with pre-mortem and inversion analysis
+- Context window management as codified agent behavior
+
+**What others do better (and we acknowledge):**
+- **Multi-model review execution** -- Tools like adversarial-spec ship runtime scripts for multi-LLM debate. We provide the architecture and reference workflows but not runtime tooling (yet).
+- **Autonomous execution loops** -- Several plugins offer unattended task queue processing. Our `/sdd:start` handles single-task routing.
+- **Hook enforcement** -- Some plugins enforce workflow rules via Claude Code hooks rather than prompt instructions.
+- **Codebase indexing** -- Automatic code discovery before spec writing is not yet part of our workflow.
+
+**Complementary tools:**
+These plugins address gaps we acknowledge and pair well with this methodology:
+- Multi-model review tools (for runtime execution of our Option C architecture)
+- Autonomous execution frameworks (for unattended processing of tasks decomposed by `/sdd:decompose`)
+- Codebase indexing tools (for code discovery before spec writing)
+
+**Relationship to Anthropic's product-management plugin:**
+We pick up where product-management leaves off. That plugin helps PMs write specs, manage roadmaps, and synthesize research. This plugin drives those specs through adversarial review, implementation with mode routing, and evidence-based closure.
 
 ## Installation
 
@@ -235,6 +275,18 @@ Optional labels for additional workflows:
 - `needs:human-decision` -- blocks agent from auto-closing
 - `research:needs-grounding` → `research:literature-mapped` → `research:methodology-validated` → `research:expert-reviewed`
 - `template:prfaq-feature` | `template:prfaq-infra` | `template:prfaq-research` | `template:prfaq-quick`
+
+## Roadmap
+
+Planned for future versions (informed by competitive analysis):
+
+- **Drift prevention** -- Re-anchoring protocol that re-reads specs before every task to prevent context drift
+- **Hook enforcement** -- Claude Code hooks that enforce workflow constraints at the engineering level
+- **Quality scoring** -- Quantitative 0-100 score in `/sdd:close` across test, coverage, and review dimensions
+- **Codebase indexing** -- `/sdd:index` command for code discovery before spec writing
+- **Multi-model review runtime** -- Script for executing Option C with model-agnostic abstraction
+
+See `docs/competitive-analysis.md` for the full competitive landscape informing this roadmap.
 
 ## License
 
