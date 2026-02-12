@@ -156,7 +156,12 @@ For UI features, create a visual prototype before writing implementation code. T
 - Review the prototype against acceptance criteria
 - Commit design assets or prototype links to the ~~version-control~~ repository
 
-**Skip condition:** Skip for backend-only features, infrastructure changes, API-only work, or any non-UI scope. Proceed directly to Stage 6.
+**Skip conditions:**
+- Backend-only features, infrastructure changes, API-only work, or any non-UI scope
+- Fix or refactor of existing UI where the visual design is not changing (e.g., bug fixes, accessibility improvements, responsive adjustments, component refactoring)
+- Changes where the UI surface already exists and the work is modifying behavior, not appearance
+
+When skipped, proceed directly to Stage 6.
 
 **Output:** A reviewable prototype linked from the spec.
 
@@ -194,6 +199,14 @@ After merge, verify the feature works in a production-like environment.
 - Run smoke tests against the deployed feature
 - Check ~~analytics-platform~~ for any anomalies introduced by the change
 - Verify acceptance criteria from the spec against the live deployment
+- If using Vercel: check preview deployment URL from the PR comment, use Vercel Toolbar for visual inspection, verify environment variables are correctly set for preview vs production
+
+**Verification checklist pattern:**
+- Build succeeds (typecheck, lint, tests pass in CI)
+- Preview deployment is accessible and functional
+- Acceptance criteria from spec are met on the deployed preview
+- No regressions in existing functionality (manual spot-check or automated E2E)
+- Production deployment (after merge) matches preview behavior
 
 **Output:** Verified deployment. Feature is live.
 

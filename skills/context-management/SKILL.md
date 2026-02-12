@@ -157,3 +157,62 @@ When working in a multi-tool environment with `~~project-tracker~~`, `~~version-
 7. **At 70%,** stop and plan a session split
 
 This discipline compounds. A session that delegates properly can accomplish 3-5x more work than one that lets raw output flood the context window.
+
+## Linear Output Discipline
+
+The project tracker is the most common source of context bloat. These rules prevent it:
+
+- **NEVER** `list_issues` without explicit `limit` parameter. Default returns 100KB+ JSON.
+- **NEVER** `list_issues` in the main context. Always delegate to a subagent returning a markdown table.
+- **Single `get_issue`** is OK directly. 2+ issues must go through a subagent.
+- **Zotero `get_collection_items`**: Same rules as `list_issues`.
+- **Subagent return format for issues:** Linked markdown table with Title, Status, Assignee, Priority columns.
+
+## Firecrawl Discipline
+
+Web scraping tools produce the largest raw outputs. Control them:
+
+- **Prefer `WebFetch`** for single-page reads. Only use Firecrawl for batch/search/extract/map operations.
+- **Always set:** `onlyMainContent: true`, `formats: ["markdown"]`, `removeBase64Images: true`
+- **Never** return raw scraped markdown to main context. Summarize in 2-3 bullets or write to file.
+
+## Pilot Batch Pattern
+
+Before any operation involving 10+ items:
+
+1. Run a **pilot batch of 3 items** first
+2. Verify the output format, error handling, and item correctness
+3. Only then proceed with the full batch
+
+This pattern caught errors in URL formatting, sync storms, and MCP path issues before they affected 40+ items (EventKit Canvas Sync, Feb 8 2026).
+
+## Session Exit Summary Tables
+
+At the end of every working session, present structured summaries:
+
+### Issues Table
+
+```markdown
+| Title | Status | Assignee | Milestone | Priority | Estimate | Blocking | Blocked By |
+```
+
+- Title = `[Issue title](linear-url)` (linked, opens in desktop app)
+- Populate all fields from `get_issue(includeRelations: true)`. Use `—` for empty.
+- Verify accuracy before presenting.
+
+### Documents Table
+
+```markdown
+| Title | Project |
+```
+
+- Title = `[Doc title](linear-url)` (linked)
+- Include only documents created or modified during the session.
+
+## MCP-First Principle
+
+When choosing between an MCP tool and a custom script for the same operation:
+
+- **Prefer MCP.** MCPs account for only ~6.5% of session tool calls (evidence from Feb 1 infrastructure audit). They are lightweight, not overhead.
+- **Scripts only** when no MCP exists or the MCP can't reach the operation.
+- **Never create new scripts** if an MCP can accomplish the task.

@@ -18,6 +18,8 @@ This plugin works best with the following data sources connected. Configure them
 | **~~analytics~~** | Data-informed spec drafting, post-launch verification | Stages 2, 7 | PostHog, Amplitude, Mixpanel |
 | **~~error-tracking~~** | Production error monitoring, auto-issue creation | Stage 7 | Sentry, Bugsnag |
 | **~~component-gen~~** | UI component generation for visual prototyping | Stage 5 | v0.dev, Lovable |
+| **~~email-marketing~~** | Mailing list management, subscriber segmentation, campaign triggers | Stages 6-7 | Mailchimp, SendGrid, Resend, ConvertKit |
+| **~~geolocation~~** | IP-based region inference, geo-aware features | Stage 6 | Vercel headers (`x-vercel-ip-country`), ipapi.co, MaxMind |
 
 ## Optional
 
@@ -48,8 +50,8 @@ How each connector maps to the 9-stage funnel:
 | Stage 3: PR/FAQ Draft | project-tracker, version-control | -- | -- |
 | Stage 4: Adversarial Review | version-control | ci-cd | -- |
 | Stage 5: Visual Prototype | -- | deployment, component-gen | design |
-| Stage 6: Implementation | version-control | ci-cd | -- |
-| Stage 7: Verification | version-control | deployment, analytics, error-tracking | observability |
+| Stage 6: Implementation | version-control | ci-cd, email-marketing | geolocation |
+| Stage 7: Verification | version-control | deployment, analytics, error-tracking, email-marketing | observability |
 | Stage 7.5: Closure | project-tracker | -- | -- |
 | Stage 8: Handoff | project-tracker | -- | communication |
 
@@ -104,6 +106,8 @@ Common integration pairs and how to wire them:
 | **Error tracking <-> Deployment** | Error tracking -> Deployment | Release tagging, source map upload | Marketplace integration (e.g., Sentry-Vercel) |
 | **Error tracking <-> Project tracker** | Error tracking -> Project tracker | Auto-create issues from new error groups | Native integration (e.g., Sentry-Linear) |
 | **Analytics <-> Project tracker** | Manual | Feature flag data informs spec drafting | No direct sync -- analyst reviews data during Stage 2 |
+| **Deployment <-> Project tracker** | Manual or webhook | Preview URLs in issue comments, deploy status | Branch naming convention `claude/cia-XXX-*` + Linear-GitHub sync propagates PR links. No native Linear-Vercel integration -- add preview URLs manually or via webhook. |
+| **Email marketing <-> Database** | Application -> Both | Dual-write: subscriber data to both email platform and database | API route writes to database first (source of truth), then syncs to email platform. Idempotent PUT to avoid duplicates. |
 
 ### Environment Variable Matrix
 
@@ -116,6 +120,30 @@ Track where each credential lives across environments:
 | Deployment platform token | Keychain | Automatic | Automatic | GitHub Secret |
 | Error tracking DSN | Keychain | Platform env var | Platform env var | GitHub Secret |
 | Analytics key | Keychain | Platform env var | Platform env var | N/A |
+
+### Runtime vs Agent Credentials
+
+Some integrations require two separate credentials: one for the AI agent's MCP operations during development, and one for the application's own API calls at runtime.
+
+| Integration | Agent Credential | Application Credential | Why Separate |
+|---|---|---|---|
+| **Project tracker** | MCP OAuth token (agent session, scoped to agent identity) | API key (runtime issue creation from user-facing forms) | Agent token has agent-specific scopes and identity. Application needs programmatic access without MCP. |
+| **Deployment** | Git integration (automatic via branch push) | API token (if needed for programmatic deploys) | Usually automatic via Git. Some workflows need explicit API access for status checks. |
+| **Analytics** | MCP tool (if available) | Client-side snippet or API key | Agent reads analytics during Stage 2. Application writes events at runtime. Different access patterns. |
+
+**Rule of thumb:** If your application creates, reads, or modifies data in a connected service at runtime (not just during development), it needs its own credential separate from the MCP token.
+
+### Credential Anti-Patterns
+
+Common mistakes observed in real projects:
+
+| Anti-Pattern | Risk | Fix |
+|---|---|---|
+| Blank secrets in `.env.local` (e.g., `SERVICE_ROLE_KEY=`) | Exposes variable name, signals to attackers that the key exists somewhere | Remove unused variables entirely |
+| Unrestricted API keys (no HTTP referrer or IP restriction) | Key can be used from any origin if leaked from client-side bundle | Always set restrictions in the provider's console (Google Cloud, Mapbox, etc.) |
+| `NEXT_PUBLIC_` prefix on server-only keys | Exposes key in client-side JavaScript bundles | Remove `NEXT_PUBLIC_` prefix; access only in API routes or server components |
+| Same credential for agent and application | Scope creep -- agent token may have higher privileges than the app needs | Separate credentials with minimum-privilege scoping |
+| Secrets in `.env` committed to version control | Full credential exposure in git history | Use `.env.local` (auto-gitignored by Next.js) or `.env` with explicit `.gitignore` entry |
 
 ---
 
@@ -142,3 +170,37 @@ If you start with OS Keychain and later need a secrets manager:
 4. Update local shell config to use secrets manager CLI
 5. Verify all environments still work
 6. Remove old Keychain entries
+
+---
+
+## Real-World Example: Distributor Finder App
+
+A Next.js App Router application with Supabase (database), Google Maps (interactive map), and Vercel (deployment). Solo developer using the SDD funnel with `exec:checkpoint` mode.
+
+### Connectors Actually Used
+
+| Connector | Tool | Stages | Notes |
+|---|---|---|---|
+| project-tracker | Linear MCP | 0, 6, 7.5 | Issue tracking with `source:*` labels |
+| version-control | GitHub MCP | 6 | Feature branch per issue, PR on completion |
+| deployment | Vercel (Git integration) | 5, 7 | Auto-preview on push, manual production promote |
+| ci-cd | GitHub Actions | 7 | Typecheck, lint, build, test on PR to main |
+| web-research | Firecrawl | 1 | Server-side product data scraping |
+| analytics | Vercel Analytics | (passive) | Installed but not actively reviewed at Stage 2 |
+
+### Environment Variable Matrix
+
+| Variable | Local (.env.local) | Vercel Preview | Vercel Production | CI (GitHub) |
+|---|---|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | `.env.local` | Vercel env var | Vercel env var | N/A (not needed) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `.env.local` | Vercel env var | Vercel env var | N/A |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | `.env.local` | Vercel env var | Vercel env var | N/A |
+| `FIRECRAWL_API_KEY` | `.env.local` | Not set (server-side scraping is local-only) | Not set | N/A |
+
+### Findings
+
+**What worked:** Adversarial review (Stage 4) produced 4 Critical + 13 Important + 8 Consider findings. Fix-forward pattern resolved all Critical items before advancing. Checkpoint execution mode with documented phase gates worked well for multi-phase UI overhaul.
+
+**What was missing:** No error tracking configured (most small apps skip this). Stage 5 was skipped entirely for UI fix/refactor work (not creating new UI). No anchor/drift protocol existed to rebuild context between sessions. Credential anti-patterns found: blank service role key, unrestricted Google Maps API key.
+
+**Connector gaps exposed:** Email marketing (Mailchimp for mailing list), geolocation (region inference for subscriber segmentation), and runtime vs agent credentials (application needs its own Linear API key for user-facing feedback forms, separate from MCP OAuth).

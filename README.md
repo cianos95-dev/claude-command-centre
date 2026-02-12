@@ -177,6 +177,10 @@ Skills are passive knowledge that Claude surfaces automatically when relevant co
 | `hook-enforcement` | Workflow violations, runtime rules | Claude Code hook patterns for constraint enforcement |
 | `quality-scoring` | Closure evaluation, review quality | 0-100 scoring rubric across test/coverage/review |
 | `codebase-awareness` | New specs, code discovery | Index-informed spec writing, pattern detection |
+| `project-cleanup` | Project normalization, convention enforcement | Classification matrix, naming rules, deletion protocol, 10 anti-patterns |
+| `research-pipeline` | Literature review, paper discovery, research tools | 4-stage pipeline: discover, enrich, organize, synthesize |
+| `zotero-workflow` | Zotero operations, metadata enrichment | Plugin sequence, Linter/Cita settings, safety rules, anti-patterns |
+| `research-grounding` | Research-backed features, citation standards | Readiness label progression, PR/FAQ citation requirements |
 
 ## Execution Modes
 
@@ -391,8 +395,10 @@ spec-driven-development/
 │   │   └── SKILL.md             # Runtime hook patterns + constraint enforcement
 │   ├── quality-scoring/
 │   │   └── SKILL.md             # 0-100 scoring rubric + threshold configuration
-│   └── codebase-awareness/
-│       └── SKILL.md             # Index-informed spec writing + pattern detection
+│   ├── codebase-awareness/
+│   │   └── SKILL.md             # Index-informed spec writing + pattern detection
+│   └── project-cleanup/
+│       └── SKILL.md             # Classification matrix, naming rules, deletion protocol
 ├── hooks/
 │   ├── session-start.sh         # Load spec, verify context budget
 │   ├── pre-tool-use.sh          # Verify write alignment with spec

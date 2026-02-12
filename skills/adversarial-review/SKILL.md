@@ -181,6 +181,63 @@ The recommendation is one of:
 - **REVISE** -- Spec needs significant changes to address Critical findings
 - **RETHINK** -- Fundamental approach is questioned; consider alternative solutions
 
+## Review Findings Storage
+
+Store adversarial review findings in a persistent, version-controlled location so they can be referenced during implementation and closure.
+
+**Recommended pattern:** Create a `REVIEW-GATE-FINDINGS.md` file at the root of the feature branch (or in `docs/reviews/`). This file captures the full synthesis output and tracks resolution status.
+
+```markdown
+# Review Gate Findings: [Spec Title]
+
+**Review date:** YYYY-MM-DD
+**Recommendation:** APPROVE / REVISE / RETHINK
+**Spec:** [link to spec or issue]
+
+## Critical
+- [ ] C1: [Finding description] — [Resolution status]
+
+## Important
+- [ ] I1: [Finding description] — [Resolution status]
+
+## Consider
+- [ ] R1: [Finding description] — [Resolution status]
+
+## Carry-Forward Items
+Items deferred to future issues (with issue links):
+- I3: [Description] → [CIA-XXX]
+```
+
+**Why a separate file:** Review findings are implementation guidance, not spec content. Keeping them in a dedicated file prevents spec bloat and gives the implementer a checklist to work through. The file is committed to the feature branch and merged with the PR, preserving the review trail.
+
+## Fix-Forward Summary
+
+When adversarial review findings are partially resolved during implementation (some fixed, some deferred), document the resolution in a **fix-forward summary** as a PR comment or issue comment at Stage 7.5 closure.
+
+```markdown
+## Fix-Forward Summary
+
+**Review:** [link to REVIEW-GATE-FINDINGS.md or review comment]
+
+### Resolved in this PR
+| ID | Finding | Resolution |
+|----|---------|------------|
+| C1 | [Critical finding] | Fixed in [commit/file] |
+| I1 | [Important finding] | Addressed by [approach] |
+
+### Carry-Forward (separate issues created)
+| ID | Finding | Deferred To | Rationale |
+|----|---------|-------------|-----------|
+| I3 | [Important finding] | CIA-XXX | [Why deferred — scope, risk, dependency] |
+
+### Accepted Risks
+| ID | Finding | Decision |
+|----|---------|----------|
+| R2 | [Consider finding] | Accepted — [rationale] |
+```
+
+This pattern ensures no review findings are silently dropped. Every finding gets one of three dispositions: resolved, deferred (with tracking issue), or explicitly accepted.
+
 ## Implementation References
 
 GitHub Actions workflow files and issue templates for Options A, B, and C are located in the `references/` subdirectory. Adapt these to your ~~ci-cd~~ platform if not using GitHub Actions.

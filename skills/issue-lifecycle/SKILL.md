@@ -1,9 +1,9 @@
 ---
 name: issue-lifecycle-ownership
 description: |
-  Agent/human ownership model for issue management. Defines who owns which actions on issues (status, labels, priority, estimates, closure), closure rules matrix, session hygiene protocols, and spec lifecycle labels. The most critical skill for agent autonomy boundaries.
-  Use when determining what the agent can change vs what requires human approval, closing issues, updating issue status, managing labels, or handling session-end cleanup.
-  Trigger with phrases like "can I close this issue", "who owns priority", "issue ownership rules", "session cleanup protocol", "what labels should I set", "closure evidence requirements".
+  Agent/human ownership model for issue and project management. Defines who owns which actions on issues (status, labels, priority, estimates, closure) and projects (summary, description, updates, resources). Includes closure rules matrix, session hygiene protocols, spec lifecycle labels, project hygiene protocol with staleness detection, and daily update format.
+  Use when determining what the agent can change vs what requires human approval, closing issues, updating issue status, managing labels, handling session-end cleanup, maintaining project descriptions, posting project updates, or managing project resources.
+  Trigger with phrases like "can I close this issue", "who owns priority", "issue ownership rules", "session cleanup protocol", "what labels should I set", "closure evidence requirements", "project description stale", "post project update", "add resource to project", "update project summary".
 ---
 
 # Issue Lifecycle Ownership
@@ -97,6 +97,62 @@ Specs progress through a defined lifecycle. Apply these labels to track where a 
 
 **Spec labels coexist with execution mode labels.** An issue can be both `spec:implementing` and `exec:tdd`. The spec label tracks the document lifecycle; the execution label tracks the implementation approach.
 
+## Carry-Forward Items Protocol
+
+When adversarial review findings or implementation tasks cannot be fully resolved within the current issue's scope, they must be explicitly tracked rather than silently dropped.
+
+### When This Applies
+
+- Adversarial review findings rated **Important** or **Consider** that are deferred during implementation
+- Implementation discoveries that reveal work outside the current issue's scope
+- Technical debt identified during implementation that is not blocking
+
+### The Protocol
+
+1. **Create a new issue** for each carry-forward item (or group closely related items into one issue)
+2. **Link the new issue** as "related to" the source issue using ~~project-tracker~~ relations
+3. **Reference the source** in the new issue description: "Carry-forward from CIA-XXX adversarial review finding I3"
+4. **Add the carry-forward item** to the fix-forward summary in the source issue's closing comment (see adversarial-review skill)
+5. **Apply appropriate labels** to the new issue (`spec:draft` if it needs a spec, or appropriate exec mode if scope is clear)
+
+### What NOT to Do
+
+- Do not leave findings untracked in a review document without corresponding issues
+- Do not close the source issue without documenting what was deferred and where
+- Do not add carry-forward items to the source issue's own scope (this causes scope creep and blocks closure)
+
+## Issue Content Discipline
+
+Issue comments, descriptions, sub-issues, and resources each serve a distinct purpose. Using the wrong container for content creates clutter and makes issues hard to navigate.
+
+### Where Content Belongs
+
+| Content Type | Container | Why |
+|---|---|---|
+| Status updates, @mentions, decisions | **Comments** | Comments are a chronological conversation thread. Keep them for communication, not data storage. |
+| Evidence tables, audit findings, detailed analysis | **Resources** (documents or linked files) | Rich content belongs in a document. Link from the description. |
+| Plans, specs, research from repos | **Resources** (linked to repo files or Linear documents) | Repo artifacts are the source of truth. Resources point to them. |
+| New work discovered during implementation | **Sub-issues** | Sub-issues maintain parent-child traceability. Never add scope to the parent issue. |
+| Session orchestration for batched work | **Master session plan issue** (parent) | When multiple sessions or sequential issues form a batch, create a parent issue that tracks the overall plan. Sub-issues represent individual sessions or steps. |
+
+### Anti-Patterns
+
+- **Comment dumping**: Do not write evidence tables, credential audits, or spec content as comments. Comments get buried in the thread and are not searchable or linkable.
+- **Orphan work items**: Do not track new work discovered during implementation as informal notes. Create sub-issues immediately.
+- **Implicit session plans**: When you identify a sequence of sessions (e.g., "Session 1: merge PR, Session 2: add Mailchimp, Session 3: add geo"), create a master plan issue with sub-issues. Do not leave the orchestration implicit in a plan file or conversation.
+
+### Master Session Plan Pattern
+
+When a project phase involves multiple sequential or parallel sessions:
+
+1. **Create a parent issue** titled "Session Plan: [Phase/Feature Name]"
+2. **Create sub-issues** for each session, with blocking relationships reflecting the execution order
+3. **Update the parent description** with the overall plan, linking to sub-issues
+4. **As sessions complete**, close sub-issues with evidence and update the parent with progress notes
+5. **Close the parent** when all sub-issues are complete
+
+This pattern replaces ad-hoc session planning in plan files or conversation context, making the plan visible and trackable in the ~~project-tracker~~.
+
 ## Applying This in Practice
 
 When working with `~~project-tracker~~`:
@@ -108,6 +164,111 @@ When working with `~~project-tracker~~`:
 5. **Session end:** Run the normalization protocol across all touched issues
 
 The ownership model scales from solo agent work to multi-agent teams. In multi-agent setups, each agent follows these same rules for issues assigned to it, and proposes closure for issues assigned to other agents.
+
+## Issue Naming Convention
+
+Every issue title must follow these rules:
+
+### Verb-First, No Brackets
+
+Issue titles start with an action verb, lowercase after first word. No bracket prefixes.
+
+| Pattern | Correct | Incorrect |
+|---------|---------|-----------|
+| Feature | `Build avatar selection UI component` | `[Feature] Avatar Selection UI` |
+| Research | `Survey limerence measurement instruments` | `[Research] Limerence Instruments` |
+| Infrastructure | `Configure Supabase pgvector` | `[Infrastructure] Supabase pgvector` |
+
+**Common verb starters:** Build, Implement, Fix, Add, Create, Evaluate, Survey, Design, Migrate, Configure, Audit, Ship, Set up, Wire up
+
+### Reference Content Goes to Documents
+
+Non-actionable content (research notes, decisions, session learnings) should be Linear Documents, not issues. Apply the "Can someone mark this Done?" test — if no, it's a Document.
+
+See the `project-cleanup` skill for the full Content Classification Matrix.
+
+## Project Hygiene Protocol
+
+Projects are the container that gives issues strategic context. A well-maintained project makes milestone progress visible, keeps descriptions honest, and ensures new contributors (or future sessions) can orient quickly. This section defines what the agent maintains at the project level.
+
+### Project Artifacts
+
+| Artifact | Purpose | Cadence | Owner |
+|----------|---------|---------|-------|
+| **Summary** | One-line elevator pitch visible in project lists | On creation, rename, or major pivot | Agent |
+| **Description** | Living document: milestone map, delineation table, hygiene rules, decision log | When milestones added/completed/restructured | Agent |
+| **Resources** | Links to repo, specs, key docs, insights reports | When new key artifacts ship | Agent |
+| **Project Update** | Daily status: what changed, what's next, health signal | End of each active working session | Agent |
+| **Milestone progress** | Issue completion percentages | Automatic (on issue status change) | Agent (auto) |
+
+### Project Description Structure
+
+Every project description should contain these sections (adapt as needed):
+
+1. **Opening line** — What this project is, in one sentence
+2. **Repo link** — Clickable link to source code
+3. **Milestone Map** — Table showing all milestones, their focus, and dependencies
+4. **Delineation** — What's shareable/public vs personal/temporal (for plugin projects)
+5. **Hygiene Protocol** — Cadence table (copy from this skill, configure per project)
+6. **Decision Log** — Date + decision + context for major choices
+
+### Staleness Detection Rule
+
+The agent must check for project description staleness using these triggers:
+
+| Trigger | Action |
+|---------|--------|
+| `updatedAt` on description is >14 days old AND any milestone has new Done issues | Flag "Project description may be stale" and propose an update |
+| Milestone count changes (added or removed) | Update description in same session |
+| Project renamed | Update summary and description opening line in same session |
+| Major pivot or restructuring | Rewrite description; add entry to decision log |
+
+**Configuration for plugin users:** The staleness threshold (default: 14 days) and trigger conditions should be documented in the project description itself so the agent knows what rules to follow for each project. Projects with daily active development may use 7 days; maintenance projects may use 30 days.
+
+### Daily Project Update Format
+
+```markdown
+# Daily Update — YYYY-MM-DD
+
+**Health:** On Track | At Risk | Off Track
+
+## What happened today
+- [Grouped by theme: milestone work, triage, infra, etc.]
+- [Reference issue IDs for traceability]
+
+## What's next
+- [Immediate next actions for the next session]
+- [Any blockers or decisions needed]
+```
+
+**Rules:**
+- Post at end of each working session where issue statuses changed
+- Skip if no issue status changes occurred (no empty updates)
+- Create as a Linear document attached to the project (titled "Project Update — YYYY-MM-DD")
+- Health signal: "On Track" if milestone progress is positive, "At Risk" if blockers exist, "Off Track" if milestone is overdue
+- Keep updates concise — 3-5 bullets per section maximum
+
+### Resource Management
+
+Resources are added as a Linear document attached to the project. Maintain a single "Key Resources" document with sections for:
+
+- Source code repositories
+- Specs and plans (with local file paths or URLs)
+- Insights reports and archives
+- Methodology references
+- Linear navigation references (team, prefix, milestone names)
+
+**Update rule:** When a new key artifact is created (new spec, new plan, new insights report), add it to the resources document in the same session. Do not create separate resource documents per artifact.
+
+### Applying Project Hygiene
+
+When the agent completes any of these actions, it should check the project hygiene checklist:
+
+1. **Created a milestone** → Update project description milestone map
+2. **Completed a triage/routing session** → Post daily update, update description if structure changed
+3. **Shipped a key deliverable** → Add to resources document
+4. **Renamed or pivoted a project** → Update summary + description + decision log
+5. **End of any session with status changes** → Post daily update
 
 ## Scope Limitation Handoff Protocol
 
