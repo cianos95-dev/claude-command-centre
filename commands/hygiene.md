@@ -57,7 +57,7 @@ Evaluate every open issue against the following rules. Each finding is classifie
 
 | Check | Severity | Rule |
 |-------|----------|------|
-| `needs:human-decision` > 14 days | Error | A human decision has been pending for over 2 weeks. Flag as stale decision requiring escalation. |
+| Cian-assigned issue > 14 days | Error | A human decision has been pending for over 2 weeks. Flag as stale decision requiring escalation. Query by `assignee = Cian`, not by label. |
 | Backlog issue > 30 days | Warning | Issue has been in Backlog for over a month without activity. Flag for triage. |
 | In Progress > 14 days without update | Warning | Issue marked In Progress but no comments or status changes in 2 weeks. May be abandoned. |
 | Completed PR but issue still open | Warning | All linked PRs are merged but the issue was never closed. Suggest running `/close`. |
