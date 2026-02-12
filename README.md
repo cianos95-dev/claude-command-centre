@@ -397,8 +397,14 @@ spec-driven-development/
 │   │   └── SKILL.md             # 0-100 scoring rubric + threshold configuration
 │   ├── codebase-awareness/
 │   │   └── SKILL.md             # Index-informed spec writing + pattern detection
-│   └── project-cleanup/
-│       └── SKILL.md             # Classification matrix, naming rules, deletion protocol
+│   ├── project-cleanup/
+│   │   └── SKILL.md             # Classification matrix, naming rules, deletion protocol
+│   ├── research-grounding/
+│   │   └── SKILL.md             # Readiness label progression + citation requirements
+│   ├── research-pipeline/
+│   │   └── SKILL.md             # 4-stage pipeline: discover, enrich, organize, synthesize
+│   └── zotero-workflow/
+│       └── SKILL.md             # Plugin sequence, Linter/Cita settings, safety rules
 ├── hooks/
 │   ├── session-start.sh         # Load spec, verify context budget
 │   ├── pre-tool-use.sh          # Verify write alignment with spec

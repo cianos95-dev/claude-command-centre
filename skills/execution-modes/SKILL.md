@@ -136,3 +136,72 @@ Apply the execution mode label when transitioning an issue from spec-ready to im
 4. If the mode changes mid-implementation, update the label and document why
 
 The execution mode also informs estimation. Quick tasks are typically under 1 hour. TDD tasks are 1-4 hours. Pair sessions are 1-2 hours per sitting. Checkpoint tasks span multiple sessions. Swarm tasks vary by fan-out count but each leaf should be quick or tdd-sized.
+
+## T1-T4 Issue Classification
+
+Before selecting an execution mode, classify the issue by its relationship to agent architecture. This tier determines implementation priority, phasing, and which execution modes are appropriate.
+
+| Tier | Name | Definition | Implementation Priority |
+|------|------|-----------|------------------------|
+| **T1** | Agent-native | Features that ARE the agent system -- cannot exist without multi-agent orchestration | Phase 0-1 (core agent features) |
+| **T2** | Agent-enhanced | Features that exist independently but are significantly better with agent augmentation | Phase 2-3 (augmentation layer) |
+| **T3** | Agent-adjacent | Features with minor agent convenience but work fine without agents | Phase 3+ (optional agent convenience) |
+| **T4** | Non-agent | Traditional CRUD/UI/infra with zero agent dependency | Any phase (traditional implementation) |
+
+**T1 examples:** Agent orchestration engine, tool routing, multi-agent coordination protocol, safety monitor, agent memory system.
+
+**T2 examples:** Literature review (works manually, dramatically better with agent-driven search and synthesis), data pipeline (runnable without agents, but agent augmentation enables adaptive routing).
+
+**T3 examples:** Form auto-fill suggestions, smart defaults in settings, notification grouping -- all work fine without agents, agents add minor polish.
+
+**T4 examples:** User authentication, database schema, static page layout, dependency updates, CI/CD configuration.
+
+### Three-Question Promotion Test
+
+When an issue seems like it could be a higher tier than initially classified, apply this test sequentially:
+
+```
+1. "Does this feature REQUIRE multi-agent coordination to function at all?"
+   --> YES = T1 (agent-native)
+   --> NO  = continue
+
+2. "Would agent augmentation change the fundamental user experience?"
+   --> YES = T2 (agent-enhanced)
+   --> NO  = continue
+
+3. "Could an agent add minor convenience without changing the core feature?"
+   --> YES = T3 (agent-adjacent)
+   --> NO  = T4 (non-agent)
+```
+
+**Common misclassification:** Features that use AI (LLM calls, embeddings) are not automatically T1. A feature that calls an LLM to summarize text is T2 or T3 -- it does not require multi-agent orchestration. Only features that require agents coordinating with each other belong in T1.
+
+### Tier-to-Mode Mapping
+
+The classification tier constrains which execution modes are appropriate:
+
+| Tier | Recommended Modes | Rationale |
+|------|-------------------|-----------|
+| **T1** | `exec:pair`, `exec:checkpoint` | High complexity, architectural risk, needs human-in-the-loop validation at design and implementation |
+| **T2** | `exec:tdd` | Enhancement layer with clear interfaces -- testable acceptance criteria at the augmentation boundary |
+| **T3** | `exec:quick`, `exec:tdd` | Straightforward features with optional agent integration; TDD if the agent convenience path has edge cases |
+| **T4** | `exec:quick` | Traditional implementation with no agent dependency; fast and well-understood |
+
+This mapping is a default, not a mandate. A T4 database migration is still `exec:checkpoint` if it touches production data. The tier narrows the search space; the decision heuristic (above) makes the final call.
+
+## Retry Budget
+
+Every implementation attempt has a retry budget. The budget prevents brute-force debugging loops and ensures escalation happens before context is exhausted.
+
+**Rules:**
+
+1. **Maximum 2 failed approaches before escalation.** An "approach" is a distinct strategy for solving the problem, not a single command retry.
+2. **After first failure:** Try a different approach. Document what failed and why in a comment on the issue or in the session plan. The documentation must include: what was attempted, what the failure symptom was, and why the approach did not work.
+3. **After second failure:** STOP. Escalate to a human with evidence of both approaches tried. Present the two failure reports and ask for direction. Do not attempt a third approach without explicit human approval.
+
+**Anti-patterns:**
+
+- **Brute force retry** -- Trying the same approach 3+ times hoping for different results. If the same command or strategy failed twice, a third attempt without a changed variable is wasted context.
+- **Approach amnesia** -- Not documenting what was tried before trying something new. Without a failure log, the agent (or a future session) may repeat the same dead-end approach. Always write down what failed before pivoting.
+
+**Budget applies per-issue, not per-session.** If a session ends mid-retry, the next session inherits the retry count. Document retry state in the issue comment so it survives session boundaries.

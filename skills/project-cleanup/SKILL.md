@@ -192,3 +192,60 @@ description: |
 ```
 
 Without these clauses, skill matching relevance drops from ~90% to ~30% (Plugin Ecosystem Audit, Feb 9 2026).
+
+## Triage Decision Tree
+
+For each issue being triaged, apply these steps IN ORDER. Stop at the first step that matches.
+
+1. **CANCEL** -- Is this issue superseded, irrelevant, or duplicated by another? Cancel it with a comment linking to the superseding issue.
+2. **MERGE** -- Is this issue's scope absorbed into another active issue? Cancel this one, add its acceptance criteria to the absorbing issue's description.
+3. **MOVE** -- Is this issue in the wrong project? Move it to the correct project per the project assignment rules in CLAUDE.md.
+4. **RECLASSIFY** -- Does this issue have the wrong type/tier/labels? Fix metadata: type label, tier classification, exec mode, spec status.
+5. **UPDATE** -- Does this issue's spec need updating for current architecture? Mark for spec refresh (keep `arch:pre-pivot` or add `spec:draft`). Do NOT rewrite the spec now.
+6. **OK** -- Issue is correctly categorized, scoped, and spec is current. No action needed, remove any triage labels.
+
+**Anti-pattern:** Trying to update specs during triage. Triage is CLASSIFICATION only. Spec updates happen during cycle planning, not during batch triage sessions. Mixing classification and authoring causes context bloat and inconsistent depth across issues.
+
+### T4 Promotion Test
+
+When a T4 (Non-agent) issue seems like it might benefit from agent features, apply these three questions before changing its tier:
+
+1. "Would agent integration fundamentally change how users interact with this feature?" -- If yes, promote to T2.
+2. "Does this feature need real-time agent coordination?" -- If yes, promote to T1.
+3. "Could a simple tool call or API wrapper add agent convenience?" -- If yes, promote to T3.
+
+If all three answers are No, keep as T4. Document the promotion decision (or the decision to keep T4) in a comment on the issue so future triage sessions don't re-evaluate the same question.
+
+## Estimation Framework
+
+| Points | T-shirt | Complexity | Typical exec mode |
+|--------|---------|------------|-------------------|
+| 1 | XS | Single file, obvious change | `exec:quick` |
+| 2 | S | 2-3 files, clear scope | `exec:quick` or `exec:tdd` |
+| 3 | M | Multiple files, some uncertainty | `exec:tdd` |
+| 5 | L | Cross-cutting, needs design | `exec:pair` or `exec:checkpoint` |
+| 8 | XL | Architectural, multi-session | `exec:checkpoint` or `exec:swarm` |
+
+**Rules:**
+
+- Estimates drive exec mode selection, not the reverse. Assign the estimate first, then pick the exec mode that matches.
+- If estimate > 5, consider splitting into sub-issues before scheduling.
+- Claude OWNS estimates (complexity assessment leads to exec mode routing). Human OWNS priority and due dates.
+- Re-estimate at `spec:ready` if scope has changed since `spec:draft`. Do not carry stale estimates into implementation.
+
+### Consolidation Protocol
+
+Periodic backlog consolidation prevents issue sprawl. Run before each milestone boundary.
+
+**Cadence:**
+- Before milestone start: full backlog sweep
+- Weekly during active milestone: quick dedup check on new issues
+- Before project review: consolidation audit
+
+**Process:**
+1. Sort all open issues by title similarity
+2. For each cluster of similar issues: pick the most complete spec as the survivor, merge acceptance criteria from others, cancel duplicates with link to survivor
+3. Track net issue delta: `created - cancelled = net change`. Target: net-negative or net-zero per consolidation pass
+4. Document consolidation results as a Linear comment on the milestone issue
+
+**Anti-pattern:** Creating new issues without first searching for existing ones that cover the same scope.

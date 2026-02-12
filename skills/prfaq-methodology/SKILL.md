@@ -180,3 +180,38 @@ The Research Base section must include:
 - At least 3 citations with relevance to the proposed feature
 - A brief note on how each citation supports or challenges the approach
 - Any contradictions in the literature and how the spec resolves them
+
+### Mandatory Non-Goals
+
+Every PR/FAQ MUST include a Non-Goals section listing what the feature explicitly will NOT do. Purpose: prevent scope creep and reinvention of existing tools.
+
+**Required content:**
+- At least 3 explicit non-goals per feature
+- Each non-goal must cite WHY it's excluded (e.g., "existing tool X handles this", "out of scope for target user", "deferred to Phase N")
+- Anti-pattern: vague non-goals like "won't be too complex" — non-goals must be specific and falsifiable
+
+**Template field (add after Pre-Mortem):**
+```
+## Non-Goals
+1. [Specific thing] — [Reason it's excluded]
+2. [Specific thing] — [Reason it's excluded]
+3. [Specific thing] — [Reason it's excluded]
+```
+
+### Solution-Scale Constraint
+
+Every spec must declare its target scale. Solution complexity must match user scale — personal tool ≠ enterprise infrastructure.
+
+**Scale categories:**
+- **Personal** (1 user): Simple, local-first, minimal infra
+- **Team** (2-10 users): Shared state, basic auth, simple deployment
+- **Organization** (10-100 users): Multi-tenant, RBAC, monitoring
+- **Platform** (100+ users): Distributed, high-availability, compliance
+
+**Rule:** If the declared scale is "Personal" or "Team", reject any solution that requires:
+- Kubernetes or container orchestration
+- Message queues or event buses
+- Microservices (monolith is correct)
+- Custom auth systems (use existing providers)
+
+Anti-pattern: "enterprise architecture for a personal tool" — the most common over-engineering failure mode.

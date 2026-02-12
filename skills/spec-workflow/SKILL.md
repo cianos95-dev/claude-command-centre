@@ -274,6 +274,73 @@ The ~~project-tracker~~ labels track where an issue is in the funnel:
 | `spec:implementing` | Code is being written | Stage 6 in progress |
 | `spec:complete` | Shipped and verified | Stage 7.5 closure |
 
+## Master Plan Pattern
+
+When batched or sequential work spans 2+ sessions, create a **master session plan issue** in the project tracker. This is the tracking artifact that keeps multi-session work visible and accountable.
+
+**Structure:**
+- The master issue has sub-issues for each session or step in the plan
+- The plan file (stored locally, e.g., `~/.claude/plans/`) is the execution blueprint; the project tracker issue is the tracking artifact that others can follow
+- Sub-issues are created upfront during planning, not discovered during execution
+
+**Two-session gate:**
+- **Session 1** = decisions, research, and planning. Produce recommendations, not changes.
+- **Human review gate** between sessions. The human reviews Session 1 output before Session 2 begins.
+- **Session 2** = execution. Apply the decisions made and approved in Session 1.
+
+**Why separate sessions:** Never mix research/decisions and execution in the same session. Empirically, combining both leads to >70% context consumption (compaction risk), rushed decisions late in the session, and execution that outpaces approval. The two-session gate forces deliberate pacing.
+
+**When to use:** Any task that requires both "figuring out what to do" and "doing it" across more than a trivial scope. If the research phase alone could consume >30% of context, split into sessions.
+
+## Scope Discipline
+
+Scope creep is the primary risk to session success. These rules enforce predictable execution.
+
+**Pilot batch before bulk operations:**
+- When a task affects 10+ items (issues, files, database records, etc.), do a pilot batch of 3-5 first
+- Verify results with the human or against expected outcomes
+- Then proceed with the remainder
+- This catches systematic errors early when they are cheap to fix, not after 50 items are modified
+
+**Approach confirmation:**
+- Before executing a plan that touches >5 files or >10 issues, explicitly confirm the approach with the human
+- Even if the overall plan is approved, the first batch serves as validation of the specific implementation approach
+- "The plan is right" and "my execution of the plan is right" are two different claims
+
+**Scope creep guard:**
+- If during execution you discover new work, create a sub-issue immediately
+- NEVER add scope to the parent issue or the current session plan
+- Document the discovery, link it to the parent, and move on
+- The new work enters the funnel at Stage 0 like everything else
+
+**Anti-pattern: "while I'm here":**
+- Resist the temptation to fix adjacent issues discovered during implementation
+- Log them as new issues with appropriate context, do not fix them in the current session
+- Adjacent fixes bypass the spec and review gates, introducing unreviewed changes
+- The only exception is trivially mechanical fixes (e.g., a typo on the same line you are editing) that require zero judgment
+
+## Human Review Gates
+
+The three approval gates (Stage 3, Stage 4, Stage 6) are structural requirements, not suggestions. They exist because agent-driven work can move faster than human comprehension of what changed.
+
+**Gate enforcement:**
+- No gate can be skipped, even for `quick` execution mode (which still requires Gate 3: PR review)
+- Gates are synchronization points: the agent stops, the human catches up, then work resumes
+- Passing a gate is an explicit human action (approval comment, PR approval, etc.), never implicit
+
+**Architectural decisions require split sessions:**
+- Any change that alters system architecture, data models, or cross-cutting concerns must be split into "propose" and "execute" sessions
+- Session 1 produces a proposal (ADR, spec update, or recommendation document)
+- Human review between sessions is NOT optional -- it is a structural requirement
+- Session 2 executes only what was explicitly approved
+
+**Evidence format for review:**
+- Present findings as a summary table, not raw data dumps
+- Link to project tracker issues for traceability
+- Include an explicit recommendation (approve, revise, reject, or defer)
+- Keep the review surface small: the human should be able to make a decision in under 5 minutes of reading
+- Never dump evidence tables, audit findings, or spec content into issue comments -- use documents or linked files instead
+
 ## Cross-Skill References
 
 This workflow integrates with the other skills in this plugin:

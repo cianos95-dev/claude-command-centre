@@ -241,3 +241,41 @@ This pattern ensures no review findings are silently dropped. Every finding gets
 ## Implementation References
 
 GitHub Actions workflow files and issue templates for Options A, B, and C are located in the `references/` subdirectory. Adapt these to your ~~ci-cd~~ platform if not using GitHub Actions.
+
+## User Decision Log
+
+During adversarial review, maintain an explicit log of user decisions to prevent re-proposing rejected ideas.
+
+**Format:**
+| Round | Proposal | User Decision | Verbatim Reason |
+|-------|----------|:------------:|-----------------|
+| 1 | "Use Redis for caching" | REJECTED | "Too complex for personal tool" |
+| 2 | "Add retry middleware" | ACCEPTED | "Makes sense for reliability" |
+
+**Rules:**
+- Log EVERY user decision (accept, reject, defer, modify)
+- Record the reason VERBATIM — do not paraphrase or interpret
+- Before proposing anything in subsequent rounds, check the log for prior rejections
+- If a previously rejected idea is reconsidered, explicitly acknowledge: "This was rejected in Round N because [reason]. Has the context changed?"
+- Anti-pattern: "proposal amnesia" — re-proposing rejected ideas without acknowledging the prior rejection
+
+### Multi-Model Consensus Protocol
+
+When using multiple models for adversarial review, follow this structured consensus process.
+
+**Configuration:**
+- Minimum 2 models, recommended 3 for tie-breaking
+- Each model gets the SAME prompt independently (no shared context)
+- Model mixing tiers: haiku (scan/classify), sonnet (review/analyze), opus (synthesize/decide)
+
+**Consensus questions (ask each model independently):**
+1. "What are the top 3 risks in this spec?"
+2. "What is missing from the acceptance criteria?"
+3. "Rate the spec's completeness 1-5 with justification"
+
+**Agreement threshold:**
+- 2/3 agreement on a risk → include in review
+- 3/3 agreement → flag as critical
+- 0/3 agreement → discard (likely noise)
+
+**Synthesis step:** After independent reviews, a single synthesizer model reads all outputs and produces a unified review. The synthesizer must NOT add new concerns — only consolidate and reconcile.
