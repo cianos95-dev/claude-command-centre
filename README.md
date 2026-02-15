@@ -85,6 +85,25 @@ These plugins address adjacent concerns and pair well with this methodology:
 **Relationship to Anthropic's product-management plugin:**
 We pick up where product-management leaves off. That plugin helps PMs write specs, manage roadmaps, and synthesize research. This plugin drives those specs through adversarial review, implementation with mode routing, drift-aware execution, and evidence-based closure.
 
+## Recommended Companion Plugins
+
+SDD is a methodology plugin -- it covers specs, reviews, and orchestration but not code-level patterns or domain knowledge. These companion plugins fill those gaps. None are required.
+
+| Plugin | Category | What It Adds | Install |
+|--------|----------|-------------|---------|
+| **superpowers** | Process | Debugging methodology, brainstorming, code review discipline, parallel agents | `claude plugins add superpowers@superpowers-marketplace` |
+| **developer-essentials** | Domain | Auth patterns, monorepo, SQL optimization, e2e testing | `claude plugins add developer-essentials@claude-code-workflows` |
+| **backend-development** | Domain | API design, microservices, event sourcing, CQRS | `claude plugins add backend-development@claude-code-workflows` |
+| **python-development** | Language | Async patterns, testing, packaging, performance | `claude plugins add python-development@claude-code-workflows` |
+| **code-operations-skills** | Tactical | Bulk code execution, cross-file refactoring | `claude plugins add code-operations-skills@mhattingpete-claude-skills` |
+| **visual-documentation-skills** | Output | SVG diagrams, flowcharts, timelines | `claude plugins add visual-documentation-skills@mhattingpete-claude-skills` |
+| **context7-plugin** | Docs | Library documentation lookup | `claude plugins add context7-plugin@context7-marketplace` |
+| **supabase-pack** | SaaS | Supabase schema, RLS, migrations | `claude plugins add supabase-pack@claude-code-plugins-plus` |
+| **vercel-pack** | SaaS | Vercel deployment, edge functions | `claude plugins add vercel-pack@claude-code-plugins-plus` |
+| **plugin-dev** | Meta | Plugin authoring guides | `claude plugins add plugin-dev@claude-plugins-official` |
+
+See [COMPANIONS.md](COMPANIONS.md) for funnel mapping and overlap evaluation details.
+
 ## Installation
 
 ### From Claude Code
