@@ -1,0 +1,221 @@
+name: Plugin Trigger Evaluation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'skills/**'
+      - 'agents/**'
+      - 'commands/**'
+      - 'hooks/**'
+      - '.claude-plugin/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'skills/**'
+      - 'agents/**'
+      - 'commands/**'
+      - 'hooks/**'
+      - '.claude-plugin/**'
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: 'Component scope to evaluate'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - skills
+          - agents
+          - commands
+          - hooks
+
+permissions:
+  contents: read
+  checks: write
+
+env:
+  NODE_VERSION: '20'
+  CC_PLUGIN_EVAL_VERSION: '0.4.0'
+
+jobs:
+  # Stage 1: Structural analysis (fast, deterministic, no API cost)
+  analyze:
+    name: 'Stage 1: Plugin Analysis'
+    runs-on: ubuntu-latest
+    outputs:
+      skills_count: ${{ steps.analyze.outputs.skills_count }}
+      agents_count: ${{ steps.analyze.outputs.agents_count }}
+      commands_count: ${{ steps.analyze.outputs.commands_count }}
+      hooks_count: ${{ steps.analyze.outputs.hooks_count }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install cc-plugin-eval
+        run: |
+          git clone --depth 1 https://github.com/sjnims/cc-plugin-eval.git /tmp/cc-plugin-eval
+          cd /tmp/cc-plugin-eval
+          npm ci
+          npm run build
+
+      - name: Create eval config
+        run: |
+          cat > /tmp/eval-config.yaml << 'EOF'
+          scope:
+            skills: true
+            agents: true
+            commands: true
+            hooks: true
+            mcp_servers: false
+          EOF
+
+      - name: Run structural analysis
+        id: analyze
+        run: |
+          cd /tmp/cc-plugin-eval
+          npx cc-plugin-eval analyze \
+            -p ${{ github.workspace }} \
+            -c /tmp/eval-config.yaml \
+            -o json 2>&1 | tee /tmp/analysis-output.txt
+
+          # Extract component counts from analysis.json
+          RESULTS_DIR=$(ls -td results/*/20* 2>/dev/null | head -1 || echo "results/spec-driven-development")
+          if [ -f "$RESULTS_DIR/analysis.json" ]; then
+            echo "skills_count=$(jq '.components.skills | length' $RESULTS_DIR/analysis.json)" >> $GITHUB_OUTPUT
+            echo "agents_count=$(jq '.components.agents | length' $RESULTS_DIR/analysis.json)" >> $GITHUB_OUTPUT
+            echo "commands_count=$(jq '.components.commands | length' $RESULTS_DIR/analysis.json)" >> $GITHUB_OUTPUT
+            echo "hooks_count=$(jq '.components.hooks | length' $RESULTS_DIR/analysis.json)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload analysis results
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis-results
+          path: /tmp/cc-plugin-eval/results/
+          retention-days: 30
+
+      - name: Verify expected component counts
+        run: |
+          SKILLS=${{ steps.analyze.outputs.skills_count }}
+          AGENTS=${{ steps.analyze.outputs.agents_count }}
+          COMMANDS=${{ steps.analyze.outputs.commands_count }}
+
+          echo "Skills: $SKILLS (expected: 17)"
+          echo "Agents: $AGENTS (expected: 3)"
+          echo "Commands: $COMMANDS (expected: 11)"
+
+          # Fail if component counts drop (regression detection)
+          if [ "$SKILLS" -lt 17 ]; then
+            echo "::error::Skill count dropped to $SKILLS (expected >= 17)"
+            exit 1
+          fi
+          if [ "$AGENTS" -lt 3 ]; then
+            echo "::error::Agent count dropped to $AGENTS (expected >= 3)"
+            exit 1
+          fi
+          if [ "$COMMANDS" -lt 11 ]; then
+            echo "::error::Command count dropped to $COMMANDS (expected >= 11)"
+            exit 1
+          fi
+
+  # Stage 2+3+4: Full trigger evaluation (expensive, requires API key)
+  evaluate:
+    name: 'Stages 2-4: Trigger Evaluation'
+    runs-on: ubuntu-latest
+    needs: analyze
+    # Only run on main branch pushes or manual dispatch to control costs
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install cc-plugin-eval
+        run: |
+          git clone --depth 1 https://github.com/sjnims/cc-plugin-eval.git /tmp/cc-plugin-eval
+          cd /tmp/cc-plugin-eval
+          npm ci
+          npm run build
+
+      - name: Create eval config
+        run: |
+          cat > /tmp/eval-config.yaml << 'EOF'
+          scope:
+            skills: true
+            agents: true
+            commands: true
+            hooks: true
+            mcp_servers: false
+
+          execution:
+            model: "claude-sonnet-4-5-20250929"
+            max_turns: 5
+            timeout_ms: 60000
+            session_strategy: "batched_by_component"
+            permission_bypass: true
+            disallowed_tools:
+              - Write
+              - Edit
+              - Bash
+
+          budget:
+            max_budget_usd: 50
+
+          output:
+            format: "junit-xml"
+          EOF
+
+      - name: Run full evaluation
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          cd /tmp/cc-plugin-eval
+          npx cc-plugin-eval run \
+            -p ${{ github.workspace }} \
+            -c /tmp/eval-config.yaml \
+            -o junit-xml \
+            --verbose 2>&1 | tee /tmp/eval-output.txt || true
+
+      - name: Upload evaluation results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evaluation-results
+          path: |
+            /tmp/cc-plugin-eval/results/
+          retention-days: 30
+
+      - name: Publish JUnit test results
+        uses: mikepenz/action-junit-report@v5
+        if: always()
+        with:
+          report_paths: '/tmp/cc-plugin-eval/results/**/junit-report.xml'
+          check_name: 'Plugin Trigger Evaluation'
+          fail_on_failure: true
+          summary: |
+            ## Plugin Trigger Evaluation
+            Skills: ${{ needs.analyze.outputs.skills_count }} |
+            Agents: ${{ needs.analyze.outputs.agents_count }} |
+            Commands: ${{ needs.analyze.outputs.commands_count }}
+
+  # Summary check that can be used as branch protection rule
+  eval-gate:
+    name: 'Evaluation Gate'
+    runs-on: ubuntu-latest
+    needs: [analyze]
+    # Always run this gate, even on PRs (uses analysis only)
+    steps:
+      - name: Gate check
+        run: |
+          echo "✅ Plugin structural analysis passed"
+          echo "Skills: ${{ needs.analyze.outputs.skills_count }}"
+          echo "Agents: ${{ needs.analyze.outputs.agents_count }}"
+          echo "Commands: ${{ needs.analyze.outputs.commands_count }}"
+          echo "Hooks: ${{ needs.analyze.outputs.hooks_count }}"

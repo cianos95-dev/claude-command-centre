@@ -1,6 +1,6 @@
 ---
 name: insights-pipeline
-description: Archive Claude Code Insights reports and extract actionable patterns for CLAUDE.md improvement.
+description: Archive Claude Code Insights reports and extract actionable patterns for CLAUDE.md improvement. Use when archiving an Insights HTML report, extracting patterns from Insights data, reviewing trends across multiple reports, or finding CLAUDE.md improvement candidates. Trigger with phrases like "archive insights report", "extract patterns from insights", "review insights trends", "what did insights suggest", "insights to CLAUDE.md", "process insights report".
 ---
 
 # Insights Pipeline

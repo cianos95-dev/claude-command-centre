@@ -4,5 +4,6 @@
   "description": "Drive software from spec to deployment with AI-agent-native ownership boundaries, adversarial review, and execution mode routing.",
   "author": "Cian O'Sullivan",
   "license": "Apache-2.0",
-  "repository": "https://github.com/cianos95-dev/spec-driven-development"
+  "repository": "https://github.com/cianos95-dev/spec-driven-development",
+  "hooks": "hooks/hooks.json"
 }
