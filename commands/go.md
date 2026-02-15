@@ -21,7 +21,8 @@ If no argument is given, look for existing work in progress:
 
 1. Check for `.sdd-state.json` in the project root.
    - **Found AND `phase` is `execution`** -- Resume the execution loop. Show the status view (Step 4), then continue from the current task.
-   - **Found AND `phase` is NOT `execution`** -- Show the status view and suggest the next action for the current phase.
+   - **Found AND `phase` is `replan`** -- The stop hook triggered a replan. Show the status view with `[>] Replan` indicator. Execute the replan protocol: re-read the spec and `.sdd-progress.md`, compare completed work against all acceptance criteria, regenerate remaining tasks, update `.sdd-state.json` (set `phase` back to `execution`, update `totalTasks` and `taskIndex`), then continue executing from the first new task.
+   - **Found AND `phase` is NOT `execution` or `replan`** -- Show the status view and suggest the next action for the current phase.
 2. If no state file exists, query the connected project tracker for agent-assigned issues with status "In Progress".
    - **Found one** -- Load that issue and resume (route through the Issue ID logic in 1C).
    - **Found multiple** -- List all in-progress agent issues and ask the user to choose one.
@@ -105,6 +106,7 @@ When entering the execution phase (either fresh or resuming), create the state a
   "gatesPassed": [1, 2],
   "awaitingGate": null,
   "specPath": "docs/specs/feature-name.md",
+  "replanCount": 0,
   "createdAt": "2026-02-15T12:00:00Z",
   "lastUpdatedAt": "2026-02-15T12:00:00Z"
 }
@@ -193,6 +195,8 @@ Determine each stage's status from two sources: `.sdd-state.json` (execution loo
 
 - `[x]` -- Stage completed
 - `[>]` -- Current active stage
+- `[~]` -- Stage auto-passed (e.g., gate disabled in preferences)
+- `[R]` -- Replan in progress (shown on Execute stage during replanning)
 - `[ ]` -- Stage not yet reached
 
 ## Step 5: Begin Work

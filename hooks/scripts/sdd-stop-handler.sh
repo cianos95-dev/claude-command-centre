@@ -121,6 +121,7 @@ EXEC_MODE=$(echo "$STATE" | jq -r '.executionMode // "quick"' 2>/dev/null) || ex
 AWAITING_GATE=$(echo "$STATE" | jq -r '.awaitingGate // "null"' 2>/dev/null) || exit 0
 LINEAR_ISSUE=$(echo "$STATE" | jq -r '.linearIssue // empty' 2>/dev/null) || exit 0
 SPEC_PATH=$(echo "$STATE" | jq -r '.specPath // empty' 2>/dev/null) || exit 0
+REPLAN_COUNT=$(echo "$STATE" | jq -r '.replanCount // 0' 2>/dev/null) || exit 0
 
 # Normalise "null" string to empty for gate check
 if [[ "$AWAITING_GATE" == "null" ]]; then
@@ -225,6 +226,57 @@ if [[ $TASK_INDEX -ge $TOTAL_TASKS ]]; then
 fi
 
 # ---------------------------------------------------------------------------
+# 10.5. Check for REPLAN signal (before TASK_COMPLETE)
+# ---------------------------------------------------------------------------
+# The agent signals REPLAN when 2+ remaining tasks are invalid, an existing
+# solution was discovered, or an unseen dependency emerged. This triggers
+# mid-execution replanning: re-read spec + progress, regenerate remaining tasks.
+#
+# Checked BEFORE TASK_COMPLETE because a session that signals REPLAN should
+# not also be treated as a task completion.
+
+if echo "$LAST_OUTPUT" | grep -q "REPLAN"; then
+    if [[ "$PREF_REPLAN" != "true" ]]; then
+        # Replan disabled in preferences — treat as incomplete task (fall through to Section 11)
+        :
+    elif [[ $REPLAN_COUNT -ge $MAX_REPLANS ]]; then
+        # Max replans reached — halt the loop
+        jq -n --argjson count "$REPLAN_COUNT" --argjson max "$MAX_REPLANS" \
+            --arg reason "Max replans ($MAX_REPLANS) reached after $REPLAN_COUNT replans. Halting — review .sdd-progress.md and adjust tasks manually." \
+            '{"decision": "block", "reason": $reason}'
+        exit 0
+    else
+        # Replan allowed — update state and block with planning prompt
+        NEW_REPLAN_COUNT=$((REPLAN_COUNT + 1))
+        NEW_GLOBAL_ITER=$((GLOBAL_ITER + 1))
+
+        TEMP_STATE=$(mktemp)
+        UPDATED=$(echo "$STATE" | jq \
+            --argjson rc "$NEW_REPLAN_COUNT" \
+            --argjson gi "$NEW_GLOBAL_ITER" \
+            '.replanCount = $rc | .phase = "replan" | .globalIteration = $gi | .lastUpdatedAt = (now | strftime("%Y-%m-%dT%H:%M:%SZ"))' \
+            2>/dev/null) || true
+
+        if [[ -n "$UPDATED" ]] && echo "$UPDATED" > "$TEMP_STATE" 2>/dev/null && [[ -s "$TEMP_STATE" ]]; then
+            mv "$TEMP_STATE" "$STATE_FILE"
+        else
+            rm -f "$TEMP_STATE"
+            exit 0
+        fi
+
+        REASON="REPLAN triggered for ${LINEAR_ISSUE:-unknown issue} (replan $NEW_REPLAN_COUNT of $MAX_REPLANS)."
+        REASON="$REASON Read the spec${SPEC_PATH:+ at $SPEC_PATH} and .sdd-progress.md."
+        REASON="$REASON Compare completed work against ALL acceptance criteria."
+        REASON="$REASON Regenerate remaining tasks based on what actually exists in the codebase."
+        REASON="$REASON Update .sdd-state.json: set phase back to execution, update totalTasks and taskIndex."
+        REASON="$REASON Then continue executing from the first new task. Signal TASK_COMPLETE when done."
+
+        jq -n --arg reason "$REASON" '{"decision": "block", "reason": $reason}'
+        exit 0
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # 11. Check for TASK_COMPLETE signal in last assistant output
 # ---------------------------------------------------------------------------
 
@@ -262,6 +314,11 @@ if ! echo "$LAST_OUTPUT" | grep -q "TASK_COMPLETE"; then
     if [[ "$EXEC_MODE" == "checkpoint" ]]; then
         REASON="$REASON Pause at any checkpoint gates for human review before proceeding."
     fi
+
+    # Prompt enrichments (configurable via .sdd-preferences.yaml)
+    [[ "$PREF_SUBAGENT" == "true" ]] && REASON="$REASON Use parallel subagents for codebase reads; single subagent for build/test."
+    [[ "$PREF_SEARCH" == "true" ]] && REASON="$REASON Before implementing, search the codebase for existing solutions. Don't assume functionality is missing."
+    [[ "$PREF_AGENTS_FILE" == "true" ]] && [[ -f "$PROJECT_ROOT/.sdd-agents.md" ]] && REASON="$REASON Read .sdd-agents.md for project-specific build commands and codebase patterns."
 
     REASON="$REASON Signal TASK_COMPLETE when done."
 
@@ -318,6 +375,11 @@ fi
 if [[ "$EXEC_MODE" == "checkpoint" ]]; then
     REASON="$REASON Pause at any checkpoint gates for human review before proceeding."
 fi
+
+# Prompt enrichments (configurable via .sdd-preferences.yaml)
+[[ "$PREF_SUBAGENT" == "true" ]] && REASON="$REASON Use parallel subagents for codebase reads; single subagent for build/test."
+[[ "$PREF_SEARCH" == "true" ]] && REASON="$REASON Before implementing, search the codebase for existing solutions. Don't assume functionality is missing."
+[[ "$PREF_AGENTS_FILE" == "true" ]] && [[ -f "$PROJECT_ROOT/.sdd-agents.md" ]] && REASON="$REASON Read .sdd-agents.md for project-specific build commands and codebase patterns."
 
 REASON="$REASON Signal TASK_COMPLETE when done."
 
