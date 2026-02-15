@@ -153,7 +153,35 @@ When working in a multi-tool environment with ~~project-tracker~~, ~~version-con
 
 This discipline compounds. A session that delegates properly can accomplish 3-5x more work than one that lets raw output flood the context window.
 
-> See [references/tool-discipline.md](references/tool-discipline.md) for Linear output discipline, query specificity rules, Firecrawl discipline, and the MCP-first principle.
+## Tool-Specific Output Discipline
+
+These rules control the most common sources of context bloat. They are **behavioral rules**, not reference material — follow them on every tool call.
+
+### ~~project-tracker~~ Output Discipline
+
+- **NEVER** `list_issues` without explicit `limit` (default returns 100KB+ JSON). Always `limit: 10` or less.
+- **NEVER** `list_issues` in main context — always delegate to a subagent returning a markdown table.
+- **Single `get_issue`** OK directly. 2+ issues → subagent.
+- **Collection list operations** (e.g., Zotero `get_collection_items`): same rules.
+
+Subagent return format for issues:
+
+```markdown
+| ID | Title | Status | Assignee | Priority |
+|----|-------|--------|----------|----------|
+```
+
+No descriptions, no full metadata dumps, no nested JSON. Main context uses this table for decisions; call `get_issue` on specific IDs for depth.
+
+### Web Scraping Discipline
+
+- **Prefer lightweight fetch** for single-page reads. Only use batch scraping tools for multi-page operations.
+- **Always set:** `onlyMainContent: true`, `formats: ["markdown"]`, `removeBase64Images: true`
+- **Never** return raw scraped markdown to main context. Summarize in 2-3 bullets or write to file.
+
+### MCP-First Principle
+
+When choosing between an MCP tool and a custom script: **prefer MCP.** MCPs account for only ~6.5% of session tool calls. Scripts only when no MCP exists or the MCP can't reach the operation. Never create new scripts if an MCP can accomplish the task.
 
 ## Pilot Batch Pattern
 

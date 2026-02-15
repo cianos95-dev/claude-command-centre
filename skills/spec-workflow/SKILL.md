@@ -177,7 +177,27 @@ When batched or sequential work spans 2+ sessions, create a **master session pla
 
 **When to use:** Any task that requires both "figuring out what to do" and "doing it" across more than a trivial scope. If the research phase alone could consume >30% of context, split into sessions.
 
-> See [references/scope-discipline.md](references/scope-discipline.md) for the full scope discipline rules, pilot batch patterns, and human review gate enforcement details.
+## Scope Discipline
+
+Scope creep is the primary risk to session success. These rules are **structural guards**, not suggestions.
+
+**Pilot batch before bulk:** When a task affects 10+ items, do a pilot batch of 3-5 first. Verify results, then proceed. This catches systematic errors when they are cheap to fix.
+
+**Approach confirmation:** Before executing a plan touching >5 files or >10 issues, confirm the approach. "The plan is right" and "my execution of the plan is right" are two different claims.
+
+**Scope creep guard:** If during execution you discover new work, create a sub-issue immediately. NEVER add scope to the parent issue. The new work enters the funnel at Stage 0 like everything else.
+
+**Anti-pattern — "while I'm here":** Resist fixing adjacent issues during implementation. Log them as new issues. Adjacent fixes bypass spec and review gates. Only exception: trivially mechanical fixes (typo on the same line) requiring zero judgment.
+
+## Human Review Gate Enforcement
+
+- No gate can be skipped, even for `quick` mode (which still requires Gate 3: PR review)
+- Gates are synchronization points: agent stops, human catches up, then work resumes
+- Passing a gate is an **explicit human action** (approval comment, PR approval), never implicit
+
+**Architectural decisions require split sessions:** Any change to architecture, data models, or cross-cutting concerns → Session 1 produces proposal, human reviews, Session 2 executes only what was approved. The inter-session review is NOT optional.
+
+**Evidence format:** Summary tables (not raw dumps), linked to tracker issues, with explicit recommendation (approve/revise/reject/defer). Human should decide in under 5 minutes of reading.
 
 ## Cross-Skill References
 
