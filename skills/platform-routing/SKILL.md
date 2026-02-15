@@ -1,12 +1,12 @@
 ---
 name: platform-routing
-description: Recommends the optimal Claude platform (Code, Cowork, Desktop Chat) for each SDD workflow stage. Provides hook-free exit checklists for non-CLI contexts and Desktop Chat project patterns for client context routing.
-triggers:
-  - starting a new workflow stage
-  - asking where to do something
-  - beginning spec drafting, triage, or implementation
-  - ending a session in Cowork or Desktop Chat
-  - setting up a new client or project context
+description: |
+  Recommends the optimal Claude platform (Code, Cowork, Desktop Chat) for each SDD workflow stage.
+  Provides hook-free exit checklists for non-CLI contexts and Desktop Chat project patterns for client context routing.
+  Use when starting a new workflow stage, asking where to do something, beginning spec drafting, triage, or implementation,
+  ending a session in Cowork or Desktop Chat, or setting up a new client or project context.
+  Trigger with phrases like "where should I do this", "which platform for spec drafting", "should I use Cowork or Code",
+  "set up a Desktop Chat project", "what's the exit checklist for Cowork".
 ---
 
 # Platform Routing
