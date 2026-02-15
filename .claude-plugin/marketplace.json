@@ -9,14 +9,14 @@
   },
   "metadata": {
     "description": "SDD methodology, PM/Dev workflows, adversarial review, execution mode routing, insights pipeline, and issue lifecycle management — packaged for marketplace distribution.",
-    "version": "1.2.0"
+    "version": "1.3.0"
   },
   "plugins": [
     {
       "name": "spec-driven-development",
       "source": ".",
       "description": "Drive software from spec to deployment with AI-agent-native ownership boundaries, adversarial review, and execution mode routing. Complements Anthropic's product-management plugin.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "author": {
         "name": "Cian O'Sullivan",
         "url": "https://github.com/cianos95-dev"
