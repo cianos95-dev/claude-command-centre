@@ -41,17 +41,49 @@ Can Phase B run in parallel with Phase A?
 
 ## 2. Session Mode Mapping
 
-Each dispatched session needs a Claude Code mode assignment. Map the session's characteristics to the appropriate mode:
+Each dispatched session needs a **UI launch mode** — the permission level selected when starting the Claude Code session. The mapping depends on two factors: the `exec:*` label AND whether the task produces code changes.
 
-| Session Characteristic | Mode | Rationale |
-|------------------------|------|-----------|
-| Investigation, unknown scope | **Plan** | Explore before committing code |
-| Well-specified with testable criteria | **Code** | TDD, start implementation immediately |
-| Config, docs, low-risk changes | **Act** (YOLO) | No approval gates needed |
-| Uncertain, needs human judgment | **Ask** | Approval required per action |
-| Has adversarial review gate | **Plan** then **Code** | Two-phase: plan first, implement after review |
+### Primary mapping (tasks that produce code/file changes)
 
-This maps to but does not replace `exec:*` labels. The `exec:*` label describes the _task's_ execution mode; the Claude Code mode describes the _session's_ interaction level. A `exec:tdd` task runs in **Code** mode. A `exec:pair` task runs in **Ask** mode.
+| Exec Mode | Launch As | Rationale |
+|-----------|-----------|-----------|
+| `quick` | Bypass permissions | Well-defined, no ambiguity, just execute |
+| `tdd` | Bypass permissions | Red-green-refactor is autonomous once started |
+| `pair` | Plan mode | Explore + get human input, then implement after approval |
+| `checkpoint` | Ask permissions | Pauses at gates, human approves each step |
+| `swarm` | Bypass permissions | Subagent orchestration is autonomous |
+| `spike` | Bypass permissions | Exploration that produces artifacts (files, docs) |
+
+### Override: analysis-only tasks
+
+If the deliverable is a **recommendation, evaluation, or decision** (no code/file changes to the repo), Plan mode is counterproductive — the plan IS the deliverable, leaving nothing to do after approval.
+
+| Task Type | Launch As | Rationale |
+|-----------|-----------|-----------|
+| Analysis/evaluation spike | Bypass permissions | Writing the analysis is the work; no implementation phase follows |
+| A/B comparison (no code) | Bypass permissions | Scenario evaluation is autonomous |
+| Investigation with code changes | Plan mode | Plan the approach, then implement |
+
+### How to decide
+
+```
+Does the session produce code/file changes to the repo?
+|
++-- NO (analysis, evaluation, recommendation)
+|   +-- Always: Bypass permissions
+|
++-- YES
+    +-- Is the approach well-defined? --> Bypass permissions (quick, tdd, swarm)
+    +-- Does it need human input on approach? --> Plan mode (pair)
+    +-- Does it need approval at milestones? --> Ask permissions (checkpoint)
+```
+
+Include this in every dispatch prompt as a **"Launch as:"** field:
+
+```
+**Exec mode:** pair | **Launch as:** Plan mode
+**Exec mode:** spike (analysis-only) | **Launch as:** Bypass permissions
+```
 
 ## 3. Adversarial Review Integration
 
@@ -80,7 +112,7 @@ Context:
 - {Link to prior session if resuming}
 - {Cost/resource constraints if any}
 
-Execution mode: {quick|tdd|pair|checkpoint}
+Execution mode: {quick|tdd|pair|checkpoint|swarm|spike} | Launch as: {Bypass permissions|Plan mode|Ask permissions}
 
 Tasks:
 1. {Numbered task list}
