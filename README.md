@@ -168,6 +168,7 @@ Skills are passive knowledge that Claude surfaces automatically when relevant co
 | Skill | Triggers On | What It Provides |
 |-------|------------|-----------------|
 | `spec-workflow` | Funnel stages, workflow planning | 9-stage funnel with gate definitions |
+| `execution-engine` | Task execution, iteration loops | Core execution loop, state machine, replan protocol |
 | `execution-modes` | Task implementation, mode selection | 5-mode taxonomy with decision heuristics |
 | `issue-lifecycle` | Issue closure, status transitions | Agent/human ownership table, closure rules |
 | `adversarial-review` | Spec review, quality assurance | 3 perspectives, 4 architecture options, multi-model runtime |
@@ -374,77 +375,106 @@ These tools pair well with the methodology and offer student pricing:
 - **JetBrains** -- All Products Pack free (alternative IDE)
 - **1Password** -- 1yr free via GitHub Pack (credential management)
 
-## Project Structure
+## Plugin Structure
+
+v1.3.0 follows the [Anthropic plugin-dev](https://github.com/anthropics/claude-plugins) standard layout.
 
 ```
 spec-driven-development/
 ├── .claude-plugin/
-│   └── marketplace.json          # Marketplace manifest
-├── .mcp.json                    # Connector configuration
+│   ├── plugin.json               # Canonical plugin manifest (v1.3.0)
+│   └── marketplace.json          # Marketplace metadata
+├── .mcp.json                     # Connector configuration
+├── agents/
+│   ├── spec-author.md            # Stages 0-3: intake → spec approval
+│   ├── reviewer.md               # Stage 4: adversarial review
+│   └── implementer.md            # Stages 5-7.5: implementation → closure
 ├── commands/
-│   ├── write-prfaq.md           # Interactive PR/FAQ drafting
-│   ├── review.md                # Adversarial spec review (multi-model)
-│   ├── decompose.md             # Epic → atomic task breakdown
-│   ├── start.md                 # Implementation with mode routing
-│   ├── close.md                 # Evidence-based closure with quality scoring
-│   ├── hygiene.md               # Issue health audit
-│   ├── index.md                 # Codebase indexing for spec-aware discovery
-│   └── anchor.md                # Drift prevention via re-anchoring
+│   ├── write-prfaq.md            # Interactive PR/FAQ drafting
+│   ├── review.md                 # Adversarial spec review (multi-model)
+│   ├── decompose.md              # Epic → atomic task breakdown
+│   ├── start.md                  # Implementation with mode routing
+│   ├── close.md                  # Evidence-based closure with quality scoring
+│   ├── hygiene.md                # Issue health audit
+│   ├── index.md                  # Codebase indexing for spec-aware discovery
+│   └── anchor.md                 # Drift prevention via re-anchoring
 ├── skills/
+│   ├── execution-engine/
+│   │   ├── SKILL.md              # Core loop + state machine
+│   │   └── references/
+│   │       ├── replan-protocol.md
+│   │       ├── retry-budget.md
+│   │       └── configuration.md
 │   ├── execution-modes/
-│   │   └── SKILL.md             # 5 modes + decision heuristics
+│   │   └── SKILL.md              # 5 modes + decision heuristics
 │   ├── adversarial-review/
-│   │   ├── SKILL.md             # Perspectives + architecture options
+│   │   ├── SKILL.md              # Perspectives + architecture options
 │   │   └── references/
 │   │       ├── github-action-copilot.yml
 │   │       ├── github-action-api.yml
 │   │       └── multi-model-runtime.sh
+│   ├── spec-workflow/
+│   │   ├── SKILL.md              # 9-stage funnel + 3 approval gates
+│   │   └── references/
+│   │       ├── stage-details.md
+│   │       └── scope-discipline.md
 │   ├── issue-lifecycle/
-│   │   └── SKILL.md             # Ownership table + closure rules
+│   │   ├── SKILL.md              # Ownership table + closure rules
+│   │   └── references/
+│   │       ├── project-hygiene.md
+│   │       └── content-discipline.md
+│   ├── context-management/
+│   │   ├── SKILL.md              # Subagent delegation + context budget
+│   │   └── references/
+│   │       ├── session-economics.md
+│   │       └── tool-discipline.md
+│   ├── project-cleanup/
+│   │   ├── SKILL.md              # Classification matrix, naming rules, deletion protocol
+│   │   └── references/
+│   │       └── do-not-rules.md
 │   ├── prfaq-methodology/
-│   │   ├── SKILL.md             # Working Backwards method
+│   │   ├── SKILL.md              # Working Backwards method
 │   │   └── templates/
 │   │       ├── prfaq-feature.md
 │   │       ├── prfaq-research.md
 │   │       ├── prfaq-infra.md
 │   │       └── prfaq-quick.md
-│   ├── context-management/
-│   │   └── SKILL.md             # Subagent delegation + context budget
-│   ├── spec-workflow/
-│   │   └── SKILL.md             # 9-stage funnel + 3 approval gates
 │   ├── drift-prevention/
-│   │   └── SKILL.md             # Re-anchoring protocol + drift detection
+│   │   └── SKILL.md              # Re-anchoring protocol + drift detection
 │   ├── hook-enforcement/
-│   │   └── SKILL.md             # Runtime hook patterns + constraint enforcement
+│   │   └── SKILL.md              # Runtime hook patterns + constraint enforcement
 │   ├── quality-scoring/
-│   │   └── SKILL.md             # 0-100 scoring rubric + threshold configuration
+│   │   └── SKILL.md              # 0-100 scoring rubric + threshold configuration
 │   ├── codebase-awareness/
-│   │   └── SKILL.md             # Index-informed spec writing + pattern detection
-│   ├── project-cleanup/
-│   │   └── SKILL.md             # Classification matrix, naming rules, deletion protocol
+│   │   └── SKILL.md              # Index-informed spec writing + pattern detection
 │   ├── research-grounding/
-│   │   └── SKILL.md             # Readiness label progression + citation requirements
+│   │   └── SKILL.md              # Readiness label progression + citation requirements
 │   ├── research-pipeline/
-│   │   └── SKILL.md             # 4-stage pipeline: discover, enrich, organize, synthesize
+│   │   └── SKILL.md              # 4-stage pipeline: discover, enrich, organize, synthesize
 │   ├── zotero-workflow/
-│   │   └── SKILL.md             # Plugin sequence, Linter/Cita settings, safety rules
+│   │   └── SKILL.md              # Plugin sequence, Linter/Cita settings, safety rules
 │   └── platform-routing/
-│       └── SKILL.md             # Cross-platform routing, hook-free exit checklist
+│       └── SKILL.md              # Cross-platform routing, hook-free exit checklist
 ├── hooks/
-│   ├── session-start.sh         # Load spec, verify context budget
-│   ├── pre-tool-use.sh          # Verify write alignment with spec
-│   ├── post-tool-use.sh         # Check ownership boundary violations
-│   └── stop.sh                  # Hygiene check, status update, handoff
+│   ├── hooks.json                # Hook registration (all lifecycle events)
+│   ├── session-start.sh          # Load spec, verify context budget
+│   ├── pre-tool-use.sh           # Verify write alignment with spec
+│   ├── post-tool-use.sh          # Check ownership boundary violations
+│   ├── stop.sh                   # Hygiene check, status update, handoff
+│   └── scripts/
+│       └── sdd-stop-handler.sh   # Execution engine stop handler
 ├── examples/
-│   ├── sample-prfaq.md          # Filled-out PR/FAQ
+│   ├── sample-prfaq.md           # Filled-out PR/FAQ
 │   ├── sample-closure-comment.md # Closure comment with quality score
 │   ├── sample-review-findings.md # Adversarial review output
-│   ├── sample-index-output.md   # Codebase index example
-│   └── sample-anchor-output.md  # Re-anchoring context rebuild
-├── CONNECTORS.md                # Data source documentation
+│   ├── sample-index-output.md    # Codebase index example
+│   └── sample-anchor-output.md   # Re-anchoring context rebuild
+├── CONNECTORS.md                 # Data source documentation
 ├── README.md
-└── LICENSE                      # Apache 2.0
+└── LICENSE                       # Apache 2.0
 ```
+
+**Progressive disclosure:** Core methodology lives in each `SKILL.md` (~1,500-2,000 words). Supplementary content (protocol details, anti-patterns, troubleshooting) lives in `references/` subdirectories and is loaded on demand via reference pointers.
 
 ## Example Workflow
 
