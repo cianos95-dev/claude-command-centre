@@ -61,9 +61,9 @@ The synthesizer also flags any disagreements between reviewers and notes where t
 
 ## Architecture Options
 
-Six options for running adversarial reviews, ordered by automation level. Options A-D are the original architectures. Options E-F extend the review methodology with persona-based and debate-driven approaches, validated by A/B testing (CIA-395).
+Eight options for running adversarial reviews, ordered by automation level. Options A-D are the original architectures. Options E-G extend the review methodology with persona-based, debate-driven, and multi-model approaches, validated by A/B testing (CIA-395, CIA-297). Option H routes reviews to external Linear-connected agents.
 
-Options A-D trigger on spec file merge to `docs/specs/` on the main branch of your ~~version-control~~ repository. Options E-F are session-triggered.
+Options A-D trigger on spec file merge to `docs/specs/` on the main branch of your ~~version-control~~ repository. Options E-G are session-triggered. Option H is Linear assignment-triggered (async).
 
 ### Option A: CI Agent (Free)
 
@@ -263,17 +263,55 @@ Deduplicate findings across all 8 reviews. Tag each as `convergent` (both tiers)
 
 **Known limitation:** Haiku Architectural Purist is consistently undertriggered (avg 2.0 findings). The "5 minutes, one critical violation" framing is too restrictive for abstract architectural reasoning. Consider expanding or dropping haiku for this persona on simpler specs.
 
+### Option H: Linear Agent Dispatch (Free/Paid, Experimental)
+
+Routes adversarial review to external Linear-connected agents (cto.new, Codex, Cyrus) instead of in-session Claude subagents. The review runs asynchronously — the agent picks up the issue, reviews the spec, and posts findings as a Linear comment or PR review.
+
+| Dimension | Rating |
+|-----------|--------|
+| Monthly cost | $0 (cto.new) to $20/mo (Codex) |
+| Automation level | Full (Linear assignment trigger) |
+| Review model quality | Variable (depends on agent) |
+| Multi-model capability | Yes (different agents use different model families) |
+| Setup effort | Low (enable agent in Linear, assign issue) |
+| Hands-off score | 9/10 |
+
+**How it works:**
+1. Create a review sub-issue with the spec content in the description
+2. Assign to an external agent (cto.new for free, Codex for GPT perspective)
+3. Agent reviews asynchronously and posts findings
+4. Human or Claude synthesizes findings from multiple agent reviews
+
+**Agent-specific review strengths:**
+| Agent | Review Strength | Weakness |
+|-------|----------------|----------|
+| **cto.new** | Multi-LLM auto-router; wide model diversity for free | No structured review format; findings may lack severity ratings |
+| **Codex** | Structured PR code review with P1/P2 findings; unique GPT perspective | Requires $20/mo; no spec-level review (PR-level only) |
+| **Cyrus** | Claude-native; self-verification catches its own false positives | BYOK token cost; 3-5x token multiplier |
+
+**When to use Option H:**
+- When you want cross-model-family diversity at zero/low cost (GPT via Codex + Claude via Cyrus + multi-LLM via cto.new)
+- When review can be asynchronous (no immediate feedback needed)
+- When Options E-G feel heavyweight for the spec complexity
+
+**When NOT to use Option H:**
+- When structured persona-based review is needed (agents don't support SDD's persona framework)
+- When the spec requires codebase awareness (external agents may not have full repo context)
+- When immediate feedback is needed (async turnaround varies from minutes to hours)
+
+**Replaces:** Options A and B (GitHub Actions → CI/premium agent). Option H achieves the same async agent review via Linear assignment instead of GitHub Actions YAML, which is simpler to configure and maintain.
+
 ### Comparison Summary
 
-| Dimension | A: CI | B: Premium | C: API | D: In-Session | E: Persona | F: Debate | G: Tier Diversity |
-|-----------|-------|------------|--------|---------------|------------|-----------|-------------------|
-| Monthly cost | $0 | ~$40 | Variable | $0 | $0 | $0 | $0 |
-| Automation | Full | Full | Full | Manual | Manual | Manual | Manual |
-| Model quality | Good | Very Good | Best | Very Good | Best | Best | Best |
-| Multi-model | No | Limited | Yes | Yes | No | Optional | Yes (native) |
-| Setup effort | Low | Low | Medium | None | None | Low | Low |
-| Hands-off | 8/10 | 9/10 | 9/10 | 6/10 | 7/10 | 5/10 | 6/10 |
-| Unique finding rate | ~23% | ~25% | ~30% | ~23% | ~42% | TBD | ~55% |
+| Dimension | A: CI | B: Premium | C: API | D: In-Session | E: Persona | F: Debate | G: Tier Diversity | H: Agent Dispatch |
+|-----------|-------|------------|--------|---------------|------------|-----------|-------------------|-------------------|
+| Monthly cost | $0 | ~$40 | Variable | $0 | $0 | $0 | $0 | $0-20 |
+| Automation | Full | Full | Full | Manual | Manual | Manual | Manual | Full |
+| Model quality | Good | Very Good | Best | Very Good | Best | Best | Best | Variable |
+| Multi-model | No | Limited | Yes | Yes | No | Optional | Yes (native) | Yes (cross-family) |
+| Setup effort | Low | Low | Medium | None | None | Low | Low | Low |
+| Hands-off | 8/10 | 9/10 | 9/10 | 6/10 | 7/10 | 5/10 | 6/10 | 9/10 |
+| Unique finding rate | ~23% | ~25% | ~30% | ~23% | ~42% | TBD | ~55% | TBD |
 
 ## Hybrid Combinations
 
@@ -294,6 +332,10 @@ Options are not mutually exclusive. Effective combinations include:
 **Option F + C (Debate + external model):** Structured debate with 4 Claude personas in Rounds 1-2, plus 1 external model (via OpenRouter) as a 5th voice in Round 2 only. The external model reads all Round 1 outputs and provides cross-examination from a genuinely different reasoning architecture. Adds ~$0.10-0.50 per review depending on model choice.
 
 **Option E + G (Tiered persona review):** Run Option G's 3-phase pipeline as the primary review pass. Use the tier diversity to identify convergent findings (highest confidence) and tier-exclusive findings (surface vs depth insights). The sonnet-only findings provide deep technical coverage; the haiku-only findings catch user-facing confusion and strategic identity issues at near-zero marginal cost.
+
+**Option E + H (Persona + external agent):** Run the persona panel (Option E) for SDD-native review, then dispatch to cto.new or Codex (Option H) for cross-model-family perspective. The external agent finds issues that all-Claude reviews miss. Synthesize both sets of findings manually. Best for high-impact specs where model diversity is worth the extra review cycle.
+
+**Option H as A/B replacement:** For teams currently using Options A or B (GitHub Actions-triggered CI/premium agent review), Option H achieves the same async review pattern with simpler setup — Linear assignment instead of YAML workflows. Migration path: disable the GitHub Actions workflow, enable the agent in Linear, update the dispatch template to assign review issues to the agent.
 
 ## Review Output Format
 

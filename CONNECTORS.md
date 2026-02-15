@@ -31,6 +31,67 @@ This plugin works best with the following data sources connected. Configure them
 | **~~design~~** | Visual prototyping handoff | Stage 5 | Figma, v0 |
 | **~~observability~~** | Traces, metrics, health monitoring | Stage 7 | Honeycomb, Datadog |
 
+## Agent Connectors
+
+External AI agents that integrate with the SDD funnel via ~~project-tracker~~ (Linear) assignment or webhook dispatch. These are optional accelerators — Claude Code remains the primary agent for all stages.
+
+### Adopted Agents
+
+| Agent | SDD Stages | Dispatch Method | Cost | Free Tier Viable |
+|-------|-----------|-----------------|------|------------------|
+| **cto.new** (Engine Labs) | 0 (intake), 5-6 (implement) | Linear assignment or MCP webhook (`mcp.enginelabs.ai/mcp`) | Free | Yes |
+| **Sentry** | 7 (error verification) | Error tracking integration → auto-issue creation | Free tier | Yes |
+| **Cursor** | 6 (implement, exec:tdd) | Linear assignment (native integration) | $20/mo (Pro) | No |
+| **GitHub Copilot** | 6 (implement, exec:quick) | GitHub Actions label-based auto-assignment | Free tier | Yes |
+
+### Conditional Agents
+
+Adoption depends on budget and specific workflow needs. Not required for core SDD functionality.
+
+| Agent | SDD Stages | Unique Value | Cost | Condition |
+|-------|-----------|--------------|------|-----------|
+| **Codex** (OpenAI) | 4 (code review), 6-7 | Structured PR code review with P1/P2 findings — no other agent offers this | $20/mo (ChatGPT Plus) | Adopt if GPT diversity + PR review automation is valued |
+| **Cyrus** (Ceedar AI) | 6 (exec:tdd, exec:pair) | Git worktree isolation per issue, 3-iteration self-verification loop | Free (BYOK — requires Anthropic API key) | Adopt if Claude consistency + self-verification is valued; accept 3-5x token cost |
+
+### Deferred Agents
+
+| Agent | Role | Why Deferred | Revisit When |
+|-------|------|-------------|--------------|
+| **Tembo** | Meta-orchestrator (wraps Cursor, Codex, Claude Code) | 1-repo limit on free tier; not validated for SDD workflow | Post-conference evaluation; potential Phase 3 orchestration backend |
+
+### Demoted Agents
+
+| Agent | Originally | Demotion Reason |
+|-------|-----------|-----------------|
+| **ChatPRD** | Stage 0-3 candidate | Does not support PR/FAQ templates; missing adversarial review and research grounding. Keep connected but do not invest in SDD integration. Optional Stage 0 supplement only. |
+
+### Agent-to-Stage Mapping
+
+| Funnel Stage | Primary Agent | Optional Accelerators |
+|---|---|---|
+| Stage 0: Intake | Claude (spec-author) | cto.new (plan agent), ChatPRD (optional) |
+| Stage 1-3: Ideation → Spec | Claude (spec-author) | — (sole agent) |
+| Stage 4: Adversarial Review | Claude (persona panel) | Codex (PR code review) |
+| Stage 5: Prototype | Claude (implementer) | cto.new |
+| Stage 6: Implementation | Claude Code | cto.new (exec:quick), Cursor (exec:tdd), Copilot (exec:quick), Cyrus (exec:tdd/pair) |
+| Stage 7: Verification | Sentry (primary) | Codex (code review), CI/CD |
+| Stage 7.5: Closure | Claude (implementer) | — (sole agent) |
+
+### Agent Credential Patterns
+
+Agent credentials are separate from application runtime credentials. Each agent authenticates via its own mechanism:
+
+| Agent | Auth Method | Credential Location |
+|-------|------------|-------------------|
+| cto.new | Linear OAuth (automatic on enable) | Linear workspace settings |
+| Sentry | DSN + Linear integration | Sentry project settings → Linear integration |
+| Cursor | Linear OAuth (native) | Cursor settings → Integrations |
+| GitHub Copilot | GitHub App (automatic) | Repository settings → Copilot |
+| Codex | Linear OAuth (via ChatGPT Plus) | ChatGPT settings → Integrations |
+| Cyrus | Anthropic API key (BYOK) | Cyrus config or Linear integration |
+
+---
+
 ## Decided Observability Stack
 
 For teams that want an opinionated starting point, this is the stack validated through real SDD projects. Each tool fills a distinct role — avoid overlap by following the stage mapping.
@@ -86,17 +147,17 @@ To customize, edit `.mcp.json` and update the server URLs to match your organiza
 
 How each connector maps to the 9-stage funnel:
 
-| Funnel Stage | Required Connectors | Recommended | Optional |
-|---|---|---|---|
-| Stage 0: Intake | project-tracker | -- | communication |
-| Stage 1-2: Ideation + Analytics | project-tracker | analytics | research-library, web-research |
-| Stage 3: PR/FAQ Draft | project-tracker, version-control | -- | -- |
-| Stage 4: Adversarial Review | version-control | ci-cd | -- |
-| Stage 5: Visual Prototype | -- | deployment, component-gen | design |
-| Stage 6: Implementation | version-control | ci-cd, email-marketing | geolocation |
-| Stage 7: Verification | version-control | deployment, analytics, error-tracking, email-marketing | observability |
-| Stage 7.5: Closure | project-tracker | -- | -- |
-| Stage 8: Handoff | project-tracker | -- | communication |
+| Funnel Stage | Required Connectors | Recommended | Optional | Agent Accelerators |
+|---|---|---|---|---|
+| Stage 0: Intake | project-tracker | -- | communication | cto.new, ChatPRD |
+| Stage 1-2: Ideation + Analytics | project-tracker | analytics | research-library, web-research | -- |
+| Stage 3: PR/FAQ Draft | project-tracker, version-control | -- | -- | -- |
+| Stage 4: Adversarial Review | version-control | ci-cd | -- | Codex (PR review) |
+| Stage 5: Visual Prototype | -- | deployment, component-gen | design | cto.new |
+| Stage 6: Implementation | version-control | ci-cd, email-marketing | geolocation | cto.new, Cursor, Copilot, Cyrus |
+| Stage 7: Verification | version-control | deployment, analytics, error-tracking, email-marketing | observability | Sentry, Codex |
+| Stage 7.5: Closure | project-tracker | -- | -- | -- |
+| Stage 8: Handoff | project-tracker | -- | communication | -- |
 
 ---
 

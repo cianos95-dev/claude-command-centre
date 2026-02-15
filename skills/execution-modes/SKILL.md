@@ -206,6 +206,64 @@ Every implementation attempt has a retry budget. The budget prevents brute-force
 
 **Budget applies per-issue, not per-session.** If a session ends mid-retry, the next session inherits the retry count. Document retry state in the issue comment so it survives session boundaries.
 
+## Agent Selection
+
+After selecting an execution mode, optionally select an external agent to accelerate implementation. Claude Code remains the default for all modes — external agents are optional accelerators, not replacements.
+
+### Agent Routing Table
+
+| Exec Mode | Default Agent | Optional Accelerators | Notes |
+|-----------|---------------|----------------------|-------|
+| `exec:quick` | Claude Code | **cto.new** (free), Codex ($20/mo), GitHub Copilot (free) | cto.new is the recommended free-tier accelerator for well-defined tasks |
+| `exec:tdd` | Claude Code | **Cursor** ($20/mo), Cyrus (free, BYOK) | Cursor has native Linear integration; Cyrus adds 3-iteration self-verification |
+| `exec:pair` | Claude Code | Cyrus (async pairing) | Claude Code is primary for interactive pairing; Cyrus for async |
+| `exec:checkpoint` | Claude Code | — | Human-gated; no agent substitution appropriate |
+| `exec:swarm` | Claude Code | Tembo (Phase 3, deferred) | Tembo wraps multiple agents but is not yet validated for SDD |
+
+### Agent Adoption Status
+
+| Agent | Status | SDD Stage Fit | Cost | Dispatch Method |
+|-------|--------|---------------|------|-----------------|
+| **cto.new** | Adopted | Stages 0, 5-6 | Free (anonymized data training) | Linear assignment or MCP webhook |
+| **Sentry** | Adopted | Stage 7 | Free tier | Error tracking → auto-issue creation |
+| **Cursor** | Adopted | Stage 6 | $20/mo (Pro required for agent features) | Linear assignment (native integration) |
+| **GitHub Copilot** | Adopted | Stage 6 | Free | GitHub Actions label-based auto-assignment |
+| **Codex** | Conditional | Stages 4, 6-7 | $20/mo (ChatGPT Plus) | Linear assignment |
+| **Cyrus** | Conditional | Stage 6 | Free (BYOK — requires Anthropic API key) | Linear assignment |
+| **Tembo** | Deferred | Stages 5-6 (orchestrator) | Free (5 credits/day, 1 repo) | Post-conference evaluation |
+| **ChatPRD** | Demoted | Stage 0 only | — | Optional supplement; does not align with PR/FAQ methodology |
+
+### Agent Selection Decision Tree
+
+```
+Is this an exec:quick task with clear acceptance criteria?
+|
++-- YES --> Is cto.new enabled?
+|           |
+|           +-- YES --> Assign to cto.new (free, fastest)
+|           +-- NO  --> Claude Code (default) or Copilot (PR generation)
+|
++-- NO --> Is this exec:tdd?
+           |
+           +-- YES --> Is Cursor Pro available?
+           |           |
+           |           +-- YES --> Cursor (native Linear + multi-file refactoring)
+           |           +-- NO  --> Claude Code (default) or Cyrus (self-verification)
+           |
+           +-- NO --> Claude Code (default for pair/checkpoint/swarm)
+```
+
+### Free Tier Bundle
+
+For SDD's student-friendly zero-cost tier, only these agents are viable:
+
+- **Claude Code** (via Claude Max or API)
+- **cto.new** (free, no credit card)
+- **GitHub Copilot** (free tier available)
+- **Cyrus Community** (free, but requires Anthropic API key — BYOK cost)
+
+All other agents require paid subscriptions. The free tier bundle provides full SDD stage coverage (0-7.5) without any paid agent dependencies.
+
 ## Cross-Skill References
 
 - **parallel-dispatch** -- When a master plan has 2+ independent phases, use parallel dispatch rules to launch concurrent sessions. `exec:swarm` handles parallelism _within_ a session via subagents; parallel dispatch handles parallelism _across_ sessions.

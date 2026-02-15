@@ -45,14 +45,14 @@ Each dispatched session needs a **UI launch mode** — the permission level sele
 
 ### Primary mapping (tasks that produce code/file changes)
 
-| Exec Mode | Launch As | Rationale |
-|-----------|-----------|-----------|
-| `quick` | Bypass permissions | Well-defined, no ambiguity, just execute |
-| `tdd` | Bypass permissions | Red-green-refactor is autonomous once started |
-| `pair` | Plan mode | Explore + get human input, then implement after approval |
-| `checkpoint` | Ask permissions | Pauses at gates, human approves each step |
-| `swarm` | Bypass permissions | Subagent orchestration is autonomous |
-| `spike` | Bypass permissions | Exploration that produces artifacts (files, docs) |
+| Exec Mode | Launch As | Agent Options | Rationale |
+|-----------|-----------|---------------|-----------|
+| `quick` | Bypass permissions | Claude Code, cto.new, Copilot | Well-defined, no ambiguity, just execute |
+| `tdd` | Bypass permissions | Claude Code, Cursor, Cyrus | Red-green-refactor is autonomous once started |
+| `pair` | Plan mode | Claude Code | Explore + get human input, then implement after approval |
+| `checkpoint` | Ask permissions | Claude Code | Pauses at gates, human approves each step |
+| `swarm` | Bypass permissions | Claude Code (Tembo Phase 3) | Subagent orchestration is autonomous |
+| `spike` | Bypass permissions | Claude Code, cto.new | Exploration that produces artifacts (files, docs) |
 
 ### Override: analysis-only tasks
 
@@ -181,6 +181,9 @@ Feedback from external agents routes back into the SDD pipeline as follows:
 | Sentry | Error alerts post-deploy | New issue via spec-author, or reopen if regression |
 | Linear Bot | Issue-PR linking | Automatic, no agent action needed |
 | Cursor | Quick fix PRs (<5 lines) | Copilot review, merge, bypass SDD |
+| cto.new | Implementation PR or branch | Review via standard PR process; compare with Claude Code output if both assigned |
+| Codex | PR code review findings (P1/P2) | Implementer addresses P1 before merge; P2 at discretion |
+| Cyrus | Self-verified PR (3 iterations) | Light review — Cyrus self-verifies, but human spot-checks |
 
 For parallel sessions: each session monitors feedback only for its own issue/PR. Cross-session feedback (e.g., Sentry error caused by interaction between two parallel PRs) routes to the human for triage.
 
@@ -221,10 +224,19 @@ Each session must, on completion:
 - **Linear race conditions:** If two sessions update the same issue, the later write wins. Avoid by assigning one issue per session.
 - **Failed sessions:** If a parallel session fails or is abandoned, update its status in the session registry to "Failed" with a brief reason. The next batch should not depend on failed session outputs without human review.
 
+## Agent-Aware Dispatch
+
+When dispatching parallel sessions to different agents, additional constraints apply:
+
+- **One agent per session.** Do not assign the same issue to multiple agents simultaneously. Linear assignment is exclusive.
+- **Branch conventions differ.** Claude Code uses `claude/{issue-id}-{slug}`. External agents use their own conventions (Cursor: `cursor/{issue-id}`, Copilot: auto-named). Document the branch in the session registry.
+- **Only Claude Code sessions have full SDD awareness.** External agents (cto.new, Cursor, Codex) do not read SDD skill files. Provide essential context (acceptance criteria, constraints) in the issue description, not in skill references.
+- **Feedback reconciliation.** If two agents produce PRs for related issues, reconcile manually. External agents do not have cross-session awareness.
+
 ## Cross-Skill References
 
-- **execution-modes** -- `exec:swarm` for 5+ independent subagent tasks within a single session; parallel dispatch is for multiple independent _sessions_
+- **execution-modes** -- `exec:swarm` for 5+ independent subagent tasks within a single session; parallel dispatch is for multiple independent _sessions_. See also the **Agent Selection** section for mode-to-agent routing.
 - **context-management** -- Session exit summary tables, subagent return discipline, context budget protocol
-- **adversarial-review** -- Multi-model consensus protocol for reconciling parallel session outputs; Options A-D for review timing
+- **adversarial-review** -- Multi-model consensus protocol for reconciling parallel session outputs; Options A-H for review timing
 - **execution-engine** -- State persistence across session boundaries via `.sdd-state.json` and `.sdd-progress.md`
 - **spec-workflow** -- Master plan pattern governs the phase decomposition that feeds dispatch decisions
