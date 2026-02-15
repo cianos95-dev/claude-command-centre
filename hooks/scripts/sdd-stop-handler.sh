@@ -54,6 +54,59 @@ if [[ -z "$STATE" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
+# 2.5. Load preferences from .sdd-preferences.yaml (via yq)
+# ---------------------------------------------------------------------------
+# All preferences have safe defaults. If yq is missing or the file does not
+# exist, every preference variable is set to its default value.
+#
+# Requires: yq (https://github.com/mikefarah/yq) — install with:
+#   brew install yq
+#
+# Preference file: $PROJECT_ROOT/.sdd-preferences.yaml
+# Schema reference: examples/sample-preferences.yaml
+
+PREFS_FILE="$PROJECT_ROOT/.sdd-preferences.yaml"
+
+# --- Set all defaults first ---
+GATE1_ENABLED="true"
+GATE2_ENABLED="true"
+GATE3_ENABLED="true"
+PREF_MAX_TASK_ITER=""          # empty = use state file value
+PREF_MAX_GLOBAL_ITER=""        # empty = use state file value
+PREF_DEFAULT_MODE=""           # empty = use state file value
+PREF_SUBAGENT="true"
+PREF_SEARCH="true"
+PREF_AGENTS_FILE="true"
+PREF_REPLAN="true"
+MAX_REPLANS=2
+
+# --- Attempt to load from file via yq ---
+if command -v yq &>/dev/null && [[ -f "$PREFS_FILE" ]]; then
+    # Gates
+    _g1=$(yq '.gates.spec_approval // "true"' "$PREFS_FILE" 2>/dev/null) && GATE1_ENABLED="$_g1"
+    _g2=$(yq '.gates.review_acceptance // "true"' "$PREFS_FILE" 2>/dev/null) && GATE2_ENABLED="$_g2"
+    _g3=$(yq '.gates.pr_review // "true"' "$PREFS_FILE" 2>/dev/null) && GATE3_ENABLED="$_g3"
+
+    # Execution overrides (only apply if non-null/non-empty)
+    _mti=$(yq '.execution.max_task_iterations // ""' "$PREFS_FILE" 2>/dev/null) && [[ -n "$_mti" ]] && PREF_MAX_TASK_ITER="$_mti"
+    _mgi=$(yq '.execution.max_global_iterations // ""' "$PREFS_FILE" 2>/dev/null) && [[ -n "$_mgi" ]] && PREF_MAX_GLOBAL_ITER="$_mgi"
+    _dm=$(yq '.execution.default_mode // ""' "$PREFS_FILE" 2>/dev/null) && [[ "$_dm" != "null" ]] && [[ -n "$_dm" ]] && PREF_DEFAULT_MODE="$_dm"
+
+    # Prompt enrichments
+    _ps=$(yq '.prompts.subagent_discipline // "true"' "$PREFS_FILE" 2>/dev/null) && PREF_SUBAGENT="$_ps"
+    _pb=$(yq '.prompts.search_before_build // "true"' "$PREFS_FILE" 2>/dev/null) && PREF_SEARCH="$_pb"
+    _pa=$(yq '.prompts.agents_file // "true"' "$PREFS_FILE" 2>/dev/null) && PREF_AGENTS_FILE="$_pa"
+
+    # Replan
+    _re=$(yq '.replan.enabled // "true"' "$PREFS_FILE" 2>/dev/null) && PREF_REPLAN="$_re"
+    _mr=$(yq '.replan.max_replans_per_session // "2"' "$PREFS_FILE" 2>/dev/null) && MAX_REPLANS="$_mr"
+fi
+
+# --- Apply execution overrides to state-derived caps ---
+# These override the values parsed from state in Section 3, so we store them
+# and apply after Section 3 parsing.
+
+# ---------------------------------------------------------------------------
 # 3. Parse state fields (with safe defaults)
 # ---------------------------------------------------------------------------
 
@@ -73,6 +126,11 @@ SPEC_PATH=$(echo "$STATE" | jq -r '.specPath // empty' 2>/dev/null) || exit 0
 if [[ "$AWAITING_GATE" == "null" ]]; then
     AWAITING_GATE=""
 fi
+
+# --- Apply preference overrides to state-derived caps ---
+[[ -n "$PREF_MAX_TASK_ITER" ]] && MAX_TASK_ITER="$PREF_MAX_TASK_ITER"
+[[ -n "$PREF_MAX_GLOBAL_ITER" ]] && MAX_GLOBAL_ITER="$PREF_MAX_GLOBAL_ITER"
+[[ -n "$PREF_DEFAULT_MODE" ]] && EXEC_MODE="$PREF_DEFAULT_MODE"
 
 # ---------------------------------------------------------------------------
 # 4. Extract last assistant output from transcript (for TASK_COMPLETE signal)

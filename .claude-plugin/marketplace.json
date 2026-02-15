@@ -39,6 +39,7 @@
       "commands": [
         "./commands/anchor.md",
         "./commands/close.md",
+        "./commands/config.md",
         "./commands/decompose.md",
         "./commands/go.md",
         "./commands/hygiene.md",

@@ -22,6 +22,51 @@ Three control mechanisms keep the loop safe:
 
 The loop is designed for unattended execution. A human starts it with `/sdd:go`, walks away, and returns to find either completed work or a clear explanation of where and why the loop stopped.
 
+## Disposable Plan Principle
+
+The task decomposition produced by `/sdd:decompose` is a hypothesis, not a contract. During execution, the agent discovers things the planner could not have known: existing utilities, unexpected dependencies, acceptance criteria already met by prior tasks.
+
+### Authority Hierarchy
+
+When sources of truth conflict during execution, resolve in this order (highest authority first):
+
+| Priority | Source | Reasoning |
+|----------|--------|-----------|
+| 1 (highest) | `.sdd-progress.md` | Reflects what was actually built and learned |
+| 2 | Code state (git) | The ground truth of what exists |
+| 3 | Spec (acceptance criteria) | The "what", not the "how" |
+| 4 | Task list (decomposition) | A plan that may already be stale |
+| 5 (lowest) | Linear sub-issues | Administrative artifacts, not execution authority |
+
+### When to Replan
+
+The agent should signal `REPLAN` (instead of `TASK_COMPLETE`) when:
+
+- **2+ remaining tasks are invalid** — the codebase already has the functionality, or a dependency makes them unnecessary
+- **An existing solution was discovered** — a utility, library, or pattern that renders planned work redundant
+- **An unseen dependency emerged** — remaining tasks cannot proceed in the planned order
+
+The agent should NOT replan when:
+
+- Only 1 task needs minor adjustment (adapt and complete it)
+- The current task is simply hard (that is what the retry budget is for)
+- Cosmetic differences from the plan (naming, file locations) exist but the intent is met
+
+### Replan Protocol
+
+When `REPLAN` is enabled in preferences and the agent signals `REPLAN`:
+
+1. The stop hook detects `REPLAN` in the transcript (checked before `TASK_COMPLETE`)
+2. State is updated: `replanCount` increments, phase set to `replan`
+3. A new session starts with a planning-specific prompt: re-read the spec and `.sdd-progress.md`, compare completed work against acceptance criteria, and regenerate remaining tasks
+4. After replanning, the phase returns to `execution` and the loop continues with the new task list
+
+Replan is capped at `max_replans_per_session` (default: 2) to prevent infinite loops.
+
+### Linear Sync After Replan
+
+After a replan, sub-issues in Linear are updated only after the replanned tasks are committed to `.sdd-progress.md` and `.sdd-state.json`. This ensures Linear reflects reality, not optimistic plans.
+
 ## How It Works
 
 ### Step-by-step flow
@@ -71,6 +116,7 @@ The engine maintains two files in the project root. Both are gitignored.
   "gatesPassed": [1, 2],
   "awaitingGate": null,
   "specPath": "docs/specs/user-preferences.md",
+  "replanCount": 0,
   "createdAt": "2026-02-15T12:00:00Z",
   "lastUpdatedAt": "2026-02-15T12:30:00Z"
 }
@@ -81,7 +127,7 @@ The engine maintains two files in the project root. Both are gitignored.
 | Field | Type | Description |
 |-------|------|-------------|
 | `linearIssue` | string | The Linear issue ID being worked on. Used for status syncing. |
-| `phase` | enum | Current funnel phase: `intake`, `spec`, `review`, `decompose`, `execution`, `verification`, `closure`. The engine only operates during `execution`. |
+| `phase` | enum | Current funnel phase: `intake`, `spec`, `review`, `decompose`, `execution`, `replan`, `verification`, `closure`. The engine operates during `execution` and `replan`. |
 | `taskIndex` | number | 0-based index of the current task in the decomposed list. |
 | `totalTasks` | number | Total number of decomposed tasks. Loop completes when `taskIndex >= totalTasks`. |
 | `taskIteration` | number | Current retry attempt for this task (1-based). Resets to 1 when advancing to the next task. |
@@ -92,6 +138,7 @@ The engine maintains two files in the project root. Both are gitignored.
 | `gatesPassed` | number[] | Array of gate numbers (1, 2, 3) already passed by this issue. Gates are passed before execution begins. |
 | `awaitingGate` | number \| null | If set, the loop is paused waiting for this gate to be approved. `null` means no gate is blocking. |
 | `specPath` | string | Relative path to the spec file. The agent reads this for acceptance criteria. |
+| `replanCount` | number | Number of times the agent has replanned during this execution. Capped by `max_replans_per_session` preference. |
 | `createdAt` | ISO 8601 | When the state file was created (execution started). |
 | `lastUpdatedAt` | ISO 8601 | When the state file was last modified by the stop hook. |
 

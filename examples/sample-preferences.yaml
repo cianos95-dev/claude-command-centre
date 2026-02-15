@@ -1,0 +1,69 @@
+# .sdd-preferences.yaml — SDD Plugin Preferences
+#
+# Place this file in your project root to customise the SDD workflow.
+# All values shown below are the defaults. Only override what you need.
+#
+# Generate this file:  /sdd:config --reset
+# View merged config:  /sdd:config --show
+# Edit a single value: /sdd:config gates.pr_review=false
+#
+# Requires: yq (brew install yq) for stop handler parsing.
+# If yq is not installed, all defaults apply automatically.
+
+# ---------------------------------------------------------------------------
+# Gates — Human approval checkpoints
+# ---------------------------------------------------------------------------
+# The SDD funnel has 3 approval gates. Set to false to auto-pass a gate.
+# Auto-passed gates show as [~] in the status view (vs [x] for human-passed).
+#
+# Presets:
+#   Full Ceremony (default): all true — every gate requires human approval
+#   Solo Developer:          spec_approval: false, review_acceptance: false
+#   Autonomous:              all false — zero gates, fully autonomous execution
+
+gates:
+  spec_approval: true       # Gate 1 — Approve spec before adversarial review
+  review_acceptance: true   # Gate 2 — Accept review findings before decomposition
+  pr_review: true           # Gate 3 — Review PR before merge
+
+# ---------------------------------------------------------------------------
+# Execution — Loop parameters
+# ---------------------------------------------------------------------------
+
+execution:
+  max_task_iterations: 5    # Retries per task before blocking (min: 1, max: 20)
+  max_global_iterations: 50 # Total loop iterations across all tasks (min: 1, max: 200)
+  default_mode: null        # Override the exec mode heuristic. One of:
+                            #   null (use heuristic), quick, tdd, pair, checkpoint, swarm
+
+# ---------------------------------------------------------------------------
+# Prompts — Continue prompt enrichments
+# ---------------------------------------------------------------------------
+# These add instructions to the stop hook's continue prompt when restarting
+# a session for the next task. Each adds ~10-15 words to the prompt.
+
+prompts:
+  subagent_discipline: true   # "Use parallel subagents for reads; single for build/test"
+  search_before_build: true   # "Search codebase for existing solutions before implementing"
+  agents_file: true           # "Read .sdd-agents.md for project-specific patterns"
+
+# ---------------------------------------------------------------------------
+# Cowork — Behavior when running in Claude Cowork
+# ---------------------------------------------------------------------------
+# Cowork has no file system, hooks, git, or subagents. These settings control
+# how the plugin adapts to Cowork's constraints.
+
+cowork:
+  default_to_planning: true   # Route to planning/spec stages, not building
+  warn_on_build: true         # Show warning when user attempts to build in Cowork
+
+# ---------------------------------------------------------------------------
+# Replan — Mid-execution plan revision
+# ---------------------------------------------------------------------------
+# When the agent discovers that remaining tasks are invalid (codebase has
+# existing solutions, unseen dependency, 2+ tasks need rework), it can signal
+# REPLAN instead of TASK_COMPLETE to trigger mid-execution replanning.
+
+replan:
+  enabled: true               # Allow REPLAN signal during execution
+  max_replans_per_session: 2  # Cap replans to prevent infinite loops (min: 1, max: 10)
