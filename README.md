@@ -430,8 +430,7 @@ spec-driven-development/
 │   │   ├── SKILL.md              # Perspectives + architecture options
 │   │   └── references/
 │   │       ├── github-action-copilot.yml
-│   │       ├── github-action-api.yml
-│   │       └── multi-model-runtime.sh
+│   │       └── github-action-api.yml
 │   ├── spec-workflow/
 │   │   ├── SKILL.md              # 9-stage funnel + 3 approval gates
 │   │   └── references/

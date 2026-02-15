@@ -209,17 +209,71 @@ A dedicated debate-synthesizer (not one of the 4 personas) reads all Round 1 + R
 
 **State persistence:** Each round's output is written to checkpoint files (`round-1-{persona}.md`, `round-2-{persona}.md`, `synthesis.md`). If a session crashes mid-debate, it can resume from the last completed round.
 
+### Option G: Multi-Model Tier Diversity (Free, Validated)
+
+Extends Option E (Persona Panel) by running each persona at TWO model tiers — deep (sonnet) and surface (haiku) — then synthesizing with opus. The two tiers find genuinely different things: sonnet excels at integration analysis and quantitative risk; haiku catches user confusion and strategic identity issues.
+
+| Dimension | Rating |
+|-----------|--------|
+| Monthly cost | $0 (Claude Max subscription) |
+| Automation level | Manual (session-triggered) |
+| Review model quality | Best (cross-tier validation) |
+| Multi-model capability | Yes (native Claude Code model routing) |
+| Setup effort | Low (same 4 persona agents + framing modifiers) |
+| Hands-off score | 6/10 (8 reviews + synthesis) |
+
+**3-Phase Pipeline:**
+
+**Phase 1 — Scan (haiku):**
+Quick structural scan extracts: spec sections, risk areas, testable claims, integration points, unstated assumptions. Focuses subsequent reviews.
+
+**Phase 2 — Review (4 personas × 2 tiers = 8 reviews):**
+- **Sonnet tier:** Full adversarial review per persona (5-11 findings each)
+- **Haiku tier:** Framing-modified quick triage per persona (1-3 findings each)
+
+Haiku framing modifiers (validated):
+| Persona | Framing | Avg Findings | Agreement Rate |
+|---------|---------|-------------|---------------|
+| Security Skeptic | "Junior security engineer, first review, focus obvious high-impact" | 2.6 | 56% |
+| Performance Pragmatist | "15-minute triage meeting, top 3 risks only" | 2.8 | 60% |
+| Architectural Purist | "5 minutes, one critical coupling/boundary violation" | 2.0 | 62% |
+| UX Advocate | "You are a user receiving this spec — what confuses you?" | 3.4 | 53% |
+
+**Phase 3 — Synthesize (opus):**
+Deduplicate findings across all 8 reviews. Tag each as `convergent` (both tiers), `sonnet-only`, or `haiku-only`. Score consensus: 6+/8 = CRITICAL, 4-5/8 = HIGH, 2-3/8 = MODERATE, 1/8 = MINORITY.
+
+**Validated metrics (n=5 specs, 222 raw findings, 105 deduplicated):**
+| Metric | Mean | Range |
+|--------|------|-------|
+| Sonnet-only findings | 45% | 29-65% |
+| Haiku-only findings | 10.6% | 9-13% |
+| Convergent findings | 44% | 25-62% |
+| False positive rate | 5.4% | 5-15% |
+| Dedup rate | 52% | 45-64% |
+
+**Routing heuristic:**
+- High complexity (merged issues, multi-system, >500 words): Full 8-review pipeline
+- Medium complexity (single feature, some TBDs): 6-review (4 sonnet + UX haiku + Security haiku)
+- Low complexity (single file, clear scope): 5-review (4 sonnet + UX haiku only)
+
+**When to use Option G:**
+- Any spec where Option E would be used and additional validation coverage is desired at near-zero marginal cost
+- Specs where "obvious user confusion" insights are as valuable as deep technical analysis
+- When you want cross-tier consensus scoring (convergent findings are highest-confidence)
+
+**Known limitation:** Haiku Architectural Purist is consistently undertriggered (avg 2.0 findings). The "5 minutes, one critical violation" framing is too restrictive for abstract architectural reasoning. Consider expanding or dropping haiku for this persona on simpler specs.
+
 ### Comparison Summary
 
-| Dimension | A: CI | B: Premium | C: API | D: In-Session | E: Persona | F: Debate |
-|-----------|-------|------------|--------|---------------|------------|-----------|
-| Monthly cost | $0 | ~$40 | Variable | $0 | $0 | $0 |
-| Automation | Full | Full | Full | Manual | Manual | Manual |
-| Model quality | Good | Very Good | Best | Very Good | Best | Best |
-| Multi-model | No | Limited | Yes | Yes | No | Optional |
-| Setup effort | Low | Low | Medium | None | None | Low |
-| Hands-off | 8/10 | 9/10 | 9/10 | 6/10 | 7/10 | 5/10 |
-| Unique finding rate | ~23% | ~25% | ~30% | ~23% | ~42% | TBD |
+| Dimension | A: CI | B: Premium | C: API | D: In-Session | E: Persona | F: Debate | G: Tier Diversity |
+|-----------|-------|------------|--------|---------------|------------|-----------|-------------------|
+| Monthly cost | $0 | ~$40 | Variable | $0 | $0 | $0 | $0 |
+| Automation | Full | Full | Full | Manual | Manual | Manual | Manual |
+| Model quality | Good | Very Good | Best | Very Good | Best | Best | Best |
+| Multi-model | No | Limited | Yes | Yes | No | Optional | Yes (native) |
+| Setup effort | Low | Low | Medium | None | None | Low | Low |
+| Hands-off | 8/10 | 9/10 | 9/10 | 6/10 | 7/10 | 5/10 | 6/10 |
+| Unique finding rate | ~23% | ~25% | ~30% | ~23% | ~42% | TBD | ~55% |
 
 ## Hybrid Combinations
 
@@ -238,6 +292,8 @@ Options are not mutually exclusive. Effective combinations include:
 **Option E + F (Escalating depth):** Persona panel (Option E) for routine complex specs. If the panel surfaces 2+ splits (2/2 persona disagreements), escalate to structured debate (Option F) to resolve. This reserves the expensive 2-round protocol for specs that genuinely need it.
 
 **Option F + C (Debate + external model):** Structured debate with 4 Claude personas in Rounds 1-2, plus 1 external model (via OpenRouter) as a 5th voice in Round 2 only. The external model reads all Round 1 outputs and provides cross-examination from a genuinely different reasoning architecture. Adds ~$0.10-0.50 per review depending on model choice.
+
+**Option E + G (Tiered persona review):** Run Option G's 3-phase pipeline as the primary review pass. Use the tier diversity to identify convergent findings (highest confidence) and tier-exclusive findings (surface vs depth insights). The sonnet-only findings provide deep technical coverage; the haiku-only findings catch user-facing confusion and strategic identity issues at near-zero marginal cost.
 
 ## Review Output Format
 
@@ -354,29 +410,35 @@ During adversarial review, maintain an explicit log of user decisions to prevent
 
 ### Multi-Model Consensus Protocol
 
-When using multiple models for adversarial review, follow this structured consensus process.
+When using multiple model tiers for adversarial review, follow this validated consensus process. Experimentally validated on 5 specs (CIA-297, n=222 raw findings, 105 deduplicated). See `.claude/ab-test-results/multi-model-comparison.md` for full data.
 
-**Configuration:**
-- Minimum 2 models, recommended 3 for tie-breaking
-- Each model gets the SAME prompt independently (no shared context)
-- Model mixing tiers: haiku (scan/classify), sonnet (review/analyze), opus (synthesize/decide)
+**Model tier roles:**
+| Tier | Role | When |
+|------|------|------|
+| Haiku | Scan, classify, surface-level triage | Phase 1 scan, Phase 2 haiku-tier reviews |
+| Sonnet | Deep adversarial review | Phase 2 sonnet-tier reviews |
+| Opus | Synthesize, deduplicate, reconcile | Phase 3 synthesis |
 
-**Consensus questions (ask each model independently):**
-1. "What are the top 3 risks in this spec?"
-2. "What is missing from the acceptance criteria?"
-3. "Rate the spec's completeness 1-5 with justification"
+**Consensus scoring (validated, 8 reviewers = 4 personas × 2 tiers):**
+| Level | Threshold | Action |
+|-------|-----------|--------|
+| CRITICAL | 6+/8 reviewers | Must address before implementation |
+| HIGH | 4-5/8 reviewers | Should address before implementation |
+| MODERATE | 2-3/8 reviewers | Should consider |
+| MINORITY | 1/8 reviewers | Note — do not dismiss (may represent specialist expertise) |
 
-**Agreement threshold:**
-- 2/3 agreement on a risk → include in review
-- 3/3 agreement → flag as critical
-- 0/3 agreement → discard (likely noise)
+**Tier tagging:** Each unified finding is tagged:
+- `convergent` — found by both sonnet AND haiku tier (highest confidence, ~44% of findings)
+- `sonnet-only` — found only by sonnet tier (~45% of findings, mostly integration/quantitative analysis)
+- `haiku-only` — found only by haiku tier (~11% of findings, mostly user confusion/strategic identity)
 
-**Structured exchange format:** When passing findings between models (especially across different model providers), use a structured JSON format rather than free text. This prevents misinterpretation and enables programmatic reconciliation.
+**Structured exchange format:** When passing findings between models, use structured JSON to prevent misinterpretation and enable programmatic reconciliation.
 
 ```json
 {
-  "finding_id": "S1",
+  "finding_id": "SS1",
   "persona": "security-skeptic",
+  "model_tier": "sonnet",
   "severity": "critical",
   "spec_section": "3.2 Authentication",
   "description": "Token stored in localStorage is vulnerable to XSS",
@@ -385,4 +447,15 @@ When using multiple models for adversarial review, follow this structured consen
 }
 ```
 
-**Synthesis step:** After independent reviews, a dedicated synthesizer model reads all outputs and produces a unified review. The synthesizer must NOT add new concerns — only consolidate and reconcile. When using Option F (structured debate), the synthesizer is a separate agent (`debate-synthesizer`) rather than one of the reviewing personas, to avoid conflicts of interest.
+**Finding ID convention:** Two-letter code = persona initial + tier initial. SS = Security Sonnet, SH = Security Haiku, PS = Performance Sonnet, PH = Performance Haiku, AS = Architecture Sonnet, AH = Architecture Haiku, US = UX Sonnet, UH = UX Haiku.
+
+**Synthesis step:** After independent reviews, a dedicated synthesizer model (opus) reads all outputs and produces a unified review. The synthesizer must NOT add new concerns — only consolidate, deduplicate, tag tiers, and reconcile. When using Option F (structured debate), the synthesizer is a separate agent (`debate-synthesizer`) rather than one of the reviewing personas, to avoid conflicts of interest.
+
+**What each tier finds (validated patterns):**
+| Sonnet excels at | Haiku excels at |
+|------------------|-----------------|
+| Integration/dependency analysis | "Does this confuse a new reader?" |
+| Quantitative risk (latency, cost, sample size) | Identity confusion (prototype vs production) |
+| Architecture coherence and coupling | Source attribution and traceability |
+| Edge cases and failure modes | "What does the user DO?" questions |
+| Cross-file/cross-system implications | Over-engineering detection |
