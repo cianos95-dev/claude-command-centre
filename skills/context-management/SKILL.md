@@ -221,3 +221,4 @@ At the end of every working session, present structured summaries:
 - **execution-engine** -- Fresh context on each task iteration reduces per-task context pressure
 - **issue-lifecycle** -- Session exit protocol defines what status normalization is required
 - **spec-workflow** -- Master plan pattern governs multi-session work splitting
+- **parallel-dispatch** -- Extends context management to multi-session scenarios. Each parallel session has independent context; session exit tables and handoff files enable coordination across sessions.

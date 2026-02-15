@@ -66,6 +66,7 @@
         "./skills/research-pipeline",
         "./skills/spec-workflow",
         "./skills/zotero-workflow",
+        "./skills/parallel-dispatch",
         "./skills/platform-routing",
         "./skills/session-exit",
         "./skills/ship-state-verification"

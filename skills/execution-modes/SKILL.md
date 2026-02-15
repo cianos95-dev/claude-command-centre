@@ -205,3 +205,7 @@ Every implementation attempt has a retry budget. The budget prevents brute-force
 - **Approach amnesia** -- Not documenting what was tried before trying something new. Without a failure log, the agent (or a future session) may repeat the same dead-end approach. Always write down what failed before pivoting.
 
 **Budget applies per-issue, not per-session.** If a session ends mid-retry, the next session inherits the retry count. Document retry state in the issue comment so it survives session boundaries.
+
+## Cross-Skill References
+
+- **parallel-dispatch** -- When a master plan has 2+ independent phases, use parallel dispatch rules to launch concurrent sessions. `exec:swarm` handles parallelism _within_ a session via subagents; parallel dispatch handles parallelism _across_ sessions.
