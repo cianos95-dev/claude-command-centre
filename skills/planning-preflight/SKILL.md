@@ -98,7 +98,32 @@ Widen the aperture beyond the immediate task to understand the strategic context
 
 **Budget:** 3-5 seconds. Single `get_issue` for parent, single `list_issues` for milestone.
 
-### Step 4: Timeline Validation
+### Step 4: Research Dependency Check
+
+Before planning implementation, verify that related research spikes are resolved. Building on unvalidated assumptions is the most expensive failure mode in multi-session plans.
+
+**4a. Find related spikes.** From the sibling issues gathered in Step 2, filter for issues with `type:spike` or `exec:spike` labels that are not Done or Cancelled. Also check: does the current issue's description reference any research, investigation, or evaluation that hasn't been completed?
+
+**4b. Classify each unresolved spike:**
+
+| Classification | Meaning | Action |
+|----------------|---------|--------|
+| **BLOCKING** | Current issue's design depends on spike findings | **STOP.** Flag the spike for immediate dispatch. Do not proceed to spec. |
+| **INFORMING** | Spike findings would improve the design but aren't required | **WARN.** Note the spike, proceed with caveats documented. |
+| **UNRELATED** | Spike exists in same project but has no bearing on current issue | **SKIP.** No action needed. |
+
+**4c. Output.** If any BLOCKING spikes exist, add to the Planning Context Bundle:
+
+```
+### Research Dependencies (BLOCKING)
+| Spike | Title | Status | Why Blocking |
+```
+
+This is a **hard pause** -- present the blocking spikes to the user and recommend dispatching them before proceeding with the current issue's spec.
+
+**Budget:** 0-2 seconds. This filters data already gathered in Step 2.
+
+### Step 5: Timeline Validation
 
 For any deferred work mentioned in the plan or task context, validate that the deferral has a technical justification.
 
@@ -112,7 +137,7 @@ For each deferred item, answer:
 
 **Budget:** 0-2 seconds. This is a local analysis of data already gathered in Steps 1-3. No new API calls.
 
-### Step 5: Output the Planning Context Bundle
+### Step 6: Output the Planning Context Bundle
 
 Assemble the findings into a structured markdown summary. This bundle becomes the input context for the spec or plan.
 
@@ -135,6 +160,12 @@ Assemble the findings into a structured markdown summary. This bundle becomes th
 
 | ID | Title | Classification | Rationale |
 |----|-------|----------------|-----------|
+
+### Research Dependencies
+[Table of blocking/informing spikes, or OMITTED if no unresolved spikes found]
+
+| Spike | Title | Status | Classification | Impact |
+|-------|-------|--------|----------------|--------|
 
 ### Strategic Context
 - Initiative: [name] ([status])
@@ -186,6 +217,7 @@ Target: **<30 seconds** total preflight time for an incremental index with a ~10
 | Codebase index | 5-10s | Incremental `/ccc:index` (only changed files) |
 | Linear landscape scan | 10-15s | `list_issues` with `limit: 10`, keyword search with `limit: 5` |
 | Zoom out | 3-5s | Single `get_issue` for parent, `list_issues` for milestone |
+| Research dependency check | 0-2s | Filter Step 2 results for `type:spike` / `exec:spike` labels |
 | Timeline validation | 0-2s | Local analysis of preflight data (no new API calls) |
 | Bundle generation | 1-2s | Markdown formatting |
 

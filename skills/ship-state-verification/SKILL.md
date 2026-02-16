@@ -165,6 +165,92 @@ This skill expands on DO NOT rule #9 from `project-cleanup/references/do-not-rul
 
 **Selective verification.** Only checking the artifacts you just created, not the full manifest. Other artifacts may have been moved, renamed, or deleted by concurrent work. Always verify the complete set.
 
+## Anthropic Ecosystem Alignment
+
+These checks verify CCC aligns with patterns established in the Anthropic knowledge-work-plugins repository (specifically the product-management plugin and PR #55 expanding it). Run these alongside the standard ship-state checklist when preparing releases.
+
+### 6. README Consistency
+
+Command, skill, and agent counts in the README header and tables must match the filesystem exactly.
+
+```bash
+# Header count verification
+readme_skills_claimed=$(grep -oE '[0-9]+ skills' README.md | head -1 | grep -oE '[0-9]+')
+actual_skills=$(find skills -name "SKILL.md" -maxdepth 2 | wc -l | tr -d ' ')
+echo "README claims: $readme_skills_claimed skills | Filesystem: $actual_skills skills"
+
+readme_commands_claimed=$(grep -oE '[0-9]+ commands' README.md | head -1 | grep -oE '[0-9]+')
+actual_commands=$(ls commands/*.md | wc -l | tr -d ' ')
+echo "README claims: $readme_commands_claimed commands | Filesystem: $actual_commands commands"
+
+readme_agents_claimed=$(grep -oE '[0-9]+ agents' README.md | head -1 | grep -oE '[0-9]+')
+actual_agents=$(ls agents/*.md | wc -l | tr -d ' ')
+echo "README claims: $readme_agents_claimed agents | Filesystem: $actual_agents agents"
+```
+
+Additionally, verify that every skill/command/agent on disk appears in the corresponding README table. A file that exists on disk but is absent from the README is undiscoverable to users reading the documentation. The Anthropic pattern in PR #55 requires README tables to be a complete enumeration of filesystem contents, not a curated subset.
+
+**Check for phantom directories** -- skill directories that exist but contain no SKILL.md:
+
+```bash
+for d in skills/*/; do
+  if [ ! -f "$d/SKILL.md" ]; then
+    echo "PHANTOM: $d (directory exists but no SKILL.md)"
+  fi
+done
+```
+
+Phantom directories inflate apparent plugin breadth without delivering content. Delete them or populate them before release.
+
+### 7. Frontmatter Validation
+
+All commands must have `description` and `argument-hint` fields in their YAML frontmatter. All skills must have `name` and `description` fields. This matches the Anthropic pattern where every command carries sufficient metadata for Claude to match it to user intent without reading the full file.
+
+```bash
+# Command frontmatter check
+for f in commands/*.md; do
+  name=$(basename "$f" .md)
+  has_desc=$(head -20 "$f" | grep -c "^description:")
+  has_hint=$(head -20 "$f" | grep -c "^argument-hint:")
+  if [ "$has_desc" -eq 0 ] || [ "$has_hint" -eq 0 ]; then
+    echo "FAIL: $name (desc=$has_desc, hint=$has_hint)"
+  fi
+done
+
+# Skill frontmatter check
+for f in skills/*/SKILL.md; do
+  name=$(basename $(dirname "$f"))
+  has_name=$(head -20 "$f" | grep -c "^name:")
+  has_desc=$(head -20 "$f" | grep -c "^description:")
+  if [ "$has_name" -eq 0 ] || [ "$has_desc" -eq 0 ]; then
+    echo "FAIL: $name (name=$has_name, desc=$has_desc)"
+  fi
+done
+```
+
+CCC also uses a `platforms` field in command frontmatter (`[cli]`, `[cowork]`, `[cli, cowork]`) which the Anthropic pattern does not. This is a CCC extension and is acceptable as long as the base fields are present.
+
+### 8. Skill Depth Threshold
+
+The Anthropic ecosystem targets 8K+ characters per SKILL.md. Skills below this threshold are thin and may not provide enough methodology for Claude to apply them consistently. Measure all skills and flag those below threshold:
+
+```bash
+for f in skills/*/SKILL.md; do
+  name=$(basename $(dirname "$f"))
+  chars=$(wc -c < "$f")
+  if [ "$chars" -lt 8000 ]; then
+    echo "BELOW 8K: $name ($chars chars)"
+  fi
+done
+```
+
+Skills below 8K should either be expanded with additional methodology, examples, anti-patterns, and checklists, or merged into a related skill if they lack enough standalone substance to justify 8K of content.
+
+**Severity tiers:**
+- Below 4K: Critical -- skill is a stub, unlikely to trigger reliably or provide useful guidance
+- 4K-6K: Important -- skill covers the topic but lacks depth for consistent application
+- 6K-8K: Consider -- skill is functional but would benefit from expansion
+
 ## Cross-Skill References
 
 - **project-cleanup** -- DO NOT #9 is the anti-pattern rule; this skill is the full practice

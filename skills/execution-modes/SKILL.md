@@ -82,31 +82,59 @@ Every task entering implementation should be tagged with exactly one execution m
 
 ---
 
+### `exec:spike` -- Research-First Exploration
+
+**When:** The task requires investigation before implementation can begin. The primary output is knowledge (a document, analysis, or recommendation), not code. Spikes answer "should we?" and "how should we?" before "build it."
+
+**Behavior:** Time-boxed exploration with a defined deliverable. The agent investigates, surveys, or evaluates, then produces a structured artifact (Linear document, research brief, gap analysis). No implementation code is written during a spike -- the output informs subsequent implementation issues.
+
+**Examples:** Competitive landscape survey, library evaluation, architecture feasibility study, API compatibility assessment, pattern extraction from external repos, configuration surface research.
+
+**Guard rail:** Spikes must be time-boxed (default: 1 session). If a spike needs more time, split it into focused sub-spikes rather than extending. Every spike ends with a concrete recommendation, even if "needs more investigation" -- in which case, create a follow-up spike with a narrower scope.
+
+**Key principle: Research spikes run before their dependent implementation issues.** When an implementation issue references research that hasn't been done, the spike takes priority. This prevents building on assumptions that haven't been validated.
+
+---
+
 ## Decision Heuristic
 
 Use this tree to select the appropriate mode. Start at the root and follow the branches:
 
 ```
-Is the scope well-defined with clear acceptance criteria?
+Is this exploration/investigation (output is knowledge, not code)?
 |
-+-- YES --> Are there 5+ independent tasks?
-|           |
-|           +-- YES --> exec:swarm
-|           |
-|           +-- NO --> Is it testable (can you write a failing test)?
-|                      |
-|                      +-- YES --> exec:tdd
-|                      |
-|                      +-- NO --> exec:quick
++-- YES --> exec:spike
 |
-+-- NO --> Is it high-risk (security, data, breaking changes)?
++-- NO --> Is the scope well-defined with clear acceptance criteria?
            |
-           +-- YES --> exec:checkpoint
+           +-- YES --> Are there 5+ independent tasks?
+           |           |
+           |           +-- YES --> exec:swarm
+           |           |
+           |           +-- NO --> Is it testable (can you write a failing test)?
+           |                      |
+           |                      +-- YES --> exec:tdd
+           |                      |
+           |                      +-- NO --> exec:quick
            |
-           +-- NO --> exec:pair
+           +-- NO --> Is it high-risk (security, data, breaking changes)?
+                      |
+                      +-- YES --> exec:checkpoint
+                      |
+                      +-- NO --> exec:pair
 ```
 
 When in doubt, prefer `exec:pair`. It is the safest default because it keeps a human in the loop while the scope crystallizes. Modes can be upgraded mid-task (pair to tdd, quick to checkpoint) but should not be downgraded without justification.
+
+### Research-First Sequencing Rule
+
+When dispatching a batch of work, apply this ordering:
+
+1. **Spikes first.** Any `exec:spike` or `type:spike` issue runs before implementation issues that depend on its findings.
+2. **Parallel spikes.** Independent spikes run concurrently. A spike blocks only issues that reference it as input.
+3. **Implementation after intel.** Do not begin `exec:tdd`, `exec:quick`, or `exec:checkpoint` on a feature whose design was informed by an unresolved spike.
+
+This prevents "build then discover" -- the most expensive failure mode in multi-session plans. When a master plan has both research and implementation phases, research phases run first by default. The human can override this ordering with explicit justification.
 
 ## Model Routing for Subagents
 
@@ -125,6 +153,7 @@ When delegating subtasks to subagents, match the model tier to the cognitive dem
 - `exec:pair` -- Highest quality for all interactions (human is watching)
 - `exec:checkpoint` -- Highest quality for implementation, balanced for review summaries
 - `exec:swarm` -- Fast model for independent leaf tasks, balanced for reconciliation
+- `exec:spike` -- Balanced model for research, fast model for bulk reads (repo scanning, API surveys)
 
 ## Integration with Issue Labels
 
@@ -135,7 +164,7 @@ Apply the execution mode label when transitioning an issue from spec-ready to im
 3. The label informs session planning: `exec:swarm` tasks need longer sessions; `exec:quick` tasks can be batched; `exec:checkpoint` tasks need human availability windows
 4. If the mode changes mid-implementation, update the label and document why
 
-The execution mode also informs estimation. Quick tasks are typically under 1 hour. TDD tasks are 1-4 hours. Pair sessions are 1-2 hours per sitting. Checkpoint tasks span multiple sessions. Swarm tasks vary by fan-out count but each leaf should be quick or tdd-sized.
+The execution mode also informs estimation. Quick tasks are typically under 1 hour. TDD tasks are 1-4 hours. Pair sessions are 1-2 hours per sitting. Checkpoint tasks span multiple sessions. Swarm tasks vary by fan-out count but each leaf should be quick or tdd-sized. Spike tasks are 1-2 sessions (time-boxed) with deliverable = document, not code.
 
 ## T1-T4 Issue Classification
 
