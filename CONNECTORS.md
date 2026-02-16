@@ -111,19 +111,15 @@ Adoption depends on budget and specific workflow needs. Not required for core CC
 | Agent | CCC Stages | Unique Value | Cost | Condition |
 |-------|-----------|--------------|------|-----------|
 | **Codex** (OpenAI) | 4 (code review), 6-7 | Structured PR code review with P1/P2 findings — no other agent offers this | $20/mo (ChatGPT Plus) | Adopt if GPT diversity + PR review automation is valued |
-| **Cyrus** (Ceedar AI) | 6 (exec:tdd, exec:pair) | Git worktree isolation per issue, 3-iteration self-verification loop | Free (BYOK — requires Anthropic API key) | Adopt if Claude consistency + self-verification is valued; accept 3-5x token cost |
-
-### Deferred Agents
-
-| Agent | Role | Why Deferred | Revisit When |
-|-------|------|-------------|--------------|
-| **Tembo** | Meta-orchestrator (wraps Cursor, Codex, Claude Code) | 1-repo limit on free tier; not validated for CCC workflow | Post-conference evaluation; potential Phase 3 orchestration backend |
+| **Cyrus** (Ceedar AI) | 6 (exec:tdd, exec:pair) | Git worktree isolation per issue, self-verification loop, MCP connections, live metrics | Community $0 (self-host CLI), Pro $50/mo (cloud, 5 repos), Team $120/mo (10 repos). Uses Claude Code subscription token. | On Pro 7-day trial (cloud-hosted). CIA-460 tracks setup. |
+| **Tembo** (Tembo AI) | Orchestration (Layer 2 meta-agent) | Agent-agnostic orchestrator — coordinates Cursor, Codex, Claude Code across repos. Multi-repo, auto-configures MCPs. | Free to start (all plans include Linear) | Adopt if multi-agent coordination or multi-repo dispatch is needed. CIA-459 tracks setup. |
+| **Devin** (Cognition) | 4 (feasibility scoping), 6 (implement) | Batch parallel scoping with confidence scoring. Autonomous PR creation. | Core $20/mo (9 ACUs ≈ 2.25h), Team $500/mo | Adopt if batch feasibility scoping adds value beyond Claude Code estimation. CIA-461 tracks evaluation. |
 
 ### Demoted Agents
 
 | Agent | Originally | Demotion Reason |
 |-------|-----------|-----------------|
-| **ChatPRD** | Stage 0-3 candidate | Does not support PR/FAQ templates; missing adversarial review and research grounding. Keep connected but do not invest in CCC integration. Optional Stage 0 supplement only. |
+| **ChatPRD** | Stage 0-3 candidate | Does not support PR/FAQ templates; missing adversarial review and research grounding. **Linear integration requires Teams tier ($29/seat/mo, $349/year)** — Pro plan (incl. Lenny's Newsletter annual bundle) only includes Slack, Google Drive, Notion. Not justified for solo workflow. Keep connected but do not invest in CCC integration. Optional Stage 0 supplement only. CIA-462 tracks details. |
 
 ### Agent-to-Stage Mapping
 
