@@ -1,3 +1,5 @@
+<!-- CIA-463 Test: Added by Cyrus agent on 2026-02-16. This is a validation test for agent delegation. -->
+
 # Connectors
 
 This plugin works best with the following data sources connected. Configure them in your global `~/.mcp.json` or through your organization's MCP setup.
