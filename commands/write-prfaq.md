@@ -4,6 +4,7 @@ description: |
   Use when starting a new feature spec, writing a press release for a proposed change, creating acceptance criteria, or structuring a proposal with pre-mortem and FAQ sections.
   Trigger with phrases like "write a spec for", "draft a PR/FAQ", "new feature proposal", "working backwards document for", "spec this idea", "create acceptance criteria for".
 argument-hint: "<feature idea, problem statement, or issue ID>"
+allowed-tools: Read, Write, Edit, Grep, Glob
 platforms: [cowork, cli]
 ---
 

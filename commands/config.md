@@ -5,6 +5,7 @@ description: |
   In Cowork: generates an interactive artifact with live YAML preview and preset buttons.
   Trigger with phrases like "configure ccc", "show ccc preferences", "set gate preferences", "ccc config", "customise workflow", "change execution defaults", "set prioritization framework", "configure eval", "change scoring format".
 argument-hint: "[--show | --reset | key=value]"
+allowed-tools: Read, Write, Bash
 platforms: [cli, cowork]
 ---
 

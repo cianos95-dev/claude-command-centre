@@ -25,7 +25,7 @@ Claude Command Centre (CCC) is the orchestration hub that sits between "spec app
 
 Where [Anthropic's product-management plugin](https://github.com/anthropics/knowledge-work-plugins/tree/main/product-management) helps PMs *write* specs (roadmaps, stakeholder updates, PRDs), CCC drives those specs *through review, implementation, and closure* -- orchestrating the full delivery lifecycle with ownership clarity at every stage.
 
-**21 skills, 12 commands, 8 agents, 4 hooks** -- a complete methodology covering the 9-stage funnel from universal intake to async handoff.
+**23 skills, 12 commands, 8 agents, 4 hooks** -- a complete methodology covering the 9-stage funnel from universal intake to async handoff.
 
 ## What Makes This Different
 
@@ -181,6 +181,10 @@ Commands are user-invoked workflows triggered with `/ccc:<command>`.
 | `/ccc:hygiene` | Audit open issues for label consistency, staleness, and ownership gaps |
 | `/ccc:index` | Scan codebase for modules, patterns, and integration points before spec writing |
 | `/ccc:anchor` | Re-read active spec, git state, and issue context to prevent drift |
+| `/ccc:config` | Manage CCC preferences (gates, execution, scoring, style) |
+| `/ccc:go` | Unified entry point -- auto-detect context and route to correct funnel stage |
+| `/ccc:insights` | Archive Insights reports and extract actionable patterns |
+| `/ccc:self-test` | Run zero-cost in-session plugin validation and coverage audit |
 
 ## Skills
 
@@ -204,6 +208,13 @@ Skills are passive knowledge that Claude surfaces automatically when relevant co
 | `zotero-workflow` | Zotero operations, metadata enrichment | Plugin sequence, Linter/Cita settings, safety rules, anti-patterns |
 | `research-grounding` | Research-backed features, citation standards | Readiness label progression, PR/FAQ citation requirements |
 | `platform-routing` | Cross-platform work, non-CLI sessions | Platform recommendations, hook-free exit checklist, context bridges |
+| `insights-pipeline` | Insights reports, pattern extraction | Archive reports, extract friction patterns, track improvement trends |
+| `observability-patterns` | Stage 7 verification, monitoring setup | Tool selection (PostHog/Sentry/Honeycomb), plugin validation, release gates |
+| `parallel-dispatch` | Multi-session dispatch, parallel phases | Dispatch decision tree, session mode mapping, coordination protocol |
+| `planning-preflight` | Spec writing, plan mode, landscape scan | Context gathering, issue overlap detection, strategic zoom-out, timeline validation |
+| `session-exit` | Session end, wrap-up, handoff | Status normalization, closing comments, summary tables, context budget checks |
+| `ship-state-verification` | Pre-publish, release preparation | File path verification, manifest validation, README accuracy, phantom deliverable detection |
+| `pattern-aggregation` | Cross-session trends, improvement trajectory | Pattern matching, friction correlation, preference drift detection, rule effectiveness |
 
 ## Cross-Platform Compatibility
 
@@ -398,7 +409,7 @@ These tools pair well with the methodology and offer student pricing:
 
 ## Plugin Structure
 
-v1.3.0 follows the [Anthropic plugin-dev](https://github.com/anthropics/claude-plugins) standard layout.
+v1.4.0 follows the [Anthropic plugin-dev](https://github.com/anthropics/claude-plugins) standard layout.
 
 ```
 claude-command-centre/
@@ -407,7 +418,12 @@ claude-command-centre/
 │   └── marketplace.json          # Marketplace metadata
 ├── agents/
 │   ├── spec-author.md            # Stages 0-3: intake → spec approval
-│   ├── reviewer.md               # Stage 4: adversarial review
+│   ├── reviewer.md               # Stage 4: adversarial review orchestrator
+│   ├── reviewer-architectural-purist.md  # Adversarial perspective: architecture
+│   ├── reviewer-performance-pragmatist.md # Adversarial perspective: performance
+│   ├── reviewer-security-skeptic.md      # Adversarial perspective: security
+│   ├── reviewer-ux-advocate.md           # Adversarial perspective: UX
+│   ├── debate-synthesizer.md     # Synthesize multi-perspective review findings
 │   └── implementer.md            # Stages 5-7.5: implementation → closure
 ├── commands/
 │   ├── write-prfaq.md            # Interactive PR/FAQ drafting
@@ -417,8 +433,26 @@ claude-command-centre/
 │   ├── close.md                  # Evidence-based closure with quality scoring
 │   ├── hygiene.md                # Issue health audit
 │   ├── index.md                  # Codebase indexing for spec-aware discovery
-│   └── anchor.md                 # Drift prevention via re-anchoring
+│   ├── anchor.md                 # Drift prevention via re-anchoring
+│   ├── config.md                 # Manage CCC preferences
+│   ├── go.md                     # Unified workflow entry point
+│   ├── insights.md               # Archive and extract Insights patterns
+│   └── self-test.md              # In-session plugin validation
 ├── skills/
+│   ├── adversarial-review/
+│   │   ├── SKILL.md              # Perspectives + architecture options
+│   │   └── references/
+│   │       ├── github-action-copilot.yml
+│   │       └── github-action-api.yml
+│   ├── codebase-awareness/
+│   │   └── SKILL.md              # Index-informed spec writing + pattern detection
+│   ├── context-management/
+│   │   ├── SKILL.md              # Subagent delegation + context budget
+│   │   └── references/
+│   │       ├── session-economics.md
+│   │       └── tool-discipline.md
+│   ├── drift-prevention/
+│   │   └── SKILL.md              # Re-anchoring protocol + drift detection
 │   ├── execution-engine/
 │   │   ├── SKILL.md              # Core loop + state machine
 │   │   └── references/
@@ -427,30 +461,29 @@ claude-command-centre/
 │   │       └── configuration.md
 │   ├── execution-modes/
 │   │   └── SKILL.md              # 5 modes + decision heuristics
-│   ├── adversarial-review/
-│   │   ├── SKILL.md              # Perspectives + architecture options
-│   │   └── references/
-│   │       ├── github-action-copilot.yml
-│   │       └── github-action-api.yml
-│   ├── spec-workflow/
-│   │   ├── SKILL.md              # 9-stage funnel + 3 approval gates
-│   │   └── references/
-│   │       ├── stage-details.md
-│   │       └── scope-discipline.md
+│   ├── hook-enforcement/
+│   │   └── SKILL.md              # Runtime hook patterns + constraint enforcement
+│   ├── insights-pipeline/
+│   │   └── SKILL.md              # Archive reports + extract patterns
 │   ├── issue-lifecycle/
 │   │   ├── SKILL.md              # Ownership table + closure rules
 │   │   └── references/
 │   │       ├── project-hygiene.md
 │   │       └── content-discipline.md
-│   ├── context-management/
-│   │   ├── SKILL.md              # Subagent delegation + context budget
+│   ├── observability-patterns/
+│   │   ├── SKILL.md              # Monitoring stack + tool selection
 │   │   └── references/
-│   │       ├── session-economics.md
-│   │       └── tool-discipline.md
-│   ├── project-cleanup/
-│   │   ├── SKILL.md              # Classification matrix, naming rules, deletion protocol
+│   │       └── structural-validation.md
+│   ├── parallel-dispatch/
+│   │   ├── SKILL.md              # Multi-session dispatch rules
 │   │   └── references/
-│   │       └── do-not-rules.md
+│   │       └── dispatch-examples.md
+│   ├── pattern-aggregation/
+│   │   └── SKILL.md              # Cross-session pattern matching + trajectories
+│   ├── planning-preflight/
+│   │   └── SKILL.md              # Pre-planning context gathering
+│   ├── platform-routing/
+│   │   └── SKILL.md              # Cross-platform routing, hook-free exit checklist
 │   ├── prfaq-methodology/
 │   │   ├── SKILL.md              # Working Backwards method
 │   │   └── templates/
@@ -458,22 +491,27 @@ claude-command-centre/
 │   │       ├── prfaq-research.md
 │   │       ├── prfaq-infra.md
 │   │       └── prfaq-quick.md
-│   ├── drift-prevention/
-│   │   └── SKILL.md              # Re-anchoring protocol + drift detection
-│   ├── hook-enforcement/
-│   │   └── SKILL.md              # Runtime hook patterns + constraint enforcement
+│   ├── project-cleanup/
+│   │   ├── SKILL.md              # Classification matrix, naming rules, deletion protocol
+│   │   └── references/
+│   │       └── do-not-rules.md
 │   ├── quality-scoring/
 │   │   └── SKILL.md              # 0-100 scoring rubric + threshold configuration
-│   ├── codebase-awareness/
-│   │   └── SKILL.md              # Index-informed spec writing + pattern detection
 │   ├── research-grounding/
 │   │   └── SKILL.md              # Readiness label progression + citation requirements
 │   ├── research-pipeline/
 │   │   └── SKILL.md              # 4-stage pipeline: discover, enrich, organize, synthesize
-│   ├── zotero-workflow/
-│   │   └── SKILL.md              # Plugin sequence, Linter/Cita settings, safety rules
-│   └── platform-routing/
-│       └── SKILL.md              # Cross-platform routing, hook-free exit checklist
+│   ├── session-exit/
+│   │   └── SKILL.md              # End-of-session normalization protocol
+│   ├── ship-state-verification/
+│   │   └── SKILL.md              # Pre-publish artifact verification
+│   ├── spec-workflow/
+│   │   ├── SKILL.md              # 9-stage funnel + 3 approval gates
+│   │   └── references/
+│   │       ├── stage-details.md
+│   │       └── scope-discipline.md
+│   └── zotero-workflow/
+│       └── SKILL.md              # Plugin sequence, Linter/Cita settings, safety rules
 ├── hooks/
 │   ├── hooks.json                # Hook registration (all lifecycle events)
 │   ├── session-start.sh          # Load spec, verify context budget

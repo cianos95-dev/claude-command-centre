@@ -4,6 +4,7 @@ description: |
   Use when implementation is complete and you need to close an issue, verify closure conditions are met, or check if an issue qualifies for auto-close vs requires human confirmation.
   Trigger with phrases like "close this issue", "is this ready to close", "mark as done", "closure evidence for", "can I auto-close this", "wrap up this task".
 argument-hint: "<issue ID>"
+allowed-tools: Read, Grep, Bash
 platforms: [cli, cowork]
 ---
 

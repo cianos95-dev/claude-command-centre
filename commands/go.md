@@ -4,6 +4,7 @@ description: |
   Use to start new work, resume in-progress tasks, check status, or enter quick mode for small fixes.
   Trigger with phrases like "let's go", "what should I work on", "resume work", "start building", "quick fix", "show status", "where was I", "continue working".
 argument-hint: "<issue ID, text description, --next, --status, or --quick>"
+allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 platforms: [cli, cowork]
 ---
 

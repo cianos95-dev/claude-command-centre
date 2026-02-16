@@ -4,6 +4,7 @@ description: |
   Use when validating plugin health, checking component coverage, auditing trigger descriptions, or verifying no components are missing or broken.
   Trigger with phrases like "self-test", "validate plugin", "check plugin health", "plugin coverage report", "test plugin components", "audit plugin triggers".
 argument-hint: "[--verbose]"
+allowed-tools: Read, Grep, Glob, Bash
 platforms: [cli, cowork]
 ---
 

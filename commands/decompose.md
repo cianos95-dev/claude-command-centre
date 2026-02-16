@@ -4,6 +4,7 @@ description: |
   Use when a spec is approved and needs to be broken into work items, an epic needs task decomposition, or you need to plan implementation order with dependency tracking.
   Trigger with phrases like "break this into tasks", "decompose this epic", "create subtasks for", "plan the implementation of", "what tasks do I need for", "split this into work items".
 argument-hint: "<issue ID or spec file path>"
+allowed-tools: Read, Write, Edit, Grep, Glob
 platforms: [cli, cowork]
 ---
 

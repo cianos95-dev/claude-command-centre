@@ -8,6 +8,7 @@ description: |
   Trigger with phrases like "anchor to spec", "re-read the spec", "am I drifting",
   "check alignment", "reload context".
 argument-hint: "[issue ID, default is current active issue]"
+allowed-tools: Read, Write, Edit, Grep, Glob
 platforms: [cli]
 ---
 
