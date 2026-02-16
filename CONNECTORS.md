@@ -111,7 +111,7 @@ Adoption depends on budget and specific workflow needs. Not required for core CC
 | Agent | CCC Stages | Unique Value | Cost | Condition |
 |-------|-----------|--------------|------|-----------|
 | **Codex** (OpenAI) | 4 (code review), 6-7 | Structured PR code review with P1/P2 findings — no other agent offers this | $20/mo (ChatGPT Plus) | Adopt if GPT diversity + PR review automation is valued |
-| **Cyrus** (Ceedar AI) | 6 (exec:tdd, exec:pair) | Git worktree isolation per issue, self-verification loop, MCP connections, live metrics | Community $0 (self-host CLI), Pro $50/mo (cloud, 5 repos), Team $120/mo (10 repos). Uses Claude Code subscription token. | On Pro 7-day trial (cloud-hosted). CIA-460 tracks setup. |
+| **Cyrus** (Ceedar AI) | 6 (exec:tdd, exec:pair) | Git worktree isolation per issue, self-verification loop, MCP connections, live metrics | Community $0 (self-host CLI), Pro $50/mo (cloud, 5 repos), Team $120/mo (10 repos). Uses Claude Code subscription token. | Validated on Pro trial (CIA-463): delegation → PR in ~5 min. Self-verification not yet tested on non-trivial task. Pro trial expires ~23 Feb 2026. Promote to Adopted after 3+ non-trivial mergeable PRs. |
 | **Tembo** (Tembo AI) | Orchestration (Layer 2 meta-agent) | Agent-agnostic orchestrator — coordinates Cursor, Codex, Claude Code across repos. Multi-repo, auto-configures MCPs. | Free to start (all plans include Linear) | Adopt if multi-agent coordination or multi-repo dispatch is needed. CIA-459 tracks setup. |
 | **Devin** (Cognition) | 4 (feasibility scoping), 6 (implement) | Batch parallel scoping with confidence scoring. Autonomous PR creation. | Core $20/mo (9 ACUs ≈ 2.25h), Team $500/mo | Adopt if batch feasibility scoping adds value beyond Claude Code estimation. CIA-461 tracks evaluation. |
 
@@ -144,7 +144,7 @@ Agent credentials are separate from application runtime credentials. Each agent 
 | Cursor | Linear OAuth (native) | Cursor settings → Integrations |
 | GitHub Copilot | GitHub App (automatic) | Repository settings → Copilot |
 | Codex | Linear OAuth (via ChatGPT Plus) | ChatGPT settings → Integrations |
-| Cyrus | Anthropic API key (BYOK) | Cyrus config or Linear integration |
+| Cyrus | Anthropic API key (BYOK) + GitHub App (`cyrusagent[bot]`) | Cyrus config or Linear integration. GitHub App on `cianos95-dev` org. |
 
 ### Agent Dispatch Protocol
 
@@ -177,7 +177,7 @@ Agents differ in how they receive delegation signals. This distinction determine
 
 | Reactivity | Agents | How It Works | Latency |
 |------------|--------|-------------|---------|
-| **Push-based** (fully async) | cto.new, Cursor, Codex, Copilot, Sentry | Agent server receives Linear webhook on delegation. Agent processes autonomously. | Minutes to hours |
+| **Push-based** (fully async) | cto.new, Cursor, Codex, Copilot, Sentry, Cyrus | Agent server receives Linear webhook on delegation. Agent processes autonomously. | Minutes to hours |
 | **Pull-based** (session-required) | Claude (`dd0797a4`) | Claude reads delegated issues when a Claude Code session starts. No webhook server. | Next session start |
 
 **Implication for Claude's agent:** Claude cannot reactively process Linear events without a session. To achieve push-based dispatch for Claude, you would need either:
@@ -236,11 +236,11 @@ When selecting an agent for a task, first determine the execution mode (see **ex
 
 | Exec Mode | Default Agent | Optional Accelerators | Notes |
 |-----------|---------------|----------------------|-------|
-| `exec:quick` | Claude Code | **cto.new** (free), Codex ($20/mo), GitHub Copilot (free) | cto.new is the recommended free-tier accelerator for well-defined tasks |
-| `exec:tdd` | Claude Code | **Cursor** ($20/mo), Cyrus (free, BYOK) | Cursor has native Linear integration; Cyrus adds 3-iteration self-verification |
-| `exec:pair` | Claude Code | Cyrus (async pairing) | Claude Code is primary for interactive pairing; Cyrus for async |
+| `exec:quick` | Claude Code | **cto.new** (free, ~5 min), Codex ($20/mo), GitHub Copilot (free) | cto.new recommended for async dispatch; Copilot for GitHub-native batch |
+| `exec:tdd` | Claude Code | **Cyrus** (self-verification, ~5 min), **Cursor** ($20/mo) | Cyrus validated for delegation pipeline (CIA-463); Cursor for IDE pairing |
+| `exec:pair` | Claude Code | Cursor (IDE pairing), Cyrus (async pairing) | Claude Code for interactive; Cursor for IDE context; Cyrus for fully async |
 | `exec:checkpoint` | Claude Code | — | Human-gated; no agent substitution appropriate |
-| `exec:swarm` | Claude Code | Tembo (Phase 3, deferred) | Tembo wraps multiple agents but is not yet validated for CCC |
+| `exec:swarm` | Claude Code | **Copilot Agent** (label-based dispatch), Tembo (future orchestrator) | Copilot Agent for GitHub-native parallel dispatch; Tembo deferred |
 
 **Claude pull-based caveat:** Claude Code (`dd0797a4`) is session-local — it has no webhook server and cannot reactively process Linear delegation events. When Claude is the default agent, delegation only takes effect when a human starts a Claude Code session. For truly async dispatch, use a push-based agent (cto.new, Cursor, Codex, Copilot).
 
@@ -249,19 +249,23 @@ When selecting an agent for a task, first determine the execution mode (see **ex
 ```
 Is this an exec:quick task with clear acceptance criteria?
 |
-+-- YES --> Is cto.new enabled?
++-- YES --> Is latency critical (< 10 min)?
 |           |
-|           +-- YES --> Assign to cto.new (free, fastest)
-|           +-- NO  --> Claude Code (default) or Copilot (PR generation)
+|           +-- YES --> cto.new (free, async) or Cyrus (~5 min validated)
+|           +-- NO  --> cto.new (free) > Copilot (free) > Claude Code (default)
 |
 +-- NO --> Is this exec:tdd?
-           |
-           +-- YES --> Is Cursor Pro available?
-           |           |
-           |           +-- YES --> Cursor (native Linear + multi-file refactoring)
-           |           +-- NO  --> Claude Code (default) or Cyrus (self-verification)
-           |
-           +-- NO --> Claude Code (default for pair/checkpoint/swarm)
+|          |
+|          +-- YES --> Cyrus (self-verification + async) or Cursor (IDE pairing)
+|          |
+|          +-- NO --> Is this exec:swarm (batch/parallel)?
+|                     |
+|                     +-- YES --> Copilot Agent (label-based) or Tembo (future)
+|                     +-- NO  --> Claude Code (default for pair/checkpoint)
+|
+Is this Stage 4 (code review)?
+|
++-- YES --> Codex (structured P1/P2 findings) + Claude persona panel (spec review)
 ```
 
 #### Free Tier Bundle
@@ -274,6 +278,76 @@ For CCC's student-friendly zero-cost tier, only these agents are viable:
 - **Cyrus Community** (free, but requires Anthropic API key — BYOK cost)
 
 All other agents require paid subscriptions. The free tier bundle provides full CCC stage coverage (0-7.5) without any paid agent dependencies.
+
+#### Model-per-Role Architecture
+
+Agents that support model selection should be configured with the optimal model for their role. This reduces cost while maintaining quality (see RouteLLM, arXiv:2406.18510).
+
+**Available model access:**
+- **Direct subscriptions:** Claude Max (Opus, Sonnet, Haiku), OpenAI (Codex CLI), GitHub Copilot (free)
+- **OpenRouter (credits-based):** DeepSeek, Gemini, Grok (xAI), Perplexity
+- **Free hosted:** cto.new (multi-vendor, no API key), Copilot Agent (GitHub-hosted)
+
+| Agent | Model Options | Recommended Default | BYOK/OpenRouter? |
+|-------|-------------|-------------------|-----------------|
+| cto.new | Anthropic, OpenAI, Google | Sonnet (fast + free) | No (free hosted) |
+| GitHub Copilot Agent | Claude Sonnet/Opus, GPT-5.x, Auto | Auto | No |
+| Codex CLI | 10+ OpenAI models + any API | gpt-5.3-codex | Yes — can point at OpenRouter |
+| Cursor | Claude, GPT, Gemini, Grok, Composer + BYOK | Auto mode | **Yes — OpenRouter for DeepSeek, Grok, Gemini Flash** |
+| Cyrus | Claude Code (BYOK) | Opus (for self-verification quality) | Yes (Anthropic key) |
+| Devin | Locked (currently Sonnet) | N/A (no control) | No |
+| Claude Code | Opus, Sonnet, Haiku | Opus | Yes (API key) |
+
+**Role-to-model mapping:**
+
+| Role | Recommended Model | Why |
+|------|------------------|-----|
+| Spec authoring, adversarial review | Claude Opus | Deepest reasoning for complex analysis |
+| Quick implementation (cto.new) | Claude Sonnet | Fast enough for well-scoped tasks |
+| TDD implementation (Cyrus) | Claude Opus | Self-verification loop needs strong reasoning |
+| IDE pairing (Cursor) | Auto mode | Picks optimal model per subtask; DeepSeek/Grok via OpenRouter for cost savings |
+| PR code review (Codex) | GPT-5.x Codex | Code-specialized model for structured review |
+| Batch coding (Cursor BYOK) | DeepSeek (OpenRouter) | ~10x cheaper than Opus, competitive code quality |
+| Fast iteration/linting | Gemini Flash (OpenRouter) | Cheapest + fastest option |
+| Research synthesis | Gemini Pro (NotebookLM/AI Studio) | 1M context, Deep Research, audio overviews |
+| Research grounding | Perplexity (OpenRouter) | Search-augmented generation for fact-checking |
+
+**OpenRouter integration points:**
+
+| Agent | Config Method | Best OpenRouter Models |
+|-------|--------------|----------------------|
+| Cursor | Settings > Models > Add API Key > OpenRouter | DeepSeek (cheap code), Gemini Flash (fast), Grok (secondary) |
+| Codex CLI | `config.toml` → custom endpoint | DeepSeek (batch), Perplexity (research) |
+| Cyrus | N/A — keep on Opus via Anthropic key | Self-verification quality requires Opus |
+
+#### Agent Performance Benchmarks
+
+Performance data collected from real delegations. Updated after each agent task.
+Full log: [Agent Performance Log](https://linear.app/cianclaude/document/agent-performance-log-ac5691c461f5)
+
+**PR Quality Rubric (0-5):** 0=No PR | 1=Wrong branch/empty | 2=Correct branch, body incomplete | 3=Adequate | 4=Well-documented, tests pass | 5=Comprehensive, self-verified, no revisions
+
+##### Observed Latency
+
+| Agent | Task Type | Avg Time-to-PR | Sample Size | Last Updated |
+|-------|-----------|----------------|-------------|-------------|
+| Cyrus (Pro) | exec:quick (trivial) | ~5 min | 1 | 2026-02-16 |
+| cto.new | — | No data | 0 | — |
+| Codex | — | No data | 0 | — |
+| Copilot Agent | — | No data | 0 | — |
+
+##### Quality Summary
+
+| Agent | Avg PR Quality (0-5) | Avg Revisions | Sample Size |
+|-------|---------------------|---------------|-------------|
+| Cyrus (Pro) | 2.0 | 0 | 1 |
+
+##### Dispatch Latency Guidance
+
+When selecting an agent, consider latency requirements:
+- **< 10 min needed:** Cyrus (~5 min observed), cto.new (expected similar)
+- **< 1 hour OK:** Cursor, Codex, Copilot (push-based, variable)
+- **Next session OK:** Claude (pull-based, session-required)
 
 #### Feedback Reconciliation Protocol
 
