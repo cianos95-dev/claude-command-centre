@@ -34,10 +34,28 @@ Linear is the default ~~project-tracker~~ for CCC. Complete this checklist to co
 - [ ] Initial milestone created (naming: `vX.Y — Description`)
 - [ ] Project description includes staleness rules (14-day threshold)
 
+**Estimates & Templates:**
+- [ ] Estimates configured: Fibonacci extended (1, 2, 3, 5, 8, 13)
+- [ ] "Count unestimated" enabled (1pt default for velocity tracking)
+- [ ] Issue templates available: Feature, Bug, Spike, Chore (4 total)
+- [ ] Document templates available: PR/FAQ, Research Findings, ADR, Session Plan (4 total)
+- [ ] Project template available: Standard Project (1 total)
+
 **Agent Delegation:**
 - [ ] Agent guidance configured (Settings > Agents > Additional guidance)
-- [ ] At least one AI agent enabled (Claude is the default)
+- [ ] Pre-built agents enabled (6 total): Claude, ChatPRD, Codex, Cursor, GitHub Copilot, Sentry
+- [ ] All relevant agents enabled on project templates
 - [ ] Agent credential patterns documented per CONNECTORS.md Agent Credential Patterns table
+- [ ] Triage Intelligence enabled (suggestions-only mode — never auto-apply)
+
+**OAuth App (Programmatic Access):**
+- [ ] OAuth app created (Settings > API > OAuth Applications)
+- [ ] Actor set to Application (not User)
+- [ ] Client Credentials grant enabled
+- [ ] Required scopes authorized: `read`, `write`, `issues:create`, `comments:create`
+- [ ] Optional scopes considered: `initiative:read`, `initiative:write`
+- [ ] Credentials stored in Keychain (`claude/linear-oauth-*`)
+- [ ] Token rotation plan in place (30-day expiry)
 
 **Initiatives (Optional — Multi-Project Only):**
 - [ ] Initiative created for each strategic theme or time-bound goal

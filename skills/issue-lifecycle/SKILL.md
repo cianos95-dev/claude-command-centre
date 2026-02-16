@@ -209,10 +209,70 @@ External feedback enters the CCC funnel through Linear:
 3. Apply `source:*` origin label to track where feedback came from
 4. Process through Stage 0 intake (verb-first title, type label, brief description)
 
+### Template Selection
+
+When creating issues in Linear, select the correct template based on issue type. Templates pre-populate labels, estimates, and description structure:
+
+| Issue Type | Template | Pre-Set Labels | Default Estimate | When |
+|------------|----------|----------------|------------------|------|
+| New functionality | Feature | `type:feature`, `spec:draft` | 3pt | User-facing capabilities, new components |
+| Broken behavior | Bug | `type:bug` | (unset — assess per issue) | Regressions, incorrect behavior, crashes |
+| Research/investigation | Spike | `type:spike`, `research:needs-grounding` | 3pt | Timeboxed exploration, literature review |
+| Maintenance/cleanup | Chore | `type:chore` | 1pt | Refactoring, dependency updates, config |
+
+**Template selection rule:** Always use a template rather than creating a blank issue. Templates enforce the label taxonomy and provide consistent description structure. If no template fits, default to Chore.
+
+### Estimate-to-Execution-Mode Mapping
+
+Issue estimates (Fibonacci extended) determine the execution mode label. The agent sets estimates based on complexity assessment, then applies the corresponding exec label:
+
+| Estimate | Execution Mode | Rationale |
+|----------|---------------|-----------|
+| 1-2pt | `exec:quick` | Small, well-defined. Direct implementation. |
+| 3pt | `exec:tdd` | Moderate complexity. Test-driven development appropriate. |
+| 5pt | `exec:tdd` or `exec:pair` | Significant scope. TDD if acceptance criteria are clear; pair if scope is uncertain. |
+| 8pt | `exec:pair` or `exec:checkpoint` | Large scope. Pair for collaborative work; checkpoint for high-risk changes. |
+| 13pt | `exec:checkpoint` | Very large scope. Must decompose into sub-issues. Checkpoint with human review at milestones. |
+
+**Rules:**
+- Estimates inform exec mode — they are not arbitrary. If the estimate changes, re-evaluate the exec label.
+- 13pt issues should always be decomposed. A single 13pt issue is a planning smell.
+- Count unestimated issues as 1pt for velocity tracking (Linear setting: "Count unestimated" = ON).
+
+### Triage Intelligence Touchpoints
+
+Linear's Triage Intelligence (suggestions-only mode) assists at specific lifecycle stages. The agent should be aware of when auto-suggestions appear and how to handle them:
+
+| Lifecycle Stage | Triage Intelligence Role | Agent Behavior |
+|-----------------|-------------------------|----------------|
+| **Issue creation** | Suggests team, project, labels, assignee | Review suggestions before accepting. Override if methodology requires different labels. |
+| **Triage processing** | Suggests priority based on issue content | Note the suggestion but defer to human for priority (human-owned field). |
+| **Label application** | May suggest type or category labels | Accept type suggestions if accurate. Always verify `type:*` label is present after triage. |
+| **Assignment** | Suggests assignee based on past patterns | Accept for recurring patterns. Override for explicit delegation decisions. |
+
+**Key rule:** Triage Intelligence runs in suggestions-only mode — it never auto-applies changes. The agent (or human) must explicitly accept or reject each suggestion.
+
+### Agent Delegation Patterns
+
+When issues are delegated to AI agents via Linear, the lifecycle ownership model intersects with the two-system agent architecture (see [docs/LINEAR-SETUP.md](../../../../docs/LINEAR-SETUP.md) Section 8):
+
+| Delegation Pattern | System Used | Lifecycle Impact |
+|-------------------|-------------|-----------------|
+| Claude Code session reads delegated issues | OAuth app (pull-based) | Agent marks In Progress on session start, follows full ownership model |
+| @mention Claude in a comment | Pre-built agent (webhook) | Agent responds conversationally. Does NOT trigger status transitions. |
+| Delegate to Cursor/cto.new/Copilot | Pre-built agent (push-based) | Agent processes asynchronously. May create PR. Human reviews and manages status. |
+| Delegate to Sentry | Pre-built agent (push-based) | Creates issues from errors. Issues enter Triage, follow normal lifecycle. |
+
+**Ownership during delegation:**
+- The **assignee** remains accountable for the issue even when delegated to an agent
+- The **delegate** field tracks which agent is actively working
+- Remove the delegate when the agent's work is complete
+- Status transitions follow the ownership table above — the delegate does not override assignee ownership rules
+
 ## Cross-Skill References
 
 - **spec-workflow** -- Stage 7.5 (issue closure) is governed by this skill's closure rules matrix
 - **project-cleanup** -- One-time structural normalization vs this skill's ongoing hygiene
 - **context-management** -- Session exit summary tables follow the format defined in that skill
 - **execution-engine** -- Execution loop updates issue status per the ownership model defined here
-- **LINEAR-SETUP.md** -- Full Linear platform configuration guide (labels, milestones, agents, cycles, initiatives)
+- **LINEAR-SETUP.md** -- Full Linear platform configuration guide (labels, milestones, agents, cycles, initiatives, OAuth app, pre-built agents, two-system architecture)
