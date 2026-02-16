@@ -65,7 +65,7 @@ For plugins with `strict: true` in their marketplace manifest, every skill, comm
 
 ```bash
 # Extract skill paths from marketplace.json and verify each
-cat .claude-plugin/marketplace.json | grep -oP '"./skills/[^"]*"' | while read -r path; do
+cat .claude-plugin/marketplace.json | grep -oE '"./skills/[^"]*"' | while read -r path; do
   clean=$(echo "$path" | tr -d '"')
   if [ ! -d "$clean" ] || [ ! -f "$clean/SKILL.md" ]; then
     echo "MISSING: $clean"

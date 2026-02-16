@@ -32,7 +32,8 @@ fi
 
 INDEX_FILE="$PROJECT_ROOT/.claude/codebase-index.md"
 if [[ -f "$INDEX_FILE" ]]; then
-  INDEX_DATE=$(head -5 "$INDEX_FILE" | grep -oP 'Generated: \K[0-9-]+' || echo "unknown")
+  INDEX_DATE=$(head -5 "$INDEX_FILE" | sed -n 's/.*Generated: \([0-9-]*\).*/\1/p' | head -1)
+  INDEX_DATE="${INDEX_DATE:-unknown}"
   echo "[CCC] Codebase index found (generated: $INDEX_DATE)"
 else
   echo "[CCC] No codebase index found. Consider running /ccc:index"

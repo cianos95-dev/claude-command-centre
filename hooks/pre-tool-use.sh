@@ -23,7 +23,8 @@ TOOL_INPUT=$(cat)
 
 # Extract the file path being written to
 # The exact JSON structure depends on the tool being used
-FILE_PATH=$(echo "$TOOL_INPUT" | grep -oP '"file_path"\s*:\s*"\K[^"]+' 2>/dev/null || echo "")
+FILE_PATH=$(echo "$TOOL_INPUT" | sed -n 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+FILE_PATH="${FILE_PATH:-}"
 
 if [[ -z "$FILE_PATH" ]]; then
   # Could not determine file path -- allow the operation
