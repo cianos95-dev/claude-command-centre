@@ -64,6 +64,9 @@ Linear is the default ~~project-tracker~~ for CCC. Complete this checklist to co
 |-----------|---------|-------------|----------|
 | **~~research-library~~** | Literature grounding for research-based features | Stages 1-2 | Zotero |
 | **~~web-research~~** | Web data for spec grounding and competitive analysis | Stages 1-2 | Firecrawl |
+| **~~academic-search~~** | Paper discovery, citation analysis, author lookup | Stages 1-2 | Semantic Scholar, arXiv, OpenAlex |
+| **~~model-registry~~** | ML model/dataset/space search for technical grounding | Stages 1-2 | HuggingFace, Kaggle |
+| **~~community-signal~~** | Developer sentiment, launch analysis, tutorial discovery | Stages 1-2 | Hacker News, YouTube |
 | **~~communication~~** | Stakeholder notifications, decision tracking | All stages | Slack |
 | **~~design~~** | Visual prototyping handoff | Stage 5 | Figma, v0 |
 | **~~observability~~** | Traces, metrics, health monitoring | Stage 7 | Honeycomb, Datadog |
@@ -334,6 +337,182 @@ Plugin health itself operates at three layers. See the `observability-patterns` 
 
 ---
 
+## Research Connector Stack
+
+For specs grounded in literature, competitive analysis, or ML/data science, this 6-MCP stack provides comprehensive research coverage across Stages 1-2. Firecrawl handles public web; the academic MCPs handle scholarly sources; HuggingFace and Kaggle handle ML assets.
+
+### Pipeline Overview
+
+```
+Discovery:  Semantic Scholar / arXiv / OpenAlex  →  papers, citations, trends
+Assets:     HuggingFace / Kaggle                 →  models, datasets, code
+Storage:    Zotero                                →  annotate, tag, semantic search
+Public Web: Firecrawl                             →  scrape, search, extract, map
+```
+
+### MCP Server Reference
+
+| MCP Server | Connector Placeholder | npm Package / Source | Purpose | Auth |
+|------------|----------------------|---------------------|---------|------|
+| **Semantic Scholar** | ~~academic-search~~ | `@xbghc/semanticscholar-mcp` | 200M+ papers, citation graphs, author profiles, recommendations | None (rate-limited) |
+| **arXiv** | ~~academic-search~~ | `arxiv-mcp-server` | Preprint search, PDF download, category filtering | None |
+| **OpenAlex** | ~~academic-search~~ | `openalex-research-mcp` | 240M+ works, institutions, venues, funders, OA links | None (email for polite pool) |
+| **Zotero** | ~~research-library~~ | `zotero-mcp` | Personal library, annotations, semantic search, collections | API key |
+| **HuggingFace** | ~~model-registry~~ | `huggingface-mcp-server` | Models, datasets, Spaces, papers, collections | API token |
+| **Kaggle** | ~~model-registry~~ | `kaggle-mcp` | Datasets, competitions, model search | API token |
+
+### Integration Patterns by Stage
+
+#### Stage 1: Research Grounding
+
+Use academic MCPs to ground specs in existing literature. The workflow follows a discovery-then-storage pattern:
+
+1. **Discover** — Search Semantic Scholar, arXiv, or OpenAlex for relevant papers
+2. **Evaluate** — Check citation counts, recency, relevance to spec scope
+3. **Store** — Add to Zotero library with tags matching Linear labels (`research:needs-grounding`, etc.)
+4. **Cite** — Reference papers in spec's Research Base section (minimum 3 for `literature-mapped`)
+
+**Which search tool when:**
+
+| Need | Tool | Why |
+|------|------|-----|
+| Broad topic search | Semantic Scholar `search_papers` | Best relevance ranking, field-of-study filtering |
+| Latest preprints | arXiv `search_papers` | Real-time index, category filtering (cs.AI, cs.SE, etc.) |
+| Citation analysis | OpenAlex `get_citation_network` | Forward + backward citation in one call |
+| Author lookup | Semantic Scholar `get_author` + `get_author_papers` | Richest author profiles |
+| Top cited works | OpenAlex `get_top_cited_works` | Built-in citation threshold filtering |
+| Trend analysis | OpenAlex `analyze_topic_trends` | Year-over-year publication volume |
+| Related papers | Semantic Scholar `get_recommendations` | Positive/negative paper seeding |
+| Institutional research | OpenAlex `search_institutions` | Country, type, output filters |
+
+#### Stage 2: Analytics Review & Competitive Analysis
+
+Use HuggingFace and Kaggle for ML/data grounding. Use Firecrawl for competitive landscape.
+
+**ML/Data grounding:**
+- HuggingFace `model_search` — find SOTA models for the problem domain
+- HuggingFace `paper_search` — semantic search across ML papers
+- HuggingFace `dataset_search` — find training/evaluation datasets
+- Kaggle `prepare_kaggle_dataset` — download competition datasets for benchmarking
+
+**Competitive landscape (via Firecrawl):**
+- Search competitor documentation sites
+- Extract feature matrices from comparison pages
+- Monitor changelog/release pages for new features
+
+### Firecrawl Integration Patterns
+
+Firecrawl is the primary ~~web-research~~ connector for public web data. It offers four operations, each suited to different research needs.
+
+#### Operations
+
+| Operation | When to Use | Token Cost | Example |
+|-----------|------------|------------|---------|
+| **search** | Finding relevant pages across the web | Low | `firecrawl_search("AI PM tools comparison 2026")` |
+| **scrape** | Extracting content from a known URL | Medium | `firecrawl_scrape("https://example.com/docs/api")` |
+| **extract** | Pulling structured data from pages | Medium | `firecrawl_extract(urls, schema={name, price, features})` |
+| **map** | Discovering all URLs on a site before scraping | Low | `firecrawl_map("https://docs.example.com")` |
+
+#### Discipline Rules
+
+These rules prevent token waste, credit exhaustion, and context bloat:
+
+1. **Prefer `WebFetch` for single-page reads.** Only use Firecrawl when you need search, batch scrape, structured extraction, or site mapping. `WebFetch` is free and sufficient for one-off page reads.
+2. **Always set `onlyMainContent: true`.** Strips navbars, footers, and sidebars. Reduces token cost by 30-60%.
+3. **Always set `formats: ["markdown"]`.** Never request `html` or `rawHtml` unless explicitly needed for extraction.
+4. **Always set `removeBase64Images: true`.** Prevents base64-encoded images from consuming context.
+5. **Search first, scrape selectively.** Use `firecrawl_search` without `scrapeOptions` to find relevant URLs, then `firecrawl_scrape` only the pages you need.
+6. **Limit crawl depth.** When using `firecrawl_crawl`, set `limit: 20` max and `maxDiscoveryDepth: 2` to prevent token overflow.
+7. **Cache with `maxAge`.** Set `maxAge: 172800000` (48h) for documentation pages that don't change frequently. 500% faster on cache hits.
+8. **Delegate to subagent.** All Firecrawl results should be processed by a Task subagent, never pasted into the main context. Subagent summarizes in 2-3 bullets.
+
+#### `.mcp.json` Fragment
+
+Research MCPs can be bundled as a recommended `.mcp.json` fragment that users merge into their project config:
+
+```json
+{
+  "mcpServers": {
+    "semanticscholar": {
+      "command": "npx",
+      "args": ["-y", "@xbghc/semanticscholar-mcp@latest"]
+    },
+    "arxiv": {
+      "command": "npx",
+      "args": ["-y", "arxiv-mcp-server@latest"]
+    },
+    "openalex": {
+      "command": "npx",
+      "args": ["-y", "openalex-research-mcp@latest"]
+    },
+    "zotero": {
+      "command": "npx",
+      "args": ["-y", "zotero-mcp@latest"],
+      "env": {
+        "ZOTERO_API_KEY": "${ZOTERO_API_KEY}",
+        "ZOTERO_USER_ID": "${ZOTERO_USER_ID}"
+      }
+    },
+    "huggingface": {
+      "command": "npx",
+      "args": ["-y", "huggingface-mcp-server@latest"],
+      "env": {
+        "HF_TOKEN": "${HF_TOKEN}"
+      }
+    },
+    "kaggle": {
+      "command": "npx",
+      "args": ["-y", "kaggle-mcp@latest"],
+      "env": {
+        "KAGGLE_USERNAME": "${KAGGLE_USERNAME}",
+        "KAGGLE_KEY": "${KAGGLE_KEY}"
+      }
+    }
+  }
+}
+```
+
+### Social Media MCPs: Evaluation
+
+These were evaluated as optional ~~community-signal~~ connectors for Stage 1-2 research intake diversification.
+
+| MCP | Verdict | Rationale |
+|-----|---------|-----------|
+| **Composio** | **REJECT** | Infrastructure overkill. Full integration platform (1000+ APIs) with cloud dependencies and OAuth complexity. Firecrawl already covers web scraping; no Stage 1-2 gap justifies the overhead. |
+| **LinkedIn** | **DEFER** | Useful for competitive analysis (PM tool launches, hiring signals) but all implementations rely on unofficial scraping APIs — fragile and ToS-risky. Firecrawl + targeted web searches suffice. Revisit if user friction emerges around LinkedIn-specific research. |
+| **YouTube** (`@kirbah/mcp-youtube`) | **ACCEPT (conditional)** | Fills Stage 1-2 gap for developer tutorial/demo analysis — transcripts reveal competitive features that text docs miss. Uses official YouTube Data API v3 (reliable). Install only if video content analysis is needed for your domain. |
+| **Hacker News** (`mcp-hacker-news`) | **ACCEPT (conditional)** | Fills Stage 1-2 gap for developer community sentiment — Show HN posts, Ask HN threads, launch discussions. Uses official HN Firebase API (stable). Low cost signal for competitive landscape and early validation. |
+
+**Guidance:** YouTube and Hacker News are accepted as *conditional* connectors — install them when your research grounding benefits from community signal. They are not required for core SDD functionality. Add to the `~~community-signal~~` placeholder in `.mcp.json` when needed.
+
+### Enterprise-Search Compatibility
+
+Anthropic's [`enterprise-search`](https://github.com/anthropics/knowledge-work-plugins/tree/main/enterprise-search) plugin provides `/search` and `/digest` commands with 3 skills (Search Strategy, Source Management, Knowledge Synthesis) for discovering knowledge across internal tools (Slack, MS 365, Notion/Guru, Atlassian, Asana).
+
+**Overlap assessment:** No functional overlap. Enterprise-search addresses *internal knowledge discovery* (chat, email, docs, wikis). CCC's research connectors address *public web and academic* data gathering. The two are complementary.
+
+**Combined coverage:**
+
+| Data Source | CCC Connector | Enterprise-Search |
+|-------------|--------------|-------------------|
+| Academic papers | S2, arXiv, OpenAlex | -- |
+| ML models/datasets | HuggingFace, Kaggle | -- |
+| Personal library | Zotero | -- |
+| Public web | Firecrawl | -- |
+| Internal chat (Slack, Teams) | -- | Slack connector |
+| Internal docs (Notion, Confluence) | -- | Atlassian, Notion/Guru connectors |
+| Email (Outlook, Gmail) | -- | MS 365 connector |
+| Project management (Asana, Jira) | -- | Asana, Atlassian connectors |
+
+**Integration opportunities for teams using both:**
+- Enterprise-search could serve as a Stage 1-2 research source for teams with internal knowledge bases (e.g., searching prior specs, design docs, Slack discussions about similar features)
+- Enterprise-search's `/digest` (daily/weekly activity rollup) could inform Stage 2 analytics review
+- Enterprise-search's Knowledge Synthesis skill (cross-source dedup, confidence scoring) could enhance adversarial review methodology
+
+**No action required** to use both plugins — they operate on different connector categories and do not conflict. Teams adopting enterprise-search alongside CCC get complete research coverage: public + academic + internal.
+
+---
+
 ## Customization
 
 Replace `~~placeholder~~` values with your team's specific tools. The plugin's methodology is tool-agnostic -- it works with any project tracker, version control system, or CI/CD platform that has MCP support.
@@ -349,7 +528,8 @@ How each connector maps to the 9-stage funnel:
 | Funnel Stage | Required Connectors | Recommended | Optional | Agent Accelerators |
 |---|---|---|---|---|
 | Stage 0: Intake | project-tracker | -- | communication | cto.new, ChatPRD |
-| Stage 1-2: Ideation + Analytics | project-tracker | analytics | research-library, web-research | -- |
+| Stage 1: Research Grounding | project-tracker | -- | academic-search (S2, arXiv, OpenAlex), research-library (Zotero), web-research (Firecrawl) | -- |
+| Stage 2: Analytics Review | project-tracker | analytics | model-registry (HuggingFace, Kaggle), web-research (Firecrawl), community-signal (HN, YouTube) | -- |
 | Stage 3: PR/FAQ Draft | project-tracker, version-control | -- | -- | -- |
 | Stage 4: Adversarial Review | version-control | ci-cd | -- | Codex (PR review) |
 | Stage 5: Visual Prototype | -- | deployment, component-gen | design | cto.new |
