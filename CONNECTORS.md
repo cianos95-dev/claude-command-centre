@@ -33,13 +33,13 @@ This plugin works best with the following data sources connected. Configure them
 
 ## Agent Connectors
 
-External AI agents that integrate with the SDD funnel via ~~project-tracker~~ (Linear) assignment or webhook dispatch. These are optional accelerators — Claude Code remains the primary agent for all stages.
+External AI agents that integrate with the SDD funnel via ~~project-tracker~~ (Linear) delegation. These are optional accelerators — Claude Code remains the primary agent for all stages.
 
 ### Adopted Agents
 
 | Agent | SDD Stages | Dispatch Method | Cost | Free Tier Viable |
 |-------|-----------|-----------------|------|------------------|
-| **cto.new** (Engine Labs) | 0 (intake), 5-6 (implement) | Linear assignment or MCP webhook (`mcp.enginelabs.ai/mcp`) | Free | Yes |
+| **cto.new** (Engine Labs) | 0 (intake), 5-6 (implement) | Linear delegation | Free | Yes |
 | **Sentry** | 7 (error verification) | Error tracking integration → auto-issue creation | Free tier | Yes |
 | **Cursor** | 6 (implement, exec:tdd) | Linear assignment (native integration) | $20/mo (Pro) | No |
 | **GitHub Copilot** | 6 (implement, exec:quick) | GitHub Actions label-based auto-assignment | Free tier | Yes |
@@ -173,6 +173,84 @@ When working on an issue:
 | Copilot | Repo files (automatic) | None needed | Uses repo context automatically |
 
 **Key distinction:** These repo-level files are for **local editor usage** (when the agent runs inside an IDE on your machine). For **Linear dispatch** (when the agent receives work via Linear assignment), all context comes from the issue description and comments. Repo-level files are a bonus — not a requirement.
+
+#### Agent Routing by Execution Mode
+
+When selecting an agent for a task, first determine the execution mode (see **execution-modes** skill), then use this table to choose an agent:
+
+| Exec Mode | Default Agent | Optional Accelerators | Notes |
+|-----------|---------------|----------------------|-------|
+| `exec:quick` | Claude Code | **cto.new** (free), Codex ($20/mo), GitHub Copilot (free) | cto.new is the recommended free-tier accelerator for well-defined tasks |
+| `exec:tdd` | Claude Code | **Cursor** ($20/mo), Cyrus (free, BYOK) | Cursor has native Linear integration; Cyrus adds 3-iteration self-verification |
+| `exec:pair` | Claude Code | Cyrus (async pairing) | Claude Code is primary for interactive pairing; Cyrus for async |
+| `exec:checkpoint` | Claude Code | — | Human-gated; no agent substitution appropriate |
+| `exec:swarm` | Claude Code | Tembo (Phase 3, deferred) | Tembo wraps multiple agents but is not yet validated for SDD |
+
+**Claude pull-based caveat:** Claude Code (`dd0797a4`) is session-local — it has no webhook server and cannot reactively process Linear delegation events. When Claude is the default agent, delegation only takes effect when a human starts a Claude Code session. For truly async dispatch, use a push-based agent (cto.new, Cursor, Codex, Copilot).
+
+#### Agent Selection Decision Tree
+
+```
+Is this an exec:quick task with clear acceptance criteria?
+|
++-- YES --> Is cto.new enabled?
+|           |
+|           +-- YES --> Assign to cto.new (free, fastest)
+|           +-- NO  --> Claude Code (default) or Copilot (PR generation)
+|
++-- NO --> Is this exec:tdd?
+           |
+           +-- YES --> Is Cursor Pro available?
+           |           |
+           |           +-- YES --> Cursor (native Linear + multi-file refactoring)
+           |           +-- NO  --> Claude Code (default) or Cyrus (self-verification)
+           |
+           +-- NO --> Claude Code (default for pair/checkpoint/swarm)
+```
+
+#### Free Tier Bundle
+
+For SDD's student-friendly zero-cost tier, only these agents are viable:
+
+- **Claude Code** (via Claude Max or API)
+- **cto.new** (free, no credit card)
+- **GitHub Copilot** (free tier available)
+- **Cyrus Community** (free, but requires Anthropic API key — BYOK cost)
+
+All other agents require paid subscriptions. The free tier bundle provides full SDD stage coverage (0-7.5) without any paid agent dependencies.
+
+#### Feedback Reconciliation Protocol
+
+When two or more agents produce outputs for related issues (e.g., parallel PRs, overlapping reviews), reconcile as follows:
+
+1. **Same issue, multiple agents:** Should not happen — assign exactly one agent per issue. If it does, the later agent's output is advisory only; the primary assignee's output is canonical.
+2. **Related issues, different agents:** Human reviews both outputs. If they conflict:
+   - Document both approaches in a Linear comment on the parent issue
+   - Choose one approach; do not merge conflicting strategies
+   - Close the rejected approach's PR with an explanatory comment
+3. **Review findings from multiple agents:** Normalize all findings into RDR format (see **adversarial-review** skill, Finding Normalization Protocol). Apply the 2/3 agreement threshold for inclusion, 3/3 for critical findings.
+
+#### Dispatch Issue Template
+
+When delegating an issue to an external agent via Linear, ensure the issue description contains all context the agent needs (external agents do not read SDD skill files):
+
+```markdown
+## Context
+{Brief description of the task and its purpose}
+
+## Acceptance Criteria
+- [ ] {Specific, testable criterion 1}
+- [ ] {Specific, testable criterion 2}
+
+## Constraints
+- Branch: `{agent-prefix}/{issue-id}-{slug}`
+- Do not modify: {list protected files/directories}
+- Test command: `{how to verify}`
+
+## References
+- Spec: {link to spec document or parent issue}
+- Related PRs: {links to any related open PRs}
+```
 
 ---
 

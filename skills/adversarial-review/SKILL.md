@@ -301,6 +301,8 @@ Routes adversarial review to external Linear-connected agents (cto.new, Codex, C
 
 **Replaces:** Options A and B (GitHub Actions → CI/premium agent). Option H achieves the same async agent review via Linear assignment instead of GitHub Actions YAML, which is simpler to configure and maintain.
 
+> For the canonical agent dispatch architecture (reactivity model, adoption status, dispatch-by-stage, routing tables), see **CONNECTORS.md § Agent Dispatch Protocol**. For finding normalization from external agent output, see the Finding Normalization Protocol below.
+
 ### Comparison Summary
 
 | Dimension | A: CI | B: Premium | C: API | D: In-Session | E: Persona | F: Debate | G: Tier Diversity | H: Agent Dispatch |

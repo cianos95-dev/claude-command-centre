@@ -230,8 +230,10 @@ When dispatching parallel sessions to different agents, additional constraints a
 
 - **One agent per session.** Do not assign the same issue to multiple agents simultaneously. Linear assignment is exclusive.
 - **Branch conventions differ.** Claude Code uses `claude/{issue-id}-{slug}`. External agents use their own conventions (Cursor: `cursor/{issue-id}`, Copilot: auto-named). Document the branch in the session registry.
-- **Only Claude Code sessions have full SDD awareness.** External agents (cto.new, Cursor, Codex) do not read SDD skill files. Provide essential context (acceptance criteria, constraints) in the issue description, not in skill references.
-- **Feedback reconciliation.** If two agents produce PRs for related issues, reconcile manually. External agents do not have cross-session awareness.
+- **Only Claude Code sessions have full SDD awareness.** External agents (cto.new, Cursor, Codex) do not read SDD skill files. Provide essential context (acceptance criteria, constraints) in the issue description, not in skill references. Use the Dispatch Issue Template from CONNECTORS.md § Agent Dispatch Protocol.
+- **Feedback reconciliation.** If two agents produce PRs for related issues, follow the Feedback Reconciliation Protocol in **CONNECTORS.md § Agent Dispatch Protocol**. External agents do not have cross-session awareness.
+
+> For agent adoption status, routing tables, the selection decision tree, and dispatch architecture, see **CONNECTORS.md § Agent Connectors**.
 
 ## Cross-Skill References
 
