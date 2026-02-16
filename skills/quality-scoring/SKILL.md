@@ -25,7 +25,7 @@ Scores are displayed as stars by default. Use `--verbose` to see numeric scores 
 | ★★ | 60-69 | Needs Work | Propose closure |
 | ★ | <60 | Inadequate | Block closure |
 
-**Display format:** Configurable via `.sdd-preferences.yaml`:
+**Display format:** Configurable via `.ccc-preferences.yaml`:
 
 ```yaml
 scoring:
@@ -194,7 +194,7 @@ If no overrides exist, the defaults from this skill apply.
 
 ## Integration with Closure
 
-The `/sdd:close` command calls quality scoring as its first step:
+The `/ccc:close` command calls quality scoring as its first step:
 
 1. Calculate score across all three dimensions
 2. Convert to star grade (or configured display format)

@@ -1,6 +1,6 @@
 # Structural Validation with cc-plugin-eval
 
-Plugin structural validation ensures that skills, commands, and agents trigger correctly after changes. This reference documents how to integrate [cc-plugin-eval](https://github.com/sjnims/cc-plugin-eval) into the SDD release process.
+Plugin structural validation ensures that skills, commands, and agents trigger correctly after changes. This reference documents how to integrate [cc-plugin-eval](https://github.com/sjnims/cc-plugin-eval) into the CCC release process.
 
 ## What cc-plugin-eval Does
 

@@ -102,7 +102,7 @@ Produce the index in a structured format that can be cached and referenced:
 ## Caching and Staleness
 
 - The index is cached in the project's `.claude/` directory as `codebase-index.md`
-- On subsequent runs, `/sdd:index` performs an incremental update:
+- On subsequent runs, `/ccc:index` performs an incremental update:
   1. Check `git diff --stat` since the index's commit hash
   2. Re-scan only changed directories
   3. Update affected sections of the index
@@ -110,7 +110,7 @@ Produce the index in a structured format that can be cached and referenced:
 
 ## Integration with Spec Writing
 
-When `/sdd:write-prfaq` runs, it automatically checks for a codebase index and includes it as a "Current Codebase Context" section in the spec. This ensures:
+When `/ccc:write-prfaq` runs, it automatically checks for a codebase index and includes it as a "Current Codebase Context" section in the spec. This ensures:
 
 - New features reference existing patterns rather than inventing new ones
 - Specs account for existing integration points
@@ -125,4 +125,4 @@ When `/sdd:write-prfaq` runs, it automatically checks for a codebase index and i
 | Before writing a new PR/FAQ | Check staleness, incremental update |
 | After major refactor or dependency update | Full re-index |
 | After merging a large PR | Incremental update |
-| Manual trigger (`/sdd:index`) | Full or incremental based on staleness |
+| Manual trigger (`/ccc:index`) | Full or incremental based on staleness |

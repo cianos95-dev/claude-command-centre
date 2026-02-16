@@ -1,16 +1,16 @@
 ---
 description: |
-  Manage SDD preferences for the current project. Customise gates, execution, prompts, planning, eval, style, session, review, scoring, Cowork, and replan behavior.
+  Manage CCC preferences for the current project. Customise gates, execution, prompts, planning, eval, style, session, review, scoring, Cowork, and replan behavior.
   Use to view current config, reset to defaults, or set individual preferences.
   In Cowork: generates an interactive artifact with live YAML preview and preset buttons.
-  Trigger with phrases like "configure sdd", "show sdd preferences", "set gate preferences", "sdd config", "customise workflow", "change execution defaults", "set prioritization framework", "configure eval", "change scoring format".
+  Trigger with phrases like "configure ccc", "show ccc preferences", "set gate preferences", "ccc config", "customise workflow", "change execution defaults", "set prioritization framework", "configure eval", "change scoring format".
 argument-hint: "[--show | --reset | key=value]"
 platforms: [cli, cowork]
 ---
 
-# Config -- SDD Preferences Manager
+# Config -- CCC Preferences Manager
 
-Manage `.sdd-preferences.yaml` for the current project. Preferences customise gates, execution parameters, prompt enrichments, Cowork behavior, planning, evaluation, review, scoring, session economics, and output style.
+Manage `.ccc-preferences.yaml` for the current project. Preferences customise gates, execution parameters, prompt enrichments, Cowork behavior, planning, evaluation, review, scoring, session economics, and output style.
 
 ## Step 1: Detect Platform and Mode
 
@@ -21,7 +21,7 @@ When running in Claude Code (file system available):
 | Argument | Action |
 |----------|--------|
 | `--show` | Display current prefs merged with defaults (Step 2) |
-| `--reset` | Generate fresh `.sdd-preferences.yaml` with all defaults + comments (Step 3) |
+| `--reset` | Generate fresh `.ccc-preferences.yaml` with all defaults + comments (Step 3) |
 | `key=value` | Set a specific preference (Step 4) |
 | (none) | Interactive walkthrough of all categories (Step 5) |
 
@@ -33,13 +33,13 @@ Generate an interactive artifact with a live YAML preview. See Step 6 for the ar
 
 ## Step 2: Show Current Config (`--show`)
 
-1. Look for `.sdd-preferences.yaml` in the project root.
+1. Look for `.ccc-preferences.yaml` in the project root.
 2. If found, parse with `yq` and merge with defaults (defaults fill any missing keys).
-3. If not found, show all defaults with a note: "No `.sdd-preferences.yaml` found — using all defaults."
+3. If not found, show all defaults with a note: "No `.ccc-preferences.yaml` found — using all defaults."
 4. Display as a formatted table:
 
 ```
-SDD Preferences (merged with defaults)
+CCC Preferences (merged with defaults)
 
 Gates [Stable]
   spec_approval:       true  (default)
@@ -87,7 +87,7 @@ Session [Session]
   max_parallel_subagents:    3  (default)
 
 Review [Stable]
-  pre_mortem_style:          sdd    (default)
+  pre_mortem_style:          ccc    (default)
   structured_categories:     false  (default)
   gate2_require_consider:    false  (default)
 
@@ -99,9 +99,9 @@ Mark overridden values with `← overridden` to distinguish from defaults.
 
 ## Step 3: Reset to Defaults (`--reset`)
 
-1. Copy `examples/sample-preferences.yaml` (from the plugin installation directory) to `.sdd-preferences.yaml` in the project root.
+1. Copy `examples/sample-preferences.yaml` (from the plugin installation directory) to `.ccc-preferences.yaml` in the project root.
 2. If the file already exists, ask for confirmation: "This will overwrite your current preferences. Continue?"
-3. Confirm creation: "`.sdd-preferences.yaml` created with all defaults. Edit as needed."
+3. Confirm creation: "`.ccc-preferences.yaml` created with all defaults. Edit as needed."
 
 ## Step 4: Set a Single Value (`key=value`)
 
@@ -111,7 +111,7 @@ Mark overridden values with `← overridden` to distinguish from defaults.
    - Booleans: `true` / `false`
    - Numbers: integer within documented range
    - Enums: one of the allowed values (e.g., `quick|tdd|pair|checkpoint|swarm|null` for `default_mode`)
-4. If `.sdd-preferences.yaml` does not exist, create it with only the specified key (other keys will use defaults).
+4. If `.ccc-preferences.yaml` does not exist, create it with only the specified key (other keys will use defaults).
 5. If the file exists, update the specific key using `yq`.
 6. Confirm: "Set `gates.pr_review` = `false`."
 
@@ -146,7 +146,7 @@ Mark overridden values with `← overridden` to distinguish from defaults.
 | `session.context_budget_pct` | int | 20-90 | 50 | Session |
 | `session.checkpoint_pct` | int | 30-95 | 70 | Session |
 | `session.max_parallel_subagents` | int | 1-10 | 3 | Session |
-| `review.pre_mortem_style` | enum | sdd, neurofoo, combined | sdd | Stable |
+| `review.pre_mortem_style` | enum | ccc, neurofoo, combined | ccc | Stable |
 | `review.structured_categories` | bool | true/false | false | Stable |
 | `review.gate2_require_consider` | bool | true/false | false | Stable |
 | `scoring.display_format` | enum | stars, letter, numeric, fibonacci | stars | Stable |
@@ -167,7 +167,7 @@ Onboarding-tier keys (`eval.cost_profile`) should be highlighted with a note: "T
 Offer preset shortcuts at the start:
 
 ```
-SDD Preferences Configuration
+CCC Preferences Configuration
 
 Quick presets:
   [1] Full Ceremony (default) — All 3 gates, all enrichments
@@ -198,7 +198,7 @@ When running in Cowork (no file system), generate a React artifact that provides
 
 The artifact must include:
 
-1. **Header** with title "SDD Preferences" and brief description.
+1. **Header** with title "CCC Preferences" and brief description.
 
 2. **Preset Buttons** — 4 buttons across the top:
    - Full Ceremony (default) | Solo Developer | Autonomous | Research Mode
@@ -217,7 +217,7 @@ The artifact must include:
 5. **Prompt Enrichment Section** — 3 toggles:
    - Subagent Discipline — "Parallel reads, single build/test"
    - Search Before Build — "Search codebase before implementing"
-   - Agents File — "Read .sdd-agents.md for project patterns"
+   - Agents File — "Read .ccc-agents.md for project patterns"
 
 6. **Cowork Section** — 2 toggles:
    - Default to Planning — "Route Cowork to planning, not building"
@@ -248,7 +248,7 @@ The artifact must include:
     - Max Parallel Subagents — number input (1-10, default 3)
 
 12. **Review Section** [Stable] — 3 controls:
-    - Pre-mortem Style — dropdown: SDD (default), Neurofoo, Combined
+    - Pre-mortem Style — dropdown: CCC (default), Neurofoo, Combined
     - Structured Categories — toggle (default: false) — "Add groupthink-prevention categories"
     - Gate 2 Require Consider — toggle (default: false) — "Also require decisions on Consider findings for Gate 2"
 
@@ -258,7 +258,7 @@ The artifact must include:
 14. **Output Section** — at the bottom:
    - Live YAML preview that updates as form values change
    - "Copy YAML" button that copies the YAML to clipboard
-   - Instructions text: "Save as `.sdd-preferences.yaml` in your project root, or run `/sdd:config --reset` in Claude Code and edit."
+   - Instructions text: "Save as `.ccc-preferences.yaml` in your project root, or run `/ccc:config --reset` in Claude Code and edit."
 
 ### Artifact Style
 
@@ -281,6 +281,6 @@ The artifact must include:
 
 ## Integration Notes
 
-- **Stop handler reads preferences.** The stop hook loads `.sdd-preferences.yaml` at the start of each run and applies the values to gate checks, prompt enrichment, and replan logic.
+- **Stop handler reads preferences.** The stop hook loads `.ccc-preferences.yaml` at the start of each run and applies the values to gate checks, prompt enrichment, and replan logic.
 - **Schema source of truth.** `examples/sample-preferences.yaml` is the canonical schema. This command copies from it for `--reset` and validates against it for `key=value`.
-- **No runtime dependency on this command.** Preferences work without ever running `/sdd:config` — the stop handler defaults are baked in. This command is a convenience for discovery and editing.
+- **No runtime dependency on this command.** Preferences work without ever running `/ccc:config` — the stop handler defaults are baked in. This command is a convenience for discovery and editing.

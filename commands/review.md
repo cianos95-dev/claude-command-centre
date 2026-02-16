@@ -140,8 +140,8 @@ After the Review Decision Record is posted:
 ```
 ✓ Adversarial review complete. Review Decision Record posted.
   → Fill decisions on Critical/Important findings to pass Gate 2
-  → Then: Run `/sdd:go` to continue → will verify Gate 2 and route to decomposition
-  → Or: Run `/sdd:decompose [issue ID]` after Gate 2 decisions are filled
+  → Then: Run `/ccc:go` to continue → will verify Gate 2 and route to decomposition
+  → Or: Run `/ccc:decompose [issue ID]` after Gate 2 decisions are filled
 ```
 
 Gate 2 is passed when all Critical and Important findings in the RDR have a Decision value (`agreed`, `override`, `deferred`, or `rejected`).

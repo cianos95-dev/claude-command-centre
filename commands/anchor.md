@@ -51,7 +51,7 @@ Assess the current implementation state:
 
 Look for unresolved feedback:
 
-1. Read adversarial review output if `/sdd:review` was run (check for review document linked to the issue)
+1. Read adversarial review output if `/ccc:review` was run (check for review document linked to the issue)
 2. Check for open PR review comments
 3. Check for carry-forward items from the issue-lifecycle protocol
 
@@ -93,13 +93,13 @@ Based on the alignment summary:
 | **Minor drift** | Note the drift, course-correct, continue |
 | **Major drift** | Pause implementation. Discuss with user if in `exec:pair` mode. Revert to last aligned state if needed. |
 | **Scope creep detected** | Create new issues for out-of-scope work (per carry-forward protocol). Refocus on original acceptance criteria. |
-| **All criteria met** | Suggest running `/sdd:close` to evaluate closure |
+| **All criteria met** | Suggest running `/ccc:close` to evaluate closure |
 
 ## What If
 
 | Situation | Response |
 |-----------|----------|
-| **No spec exists for the issue** | Anchor against the issue description and acceptance criteria only. Warn that drift detection is limited. Suggest running `/sdd:write-prfaq` if the issue is complex enough to warrant a spec. |
+| **No spec exists for the issue** | Anchor against the issue description and acceptance criteria only. Warn that drift detection is limited. Suggest running `/ccc:write-prfaq` if the issue is complex enough to warrant a spec. |
 | **Multiple issues in progress** | Anchor to the one specified by ID, or if no ID given, anchor to the most recently touched. List all In Progress issues so the user can choose. |
 | **Context compaction just occurred** | This is the most critical time to anchor. Run the full protocol and explicitly note what context was lost and rebuilt. |
 | **Agent is not the assignee** | Still run the anchor check but note that the agent is not assigned. Do not propose status changes for issues assigned to others. |

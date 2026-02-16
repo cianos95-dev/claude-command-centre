@@ -1,6 +1,6 @@
 # Upstream Monitoring
 
-How to track changes in Anthropic's plugin ecosystem that might affect the SDD plugin.
+How to track changes in Anthropic's plugin ecosystem that might affect the CCC plugin.
 
 ## Repositories to Watch
 

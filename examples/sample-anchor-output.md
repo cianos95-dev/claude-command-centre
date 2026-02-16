@@ -1,11 +1,11 @@
 # Example: Anchor Check Output
 
-> **Funnel position:** Mid-implementation utility -- output of `/sdd:anchor`
+> **Funnel position:** Mid-implementation utility -- output of `/ccc:anchor`
 > **Purpose:** Re-anchors to the active spec by re-reading source artifacts and detecting drift
 > **Prerequisite:** An active issue with a spec and ongoing implementation work
 > **Related:** Drift prevention skill governs the anchoring protocol. Codebase awareness skill provides the index that anchor consults.
 
-This example shows what `/sdd:anchor` produces when run mid-session during implementation of a feature. It demonstrates the full alignment check: acceptance criteria tracking, drift detection, open items, and the recommended next action.
+This example shows what `/ccc:anchor` produces when run mid-session during implementation of a feature. It demonstrates the full alignment check: acceptance criteria tracking, drift detection, open items, and the recommended next action.
 
 ---
 
@@ -86,7 +86,7 @@ This example shows what `/sdd:anchor` produces when run mid-session during imple
 
 ### Next Action
 
-- **All criteria met.** Suggest running `/sdd:close` to evaluate closure. Note: this is a multi-PR issue, so closure will be PROPOSE (not auto-close) per the closure rules matrix.
+- **All criteria met.** Suggest running `/ccc:close` to evaluate closure. Note: this is a multi-PR issue, so closure will be PROPOSE (not auto-close) per the closure rules matrix.
 
 ---
 

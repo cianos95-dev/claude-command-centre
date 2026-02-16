@@ -1,6 +1,6 @@
 # Retry Budget
 
-The execution engine enforces the SDD retry budget at the task level.
+The execution engine enforces the CCC retry budget at the task level.
 
 ## Per-task iteration tracking
 
@@ -10,9 +10,9 @@ Each time the stop hook restarts a session for the same task (because `TASK_COMP
 |-----------|-------------|
 | 1 | First attempt. Normal execution. |
 | 2 | Second attempt. Agent should try a different approach. |
-| 3 | Third attempt. Agent has exhausted the SDD retry budget of 2 failed approaches. The continue prompt includes a warning: "Two approaches have failed. Document failures in progress log and try a fundamentally different strategy." |
+| 3 | Third attempt. Agent has exhausted the CCC retry budget of 2 failed approaches. The continue prompt includes a warning: "Two approaches have failed. Document failures in progress log and try a fundamentally different strategy." |
 | 4 | Fourth attempt. Escalation warning injected: "This is your last attempt before the task is blocked. If you cannot complete it, add to Blocked / Flagged in the progress log." |
-| 5 (maxTaskIterations) | Hook blocks with an error. The loop stops. A message tells the user to fix the task manually, then resume with `/sdd:go`. |
+| 5 (maxTaskIterations) | Hook blocks with an error. The loop stops. A message tells the user to fix the task manually, then resume with `/ccc:go`. |
 
 ## What counts as an "iteration"
 

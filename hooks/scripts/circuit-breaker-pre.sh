@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# SDD Hook: Circuit Breaker — PreToolUse (Block Destructive Ops)
+# CCC Hook: Circuit Breaker — PreToolUse (Block Destructive Ops)
 # Trigger: Before tool execution (PreToolUse)
 # Purpose: Block destructive operations when the circuit breaker is open
 #
-# When the circuit breaker is open (.sdd-circuit-breaker.json has open: true),
+# When the circuit breaker is open (.ccc-circuit-breaker.json has open: true),
 # this hook blocks destructive tools (Write, Edit, MultiEdit, Bash, NotebookEdit)
 # and allows read-only tools to proceed.
 #
@@ -41,7 +41,7 @@ fi
 # ---------------------------------------------------------------------------
 
 PROJECT_ROOT="${SDD_PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
-CB_FILE="$PROJECT_ROOT/.sdd-circuit-breaker.json"
+CB_FILE="$PROJECT_ROOT/.ccc-circuit-breaker.json"
 
 if [[ ! -f "$CB_FILE" ]]; then
     # No circuit breaker state — allow everything
@@ -85,8 +85,8 @@ ERROR_COUNT=$(echo "$CB_STATE" | jq -r '.consecutiveErrors // 0' 2>/dev/null) ||
 
 if [[ "$IS_DESTRUCTIVE" == "true" ]]; then
     # Block destructive operation
-    MSG="[SDD Circuit Breaker] BLOCKED: '$TOOL_NAME' denied — circuit is open ($ERROR_COUNT consecutive errors on '$LAST_TOOL')."
-    MSG="$MSG Use /rewind to recover, or delete .sdd-circuit-breaker.json to force reset."
+    MSG="[CCC Circuit Breaker] BLOCKED: '$TOOL_NAME' denied — circuit is open ($ERROR_COUNT consecutive errors on '$LAST_TOOL')."
+    MSG="$MSG Use /rewind to recover, or delete .ccc-circuit-breaker.json to force reset."
 
     # Output PreToolUse deny decision
     jq -n \
@@ -100,6 +100,6 @@ if [[ "$IS_DESTRUCTIVE" == "true" ]]; then
     exit 2
 else
     # Allow read-only operation
-    echo "[SDD] Circuit open but allowing read-only tool: $TOOL_NAME"
+    echo "[CCC] Circuit open but allowing read-only tool: $TOOL_NAME"
     exit 0
 fi

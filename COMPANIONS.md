@@ -48,7 +48,7 @@ Stage 0-2: Ideation & Analytics
   └── (CCC covers this)
 
 Stage 3: PR/FAQ Draft
-  └── superpowers:brainstorming → feeds divergent ideas INTO /sdd:write-prfaq
+  └── superpowers:brainstorming → feeds divergent ideas INTO /ccc:write-prfaq
 
 Stage 4: Adversarial Review
   └── (CCC covers this -- spec-level review)
@@ -80,7 +80,7 @@ These external skills partially overlap with CCC capabilities. We evaluated whet
 | External Skill | CCC Parallel | Decision | Rationale |
 |----------------|-------------|----------|-----------|
 | superpowers:`systematic-debugging` | execution-engine | **Companion** | CCC's execution-engine handles task loop orchestration (state machine, retries, context resets). Systematic-debugging handles root cause investigation (reproduce, pattern, hypothesis, implement). Different abstraction layers -- no conflict, no redundancy. |
-| superpowers:`brainstorming` | prfaq-methodology | **Companion** | Brainstorming is pre-spec divergent exploration (ideas to design doc). PR/FAQ is post-idea convergent specification (press release to acceptance criteria). Sequential, not competing -- brainstorming feeds into `/sdd:write-prfaq`. |
+| superpowers:`brainstorming` | prfaq-methodology | **Companion** | Brainstorming is pre-spec divergent exploration (ideas to design doc). PR/FAQ is post-idea convergent specification (press release to acceptance criteria). Sequential, not competing -- brainstorming feeds into `/ccc:write-prfaq`. |
 | superpowers:`requesting-code-review` | adversarial-review | **Companion** | CCC adversarial-review is spec-level stress testing (Stage 4, before implementation). requesting-code-review is PR-level review dispatch (Stage 6, during implementation). Different funnel stages, complementary concerns. |
 | superpowers:`receiving-code-review` | (none) | **Companion** | No CCC skill covers responding to reviewer feedback. This skill teaches verify-before-implement discipline and YAGNI pushback. Generic process skill that doesn't need CCC-specific framing. |
 | developer-essentials:`code-review-excellence` | adversarial-review | **Companion** | code-review-excellence teaches PR review technique (severity labels, time-boxing, language-specific checklists). CCC adversarial-review is multi-perspective spec stress testing. Different targets (code vs specs), different methodology. |

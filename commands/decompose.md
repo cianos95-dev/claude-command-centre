@@ -33,7 +33,7 @@ Before reading the spec, verify that Gate 2 (Accept Findings) has passed. This e
    - Every row where Severity = `Critical` or `Important` must have a non-empty Decision value.
    - Every row where Decision = `override` or `rejected` must have a non-empty Response.
    - Every row where Decision = `deferred` must have an issue link in Response.
-   - If `review.gate2_require_consider` is `true` in `.sdd-preferences.yaml`, Consider rows also require Decision values.
+   - If `review.gate2_require_consider` is `true` in `.ccc-preferences.yaml`, Consider rows also require Decision values.
 6. **Gate 2 outcome:**
    - **All checks pass** → Gate 2 = PASSED. Proceed to read the spec.
    - **Any check fails** → Report which findings lack decisions. Do NOT proceed. Prompt the human to fill decisions using reply comments or the inline shorthand.
@@ -159,9 +159,9 @@ After the decomposition is complete and sub-issues are created:
 
 ```
 ✓ Decomposition complete. N tasks created with dependency graph.
-  Next: Run `/sdd:go` to continue → will enter execution loop
-  Or: Run `/sdd:start [first task ID]` to start a specific task
-  Or: Run `/sdd:start --next` to pick the highest-priority unblocked task
+  Next: Run `/ccc:go` to continue → will enter execution loop
+  Or: Run `/ccc:start [first task ID]` to start a specific task
+  Or: Run `/ccc:start --next` to pick the highest-priority unblocked task
 ```
 
 The execution loop will process tasks one at a time with fresh context per task if the stop hook is active.

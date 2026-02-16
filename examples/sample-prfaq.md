@@ -1,7 +1,7 @@
 # Example: Completed PR/FAQ (Feature Template)
 
-> **Funnel position:** Stage 3 (PR/FAQ Draft) — output of `/sdd:write-prfaq`
-> **Next step:** Send to adversarial review via `/sdd:review` → see [sample-review-findings.md](sample-review-findings.md)
+> **Funnel position:** Stage 3 (PR/FAQ Draft) — output of `/ccc:write-prfaq`
+> **Next step:** Send to adversarial review via `/ccc:review` → see [sample-review-findings.md](sample-review-findings.md)
 > **Later:** After implementation and verification → see [sample-closure-comment.md](sample-closure-comment.md)
 
 This is an example of a filled-out PR/FAQ using the `prfaq-feature` template. It demonstrates the Working Backwards methodology applied to a real feature.

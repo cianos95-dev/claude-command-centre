@@ -73,11 +73,11 @@ Linear is the default ~~project-tracker~~ for CCC. Complete this checklist to co
 
 ## Agent Connectors
 
-External AI agents that integrate with the SDD funnel via ~~project-tracker~~ (Linear) delegation. These are optional accelerators — Claude Code remains the primary agent for all stages.
+External AI agents that integrate with the CCC funnel via ~~project-tracker~~ (Linear) delegation. These are optional accelerators — Claude Code remains the primary agent for all stages.
 
 ### Adopted Agents
 
-| Agent | SDD Stages | Dispatch Method | Cost | Free Tier Viable |
+| Agent | CCC Stages | Dispatch Method | Cost | Free Tier Viable |
 |-------|-----------|-----------------|------|------------------|
 | **cto.new** (Engine Labs) | 0 (intake), 5-6 (implement) | Linear delegation | Free | Yes |
 | **Sentry** | 7 (error verification) | Error tracking integration → auto-issue creation | Free tier | Yes |
@@ -86,9 +86,9 @@ External AI agents that integrate with the SDD funnel via ~~project-tracker~~ (L
 
 ### Conditional Agents
 
-Adoption depends on budget and specific workflow needs. Not required for core SDD functionality.
+Adoption depends on budget and specific workflow needs. Not required for core CCC functionality.
 
-| Agent | SDD Stages | Unique Value | Cost | Condition |
+| Agent | CCC Stages | Unique Value | Cost | Condition |
 |-------|-----------|--------------|------|-----------|
 | **Codex** (OpenAI) | 4 (code review), 6-7 | Structured PR code review with P1/P2 findings — no other agent offers this | $20/mo (ChatGPT Plus) | Adopt if GPT diversity + PR review automation is valued |
 | **Cyrus** (Ceedar AI) | 6 (exec:tdd, exec:pair) | Git worktree isolation per issue, 3-iteration self-verification loop | Free (BYOK — requires Anthropic API key) | Adopt if Claude consistency + self-verification is valued; accept 3-5x token cost |
@@ -97,13 +97,13 @@ Adoption depends on budget and specific workflow needs. Not required for core SD
 
 | Agent | Role | Why Deferred | Revisit When |
 |-------|------|-------------|--------------|
-| **Tembo** | Meta-orchestrator (wraps Cursor, Codex, Claude Code) | 1-repo limit on free tier; not validated for SDD workflow | Post-conference evaluation; potential Phase 3 orchestration backend |
+| **Tembo** | Meta-orchestrator (wraps Cursor, Codex, Claude Code) | 1-repo limit on free tier; not validated for CCC workflow | Post-conference evaluation; potential Phase 3 orchestration backend |
 
 ### Demoted Agents
 
 | Agent | Originally | Demotion Reason |
 |-------|-----------|-----------------|
-| **ChatPRD** | Stage 0-3 candidate | Does not support PR/FAQ templates; missing adversarial review and research grounding. Keep connected but do not invest in SDD integration. Optional Stage 0 supplement only. |
+| **ChatPRD** | Stage 0-3 candidate | Does not support PR/FAQ templates; missing adversarial review and research grounding. Keep connected but do not invest in CCC integration. Optional Stage 0 supplement only. |
 
 ### Agent-to-Stage Mapping
 
@@ -168,11 +168,11 @@ Agents differ in how they receive delegation signals. This distinction determine
 - A webhook receiver (e.g., n8n workflow, Cloudflare Worker) that receives Linear delegation events and invokes the Claude API
 - A polling service that periodically checks for newly delegated issues
 
-Neither is required for the SDD workflow — Claude's pull-based model works well when sessions are frequent. Push-based dispatch is a future enhancement (see CIA-431 Option C).
+Neither is required for the CCC workflow — Claude's pull-based model works well when sessions are frequent. Push-based dispatch is a future enhancement (see CIA-431 Option C).
 
-#### Dispatch by SDD Stage
+#### Dispatch by CCC Stage
 
-| SDD Stage | Dispatch Action | Expected Agent Output |
+| CCC Stage | Dispatch Action | Expected Agent Output |
 |-----------|----------------|----------------------|
 | Stage 0 (Intake) | Delegate intake issue to cto.new | Plan comment or spec draft PR |
 | Stage 4 (Review) | Delegate spec issue to Codex or cto.new | Review findings as comment (normalize via RDR protocol) |
@@ -186,12 +186,12 @@ Linear supports workspace-level and team-level agent guidance — markdown instr
 - **Workspace level:** Settings > Agents > Additional guidance
 - **Team level:** Team settings > Agents > Additional guidance
 
-Recommended workspace guidance for SDD:
+Recommended workspace guidance for CCC:
 
 ```markdown
-## SDD Workflow Context
+## CCC Workflow Context
 
-This workspace uses Spec-Driven Development. Issues follow a funnel:
+This workspace uses Claude Command Centre. Issues follow a funnel:
 Stage 0 (Intake) → 1-3 (Spec) → 4 (Review) → 5-6 (Implement) → 7 (Verify) → 7.5 (Close)
 
 When working on an issue:
@@ -208,7 +208,7 @@ When working on an issue:
 |-------|----------------|---------------|---------|
 | Codex | `AGENTS.md` | `AGENTS.md` at repo root | Repo structure, coding conventions, test commands |
 | Cursor | `.cursor/rules/` | `.cursor/rules/*.mdc` | Project-specific rules |
-| Claude Code | `CLAUDE.md` | `CLAUDE.md` at repo root | Already exists in SDD repos |
+| Claude Code | `CLAUDE.md` | `CLAUDE.md` at repo root | Already exists in CCC repos |
 | cto.new | Issue description only | None needed | All context via Linear issue |
 | Copilot | Repo files (automatic) | None needed | Uses repo context automatically |
 
@@ -224,7 +224,7 @@ When selecting an agent for a task, first determine the execution mode (see **ex
 | `exec:tdd` | Claude Code | **Cursor** ($20/mo), Cyrus (free, BYOK) | Cursor has native Linear integration; Cyrus adds 3-iteration self-verification |
 | `exec:pair` | Claude Code | Cyrus (async pairing) | Claude Code is primary for interactive pairing; Cyrus for async |
 | `exec:checkpoint` | Claude Code | — | Human-gated; no agent substitution appropriate |
-| `exec:swarm` | Claude Code | Tembo (Phase 3, deferred) | Tembo wraps multiple agents but is not yet validated for SDD |
+| `exec:swarm` | Claude Code | Tembo (Phase 3, deferred) | Tembo wraps multiple agents but is not yet validated for CCC |
 
 **Claude pull-based caveat:** Claude Code (`dd0797a4`) is session-local — it has no webhook server and cannot reactively process Linear delegation events. When Claude is the default agent, delegation only takes effect when a human starts a Claude Code session. For truly async dispatch, use a push-based agent (cto.new, Cursor, Codex, Copilot).
 
@@ -250,14 +250,14 @@ Is this an exec:quick task with clear acceptance criteria?
 
 #### Free Tier Bundle
 
-For SDD's student-friendly zero-cost tier, only these agents are viable:
+For CCC's student-friendly zero-cost tier, only these agents are viable:
 
 - **Claude Code** (via Claude Max or API)
 - **cto.new** (free, no credit card)
 - **GitHub Copilot** (free tier available)
 - **Cyrus Community** (free, but requires Anthropic API key — BYOK cost)
 
-All other agents require paid subscriptions. The free tier bundle provides full SDD stage coverage (0-7.5) without any paid agent dependencies.
+All other agents require paid subscriptions. The free tier bundle provides full CCC stage coverage (0-7.5) without any paid agent dependencies.
 
 #### Feedback Reconciliation Protocol
 
@@ -272,7 +272,7 @@ When two or more agents produce outputs for related issues (e.g., parallel PRs, 
 
 #### Dispatch Issue Template
 
-When delegating an issue to an external agent via Linear, ensure the issue description contains all context the agent needs (external agents do not read SDD skill files):
+When delegating an issue to an external agent via Linear, ensure the issue description contains all context the agent needs (external agents do not read CCC skill files):
 
 ```markdown
 ## Context
@@ -296,9 +296,9 @@ When delegating an issue to an external agent via Linear, ensure the issue descr
 
 ## Decided Observability Stack
 
-For teams that want an opinionated starting point, this is the stack validated through real SDD projects. Each tool fills a distinct role — avoid overlap by following the stage mapping.
+For teams that want an opinionated starting point, this is the stack validated through real CCC projects. Each tool fills a distinct role — avoid overlap by following the stage mapping.
 
-| Tool | Role | SDD Stage | When to Use |
+| Tool | Role | CCC Stage | When to Use |
 |------|------|-----------|-------------|
 | **PostHog** | Product analytics, feature flags, session replays | Stage 2 (analytics review) + Stage 7 (behavior verification) | Validating that shipped features are actually used. Feature flag rollout during Stage 6. Session replays to debug user-facing issues at Stage 7. |
 | **Sentry** | Error tracking, performance monitoring | Stage 7 (error verification) | Monitoring error rates post-deploy. Performance regression detection. Source map integration for actionable stack traces. |
@@ -483,7 +483,7 @@ These were evaluated as optional ~~community-signal~~ connectors for Stage 1-2 r
 | **YouTube** (`@kirbah/mcp-youtube`) | **ACCEPT (conditional)** | Fills Stage 1-2 gap for developer tutorial/demo analysis — transcripts reveal competitive features that text docs miss. Uses official YouTube Data API v3 (reliable). Install only if video content analysis is needed for your domain. |
 | **Hacker News** (`mcp-hacker-news`) | **ACCEPT (conditional)** | Fills Stage 1-2 gap for developer community sentiment — Show HN posts, Ask HN threads, launch discussions. Uses official HN Firebase API (stable). Low cost signal for competitive landscape and early validation. |
 
-**Guidance:** YouTube and Hacker News are accepted as *conditional* connectors — install them when your research grounding benefits from community signal. They are not required for core SDD functionality. Add to the `~~community-signal~~` placeholder in `.mcp.json` when needed.
+**Guidance:** YouTube and Hacker News are accepted as *conditional* connectors — install them when your research grounding benefits from community signal. They are not required for core CCC functionality. Add to the `~~community-signal~~` placeholder in `.mcp.json` when needed.
 
 ### Enterprise-Search Compatibility
 
@@ -658,7 +658,7 @@ If you start with OS Keychain and later need a secrets manager:
 
 ## Real-World Example: Distributor Finder App
 
-A Next.js App Router application with Supabase (database), Google Maps (interactive map), and Vercel (deployment). Solo developer using the SDD funnel with `exec:checkpoint` mode.
+A Next.js App Router application with Supabase (database), Google Maps (interactive map), and Vercel (deployment). Solo developer using the CCC funnel with `exec:checkpoint` mode.
 
 ### Connectors Actually Used
 

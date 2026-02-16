@@ -1,11 +1,11 @@
-# .sdd-preferences.yaml — SDD Plugin Preferences
+# .ccc-preferences.yaml — CCC Plugin Preferences
 #
-# Place this file in your project root to customise the SDD workflow.
+# Place this file in your project root to customise the CCC workflow.
 # All values shown below are the defaults. Only override what you need.
 #
-# Generate this file:  /sdd:config --reset
-# View merged config:  /sdd:config --show
-# Edit a single value: /sdd:config gates.pr_review=false
+# Generate this file:  /ccc:config --reset
+# View merged config:  /ccc:config --show
+# Edit a single value: /ccc:config gates.pr_review=false
 #
 # Requires: yq (brew install yq) for stop handler parsing.
 # If yq is not installed, all defaults apply automatically.
@@ -18,7 +18,7 @@
 # ---------------------------------------------------------------------------
 # Gates — Human approval checkpoints                          [Tier: Stable]
 # ---------------------------------------------------------------------------
-# The SDD funnel has 3 approval gates. Set to false to auto-pass a gate.
+# The CCC funnel has 3 approval gates. Set to false to auto-pass a gate.
 # Auto-passed gates show as [~] in the status view (vs [x] for human-passed).
 #
 # Presets:
@@ -52,7 +52,7 @@ execution:
 prompts:
   subagent_discipline: true   # "Use parallel subagents for reads; single for build/test"
   search_before_build: true   # "Search codebase for existing solutions before implementing"
-  agents_file: true           # "Read .sdd-agents.md for project-specific patterns"
+  agents_file: true           # "Read .ccc-agents.md for project-specific patterns"
 
 # ---------------------------------------------------------------------------
 # Cowork — Behavior when running in Claude Cowork             [Tier: Stable]
@@ -97,7 +97,7 @@ planning:
   multi_choice: true          # Allow multiple choices during plan creation
   prioritization_framework: none  # Reasoning lens for decompose, replan, adversarial review.
                                   # One of: none, rice, moscow, eisenhower
-                                  # Surfaces in: /sdd:decompose (rank tasks), replan (justify
+                                  # Surfaces in: /ccc:decompose (rank tasks), replan (justify
                                   # reordering), adversarial review (challenge priorities),
                                   # stop handler (framework-specific prompting).
 
@@ -133,8 +133,8 @@ session:
 # how failure modes are elicited; structured categories add groupthink-prevention.
 
 review:
-  pre_mortem_style: sdd         # Pre-mortem approach: sdd | neurofoo | combined
-                                #   sdd      — SDD's Inversion Analysis (unique failure modes)
+  pre_mortem_style: ccc         # Pre-mortem approach: ccc | neurofoo | combined
+                                #   ccc      — CCC's Inversion Analysis (unique failure modes)
                                 #   neurofoo — Structured category prompting (systematic coverage)
                                 #   combined — Both: inversion first, then category sweep
   structured_categories: false  # Add groupthink-prevention categories to pre-mortem prompts
@@ -145,7 +145,7 @@ review:
 # ---------------------------------------------------------------------------
 # Scoring — Quality score display                             [Tier: Stable]
 # ---------------------------------------------------------------------------
-# Control how quality scores are rendered in /sdd:score output.
+# Control how quality scores are rendered in /ccc:score output.
 # The underlying numeric score (0-100) is always computed; this changes display.
 
 scoring:

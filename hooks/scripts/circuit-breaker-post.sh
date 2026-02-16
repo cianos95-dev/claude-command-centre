@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SDD Hook: Circuit Breaker — PostToolUse (Error Detection)
+# CCC Hook: Circuit Breaker — PostToolUse (Error Detection)
 # Trigger: After any tool execution (PostToolUse)
 # Purpose: Detect consecutive identical errors and open the circuit breaker
 #
@@ -8,7 +8,7 @@
 #   2. Warns via stderr to use /rewind
 #   3. Auto-escalates exec mode from quick→pair
 #
-# State file: $PROJECT_ROOT/.sdd-circuit-breaker.json
+# State file: $PROJECT_ROOT/.ccc-circuit-breaker.json
 # Preferences: circuit_breaker.threshold (default: 3)
 #
 # Exit codes:
@@ -40,7 +40,7 @@ ERROR_MSG=$(echo "$TOOL_OUTPUT" | jq -r '.tool_result.content // empty' 2>/dev/n
 if [[ "$TOOL_ERROR" != "true" ]]; then
     # Successful tool use — reset consecutive error count
     PROJECT_ROOT="${SDD_PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
-    CB_FILE="$PROJECT_ROOT/.sdd-circuit-breaker.json"
+    CB_FILE="$PROJECT_ROOT/.ccc-circuit-breaker.json"
     if [[ -f "$CB_FILE" ]]; then
         STATE=$(cat "$CB_FILE")
         IS_OPEN=$(echo "$STATE" | jq -r '.open // false' 2>/dev/null) || true
@@ -58,14 +58,14 @@ fi
 # ---------------------------------------------------------------------------
 
 PROJECT_ROOT="${SDD_PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
-CB_FILE="$PROJECT_ROOT/.sdd-circuit-breaker.json"
+CB_FILE="$PROJECT_ROOT/.ccc-circuit-breaker.json"
 
 # ---------------------------------------------------------------------------
 # 3. Load threshold from preferences
 # ---------------------------------------------------------------------------
 
 THRESHOLD=3
-PREFS_FILE="$PROJECT_ROOT/.sdd-preferences.yaml"
+PREFS_FILE="$PROJECT_ROOT/.ccc-preferences.yaml"
 
 if command -v yq &>/dev/null && [[ -f "$PREFS_FILE" ]]; then
     _th=$(yq '.circuit_breaker.threshold // 3' "$PREFS_FILE" 2>/dev/null) && THRESHOLD="$_th"
@@ -101,7 +101,7 @@ fi
 
 # If circuit is already open, just warn again
 if [[ "$IS_OPEN" == "true" ]]; then
-    echo "[SDD Circuit Breaker] Circuit is OPEN. Use /rewind to recover from error loop." >&2
+    echo "[CCC Circuit Breaker] Circuit is OPEN. Use /rewind to recover from error loop." >&2
     exit 2
 fi
 
@@ -126,8 +126,8 @@ TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 if [[ $CONSECUTIVE -ge $THRESHOLD ]]; then
     # CIRCUIT OPEN — write state, warn, escalate
 
-    # Read current exec mode from .sdd-state.json for escalation
-    STATE_FILE="$PROJECT_ROOT/.sdd-state.json"
+    # Read current exec mode from .ccc-state.json for escalation
+    STATE_FILE="$PROJECT_ROOT/.ccc-state.json"
     CURRENT_MODE="unknown"
     ESCALATED_MODE=""
     if [[ -f "$STATE_FILE" ]]; then
@@ -166,13 +166,13 @@ if [[ $CONSECUTIVE -ge $THRESHOLD ]]; then
         }' > "$CB_FILE"
 
     # Stderr warning (exit 2 feeds this back to Claude)
-    MSG="[SDD Circuit Breaker] CIRCUIT OPEN: $CONSECUTIVE consecutive identical errors detected on '$TOOL_NAME'."
+    MSG="[CCC Circuit Breaker] CIRCUIT OPEN: $CONSECUTIVE consecutive identical errors detected on '$TOOL_NAME'."
     MSG="$MSG The same error has repeated $CONSECUTIVE times (threshold: $THRESHOLD)."
     MSG="$MSG RECOMMENDED: Use /rewind to undo the last few tool calls and try a different approach."
     if [[ -n "$ESCALATED_MODE" ]]; then
         MSG="$MSG Exec mode auto-escalated from '$CURRENT_MODE' to '$ESCALATED_MODE' (human-in-the-loop)."
     fi
-    MSG="$MSG To reset the circuit breaker, resolve the root cause or delete .sdd-circuit-breaker.json."
+    MSG="$MSG To reset the circuit breaker, resolve the root cause or delete .ccc-circuit-breaker.json."
     echo "$MSG" >&2
     exit 2
 else
@@ -192,6 +192,6 @@ else
             updatedAt: $ts
         }' > "$CB_FILE"
 
-    echo "[SDD] Error $CONSECUTIVE of $THRESHOLD on '$TOOL_NAME'. Circuit still closed."
+    echo "[CCC] Error $CONSECUTIVE of $THRESHOLD on '$TOOL_NAME'. Circuit still closed."
     exit 0
 fi

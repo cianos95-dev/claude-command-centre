@@ -30,9 +30,9 @@ TOTAL=0
 # ---------------------------------------------------------------------------
 
 reset_state() {
-    rm -f "$TEST_DIR/.sdd-circuit-breaker.json"
-    rm -f "$TEST_DIR/.sdd-state.json"
-    rm -f "$TEST_DIR/.sdd-preferences.yaml"
+    rm -f "$TEST_DIR/.ccc-circuit-breaker.json"
+    rm -f "$TEST_DIR/.ccc-state.json"
+    rm -f "$TEST_DIR/.ccc-preferences.yaml"
 }
 
 run_post_hook() {
@@ -122,7 +122,7 @@ make_pre_input() {
     jq -n --arg tool "$tool_name" '{tool_name: $tool}'
 }
 
-CB_FILE="$TEST_DIR/.sdd-circuit-breaker.json"
+CB_FILE="$TEST_DIR/.ccc-circuit-breaker.json"
 
 # ===================================================================
 echo ""
@@ -194,14 +194,14 @@ assert_eq "Circuit remains open after success" "true" "$OPEN"
 echo ""
 echo "Test 7: Exec mode auto-escalates quick to pair"
 reset_state
-# Create an SDD state file with quick mode
-jq -n '{executionMode: "quick", phase: "execution"}' > "$TEST_DIR/.sdd-state.json"
+# Create a CCC state file with quick mode
+jq -n '{executionMode: "quick", phase: "execution"}' > "$TEST_DIR/.ccc-state.json"
 run_post_hook "$(make_error_input "Edit" "file not found")" >/dev/null 2>&1
 run_post_hook "$(make_error_input "Edit" "file not found")" >/dev/null 2>&1
 run_post_hook "$(make_error_input "Edit" "file not found")" >/dev/null 2>&1
 ESC_MODE=$(jq -r '.escalatedTo' "$CB_FILE")
 assert_eq "Escalated to pair" "pair" "$ESC_MODE"
-STATE_MODE=$(jq -r '.executionMode' "$TEST_DIR/.sdd-state.json")
+STATE_MODE=$(jq -r '.executionMode' "$TEST_DIR/.ccc-state.json")
 assert_eq "State file updated to pair" "pair" "$STATE_MODE"
 STDERR=$(cat "$TEST_DIR/stderr.tmp")
 assert_contains "Stderr mentions escalation" "escalated" "$STDERR"
@@ -210,20 +210,20 @@ assert_contains "Stderr mentions escalation" "escalated" "$STDERR"
 echo ""
 echo "Test 8: Non-quick mode does not escalate"
 reset_state
-jq -n '{executionMode: "tdd", phase: "execution"}' > "$TEST_DIR/.sdd-state.json"
+jq -n '{executionMode: "tdd", phase: "execution"}' > "$TEST_DIR/.ccc-state.json"
 run_post_hook "$(make_error_input "Bash" "fail")" >/dev/null 2>&1
 run_post_hook "$(make_error_input "Bash" "fail")" >/dev/null 2>&1
 run_post_hook "$(make_error_input "Bash" "fail")" >/dev/null 2>&1
 ESC_MODE=$(jq -r '.escalatedTo' "$CB_FILE")
 assert_eq "No escalation for tdd mode" "null" "$ESC_MODE"
-STATE_MODE=$(jq -r '.executionMode' "$TEST_DIR/.sdd-state.json")
+STATE_MODE=$(jq -r '.executionMode' "$TEST_DIR/.ccc-state.json")
 assert_eq "State file stays tdd" "tdd" "$STATE_MODE"
 
 # --- Test 9: Custom threshold from preferences ---
 echo ""
 echo "Test 9: Custom threshold from preferences"
 reset_state
-cat > "$TEST_DIR/.sdd-preferences.yaml" << 'EOF'
+cat > "$TEST_DIR/.ccc-preferences.yaml" << 'EOF'
 circuit_breaker:
   threshold: 5
 EOF

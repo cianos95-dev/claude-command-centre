@@ -1,6 +1,6 @@
 ---
 description: |
-  Unified entry point for the SDD workflow. Auto-detects context and routes to the correct funnel stage.
+  Unified entry point for the CCC workflow. Auto-detects context and routes to the correct funnel stage.
   Use to start new work, resume in-progress tasks, check status, or enter quick mode for small fixes.
   Trigger with phrases like "let's go", "what should I work on", "resume work", "start building", "quick fix", "show status", "where was I", "continue working".
 argument-hint: "<issue ID, text description, --next, --status, or --quick>"
@@ -9,7 +9,7 @@ platforms: [cli, cowork]
 
 # Go -- Unified Workflow Entry Point
 
-Single entry point for the SDD funnel. Detects your context and routes you to the right stage. All existing commands (`/start`, `/decompose`, `/close`, etc.) remain directly invocable -- `/go` is the convenience layer on top.
+Single entry point for the CCC funnel. Detects your context and routes you to the right stage. All existing commands (`/start`, `/decompose`, `/close`, etc.) remain directly invocable -- `/go` is the convenience layer on top.
 
 ## Step 1: Detect Context
 
@@ -19,9 +19,9 @@ Determine the correct action based on the argument provided.
 
 If no argument is given, look for existing work in progress:
 
-1. Check for `.sdd-state.json` in the project root.
+1. Check for `.ccc-state.json` in the project root.
    - **Found AND `phase` is `execution`** -- Resume the execution loop. Show the status view (Step 4), then continue from the current task.
-   - **Found AND `phase` is `replan`** -- The stop hook triggered a replan. Show the status view with `[>] Replan` indicator. Execute the replan protocol: re-read the spec and `.sdd-progress.md`, compare completed work against all acceptance criteria, regenerate remaining tasks, update `.sdd-state.json` (set `phase` back to `execution`, update `totalTasks` and `taskIndex`), then continue executing from the first new task.
+   - **Found AND `phase` is `replan`** -- The stop hook triggered a replan. Show the status view with `[>] Replan` indicator. Execute the replan protocol: re-read the spec and `.ccc-progress.md`, compare completed work against all acceptance criteria, regenerate remaining tasks, update `.ccc-state.json` (set `phase` back to `execution`, update `totalTasks` and `taskIndex`), then continue executing from the first new task.
    - **Found AND `phase` is NOT `execution` or `replan`** -- Show the status view and suggest the next action for the current phase.
 2. If no state file exists, query the connected project tracker for agent-assigned issues with status "In Progress".
    - **Found one** -- Load that issue and resume (route through the Issue ID logic in 1C).
@@ -30,7 +30,7 @@ If no argument is given, look for existing work in progress:
 
 ### 1B: `--status` Flag -- Show Status Only
 
-Read `.sdd-state.json` and the project tracker issue state. Display the status view (Step 4). Do NOT start any work. This is a read-only inspection.
+Read `.ccc-state.json` and the project tracker issue state. Display the status view (Step 4). Do NOT start any work. This is a read-only inspection.
 
 ### 1C: Issue ID (e.g., `CIA-042`) -- Route by Issue Status
 
@@ -45,7 +45,7 @@ Fetch the issue from the connected project tracker and route based on its curren
 | In Progress | Has sub-issues | Resume execution loop |
 | Done | -- | Run `/close` evaluation |
 
-If the issue has `spec:implementing` but no `.sdd-state.json`, recreate the state file from the issue's sub-issues and resume execution.
+If the issue has `spec:implementing` but no `.ccc-state.json`, recreate the state file from the issue's sub-issues and resume execution.
 
 ### 1D: Text Description (Free Text) -- New Idea Intake
 
@@ -86,8 +86,8 @@ Before routing to a planning phase (Stage 3: `/write-prfaq`, or Plan Mode explor
 
 **Skip preflight when:**
 - `--quick` flag is set (quick mode minimizes ceremony)
-- Resuming an existing execution loop (`.sdd-state.json` with `phase: execution` or `phase: replan`)
-- Running `/sdd:start` (implementation, not planning)
+- Resuming an existing execution loop (`.ccc-state.json` with `phase: execution` or `phase: replan`)
+- Running `/ccc:start` (implementation, not planning)
 - The detected route is NOT a planning phase (e.g., routing to execution, closure, or verification)
 
 **Preflight applies to these routes from Step 1:**
@@ -96,7 +96,7 @@ Before routing to a planning phase (Stage 3: `/write-prfaq`, or Plan Mode explor
 - 1D creates a new issue and proceeds to Stage 3 -- run preflight before `/write-prfaq`
 
 **Preflight does NOT apply to:**
-- 1A resuming execution (`.sdd-state.json` found with execution phase)
+- 1A resuming execution (`.ccc-state.json` found with execution phase)
 - 1C routing to review, decomposition, execution, or closure
 - 1B status-only inspection
 - 1E next-task pickup (routes through 1C, preflight applies only if 1C routes to planning)
@@ -119,7 +119,7 @@ Quick mode is for: bug fixes, config changes, dependency updates, small features
 
 When entering the execution phase (either fresh or resuming), create the state and progress files if they do not already exist.
 
-### `.sdd-state.json`
+### `.ccc-state.json`
 
 ```json
 {
@@ -149,7 +149,7 @@ Field definitions are documented in the **execution-engine** skill. Key initiali
 - `executionMode` is read from the issue's `exec:*` label.
 - `specPath` is the relative path to the spec file, or `null` if the spec lives in the issue description.
 
-### `.sdd-progress.md`
+### `.ccc-progress.md`
 
 ```markdown
 ## Goal
@@ -171,9 +171,9 @@ Task 0: [First task description]
 (none)
 ```
 
-If `.sdd-state.json` already exists (resuming), do NOT overwrite it. Read the existing state and resume from the current `taskIndex`.
+If `.ccc-state.json` already exists (resuming), do NOT overwrite it. Read the existing state and resume from the current `taskIndex`.
 
-If `.sdd-progress.md` already exists, do NOT overwrite it. Read it for context from prior tasks.
+If `.ccc-progress.md` already exists, do NOT overwrite it. Read it for context from prior tasks.
 
 ### Update Project Tracker
 
@@ -186,7 +186,7 @@ If `.sdd-progress.md` already exists, do NOT overwrite it. Read it for context f
 Before starting any work, always display the "You Are Here" status view. This orients the user and confirms the routing decision.
 
 ```
-SDD: CIA-042 -- "Add user preference sync"
+CCC: CIA-042 -- "Add user preference sync"
 
   [x] Intake          -- direct (Feb 14)
   [x] PR/FAQ Draft    -- prfaq-feature
@@ -205,7 +205,7 @@ Next action: Execute task 4
 
 ### Stage Completion Detection
 
-Determine each stage's status from two sources: `.sdd-state.json` (execution loop state) and the project tracker issue metadata (status, labels, comments).
+Determine each stage's status from two sources: `.ccc-state.json` (execution loop state) and the project tracker issue metadata (status, labels, comments).
 
 | Stage | Completed When |
 |-------|---------------|
@@ -234,18 +234,18 @@ After displaying the status view, start the work for the detected stage:
 
 | Detected Stage | Action |
 |----------------|--------|
-| Intake (new idea) | Issue created. Suggest next step: `/sdd:go CIA-XXX` or `/sdd:write-prfaq CIA-XXX` |
+| Intake (new idea) | Issue created. Suggest next step: `/ccc:go CIA-XXX` or `/ccc:write-prfaq CIA-XXX` |
 | PR/FAQ Draft | Invoke `/write-prfaq` with the issue ID |
 | Gate 1 pending | Inform the user that Gate 1 (spec approval) is needed. Present the spec for review. |
 | Adversarial Review | Invoke `/review` with the issue ID |
 | Gate 2 pending | Inform the user that Gate 2 (review acceptance) is needed. Present the review findings. |
 | Decompose | Invoke `/decompose` with the issue ID |
-| Execution | Load context from `.sdd-progress.md`, read the current task's acceptance criteria, and begin implementation per the execution mode. Follow the execution-engine protocol. |
+| Execution | Load context from `.ccc-progress.md`, read the current task's acceptance criteria, and begin implementation per the execution mode. Follow the execution-engine protocol. |
 | Gate 3 pending | All tasks complete. Open a PR if not already open. Inform the user that Gate 3 (PR review) is needed. Set `awaitingGate: 3` in state. |
 | Verification | PR merged. Run verification checks against the deployment. |
 | Closure | Invoke `/close` with the issue ID |
 
-For execution-phase work, follow the **execution-engine** skill protocol: read `.sdd-progress.md` for accumulated context, implement the current task, run verification, commit, update the progress log, and signal `TASK_COMPLETE` when done.
+For execution-phase work, follow the **execution-engine** skill protocol: read `.ccc-progress.md` for accumulated context, implement the current task, run verification, commit, update the progress log, and signal `TASK_COMPLETE` when done.
 
 ## Step 6: Suggest Next Step
 
@@ -253,20 +253,20 @@ After completing any stage-level work, always suggest the next action. This ensu
 
 ```
 PR/FAQ draft complete for CIA-042.
-  Next: Run `/sdd:go` to continue (will route to adversarial review)
-  Or: Run `/sdd:review CIA-042` directly
+  Next: Run `/ccc:go` to continue (will route to adversarial review)
+  Or: Run `/ccc:review CIA-042` directly
 ```
 
 ```
 All 8 tasks complete for CIA-042.
-  Next: Run `/sdd:go` to continue (will open PR for Gate 3 review)
-  Or: Open the PR manually and run `/sdd:close CIA-042` after merge
+  Next: Run `/ccc:go` to continue (will open PR for Gate 3 review)
+  Or: Open the PR manually and run `/ccc:close CIA-042` after merge
 ```
 
 ```
 Task 4/8 complete. Signaling TASK_COMPLETE.
   The stop hook will advance to task 5 automatically.
-  If the loop does not restart, run `/sdd:go` to resume.
+  If the loop does not restart, run `/ccc:go` to resume.
 ```
 
 ## What If
@@ -274,22 +274,22 @@ Task 4/8 complete. Signaling TASK_COMPLETE.
 | Situation | Response |
 |-----------|----------|
 | **No project tracker connected** | Show a warning. Offer to work without project tracker integration (file-based state only). Skip project-tracker-specific routing (label checks, status queries). Issue ID arguments will not work -- only text descriptions and `--status` are available. |
-| **`.sdd-state.json` exists but is stale** | If `lastUpdatedAt` is >24 hours ago, warn the user: "State file is N hours old. Resume this work or start fresh?" Wait for confirmation before proceeding. |
+| **`.ccc-state.json` exists but is stale** | If `lastUpdatedAt` is >24 hours ago, warn the user: "State file is N hours old. Resume this work or start fresh?" Wait for confirmation before proceeding. |
 | **Multiple in-progress issues** | List all in-progress agent-assigned issues with their titles, priorities, and last activity timestamps. Ask the user to choose one. |
 | **Issue has no `exec:*` label** | Apply the execution-modes decision heuristic to infer the correct mode. Apply the label and inform the user which mode was selected and why. |
-| **Issue is blocked by dependencies** | Show the blocking issues with their current statuses. Suggest running `/sdd:go --next` to find an unblocked task instead. |
+| **Issue is blocked by dependencies** | Show the blocking issues with their current statuses. Suggest running `/ccc:go --next` to find an unblocked task instead. |
 | **User passes both `--quick` and `--mode`** | `--mode` takes precedence for the execution mode label. `--quick` still applies the funnel collapsing behavior (skip stages 1, 2, 4, 5). |
-| **Execution loop is already running** | If `.sdd-state.json` exists with `phase: execution`, resume from the current `taskIndex` rather than restarting. Do not recreate state files. |
-| **User wants to abort the loop** | Advise deleting `.sdd-state.json` or running a future `/sdd:cancel` command. Progress is preserved in `.sdd-progress.md` and git commits. The project tracker issue remains In Progress until explicitly closed. |
+| **Execution loop is already running** | If `.ccc-state.json` exists with `phase: execution`, resume from the current `taskIndex` rather than restarting. Do not recreate state files. |
+| **User wants to abort the loop** | Advise deleting `.ccc-state.json` or running a future `/ccc:cancel` command. Progress is preserved in `.ccc-progress.md` and git commits. The project tracker issue remains In Progress until explicitly closed. |
 | **`awaitingGate` is set in state** | The loop is paused at a gate. Display which gate is needed and what is required to pass it (e.g., "Gate 3: PR needs approval"). Do not resume execution until the gate is cleared. |
-| **`taskIteration >= maxTaskIterations`** | The current task has exhausted its retry budget. Inform the user that manual intervention is needed. Show the task description, the iteration count, and suggest reviewing `.sdd-progress.md` for failure context. |
-| **State file is corrupt or malformed** | Warn the user. Offer to delete the state file and recreate it from the project tracker issue and its sub-issues. Progress in `.sdd-progress.md` is preserved regardless. |
+| **`taskIteration >= maxTaskIterations`** | The current task has exhausted its retry budget. Inform the user that manual intervention is needed. Show the task description, the iteration count, and suggest reviewing `.ccc-progress.md` for failure context. |
+| **State file is corrupt or malformed** | Warn the user. Offer to delete the state file and recreate it from the project tracker issue and its sub-issues. Progress in `.ccc-progress.md` is preserved regardless. |
 | **`--next` finds no unblocked tasks** | Report that all agent-assigned tasks are either complete, in progress, or blocked. List the blocked tasks with their blockers. Suggest checking on the blocking issues. |
 
 ## Integration Notes
 
 - **Dual access.** This command is additive. All 9 existing commands (`/anchor`, `/close`, `/decompose`, `/hygiene`, `/index`, `/insights`, `/review`, `/start`, `/write-prfaq`) continue to work independently. `/go` is a router that calls into them, not a replacement.
-- **Stop hook dependency.** The execution loop in Step 3 relies on the stop hook registered in `hooks/scripts/sdd-stop-handler.sh`. If the hook is not active, the loop will not auto-advance between tasks. Manual `/start` per task still works. `/go` will warn if the hook is not detected.
-- **Phase progression.** `/go` reads project tracker state and `.sdd-state.json` to determine position in the funnel, then invokes the appropriate internal command. It does not duplicate the logic of those commands -- it delegates to them.
-- **State file lifecycle.** `.sdd-state.json` is created when entering execution and deleted (or archived) when `/close` completes successfully. `.sdd-progress.md` persists as a record of what happened and is never auto-deleted.
+- **Stop hook dependency.** The execution loop in Step 3 relies on the stop hook registered in `hooks/scripts/ccc-stop-handler.sh`. If the hook is not active, the loop will not auto-advance between tasks. Manual `/start` per task still works. `/go` will warn if the hook is not detected.
+- **Phase progression.** `/go` reads project tracker state and `.ccc-state.json` to determine position in the funnel, then invokes the appropriate internal command. It does not duplicate the logic of those commands -- it delegates to them.
+- **State file lifecycle.** `.ccc-state.json` is created when entering execution and deleted (or archived) when `/close` completes successfully. `.ccc-progress.md` persists as a record of what happened and is never auto-deleted.
 - **Execution mode behavior.** For `exec:pair` and `exec:swarm`, the stop hook is disabled by design. `/go` still routes correctly and shows status, but the autonomous loop does not apply. See the **execution-engine** skill for details.

@@ -1,7 +1,7 @@
 ---
 name: platform-routing
 description: |
-  Recommends the optimal Claude platform (Code, Cowork, Desktop Chat) for each SDD workflow stage.
+  Recommends the optimal Claude platform (Code, Cowork, Desktop Chat) for each CCC workflow stage.
   Provides hook-free exit checklists for non-CLI contexts and Desktop Chat project patterns for client context routing.
   Use when starting a new workflow stage, asking where to do something, beginning spec drafting, triage, or implementation,
   ending a session in Cowork or Desktop Chat, or setting up a new client or project context.
@@ -11,7 +11,7 @@ description: |
 
 # Platform Routing
 
-Route SDD workflow stages to the platform where they work best. These are **recommendations, not blockers** — everything technically works everywhere, but some platforms have capabilities that make specific stages significantly more effective.
+Route CCC workflow stages to the platform where they work best. These are **recommendations, not blockers** — everything technically works everywhere, but some platforms have capabilities that make specific stages significantly more effective.
 
 ## Platform Routing Table
 
@@ -24,13 +24,13 @@ Route SDD workflow stages to the platform where they work best. These are **reco
 | Issue triage / sprint planning | Cowork | Linear connector interactive mode |
 | Status reviews / project updates | Cowork | Visual, artefact-oriented |
 | Spec writing (file-based) | Claude Code | Needs file system for `docs/specs/` |
-| Adversarial review (`/sdd:review`) | Claude Code | Requires subagent Task tool for multi-agent review |
+| Adversarial review (`/ccc:review`) | Claude Code | Requires subagent Task tool for multi-agent review |
 | Implementation / TDD | Claude Code | Hooks enforce guardrails, git access, full MCP stack |
 | Research scoping (what to ground) | Cowork | Interactive discussion to define research questions, identify gaps, choose search strategy |
 | Research execution (grounding) | Claude Code | Zotero, arXiv, Semantic Scholar, OpenAlex are stdio MCPs (CLI-only) |
 | Agent dispatch (delegation) | Cowork | Linear connector interactive mode for delegation; see CONNECTORS.md § Agent Dispatch Protocol |
 | Visual artefact creation | Cowork | Diagrams, architecture visuals, stakeholder-facing graphics via artefact generation |
-| Insights pipeline (`/sdd:insights`) | Claude Code | Requires file system for data collection and analysis |
+| Insights pipeline (`/ccc:insights`) | Claude Code | Requires file system for data collection and analysis |
 
 ### When to suggest a platform switch
 

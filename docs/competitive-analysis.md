@@ -31,7 +31,7 @@ These are plugins that directly overlap with our scope and could plausibly repla
 
 #### 3. specswarm (MartyBonacci/specswarm)
 
-- **Core feature:** Quality scoring (0-100 across six dimensions), tech stack drift prevention, and natural language routing to specialized agents. Broader scope than pure SDD but less opinionated about workflow.
+- **Core feature:** Quality scoring (0-100 across six dimensions), tech stack drift prevention, and natural language routing to specialized agents. Broader scope than pure CCC but less opinionated about workflow.
 - **Threat assessment:** MEDIUM. The quality scoring system is genuinely ahead of anything we offer. However, the breadth-over-depth approach means teams wanting a specific methodology will find it less prescriptive than ours.
 
 #### 4. sdd (LiorCohen/sdd)
@@ -140,7 +140,7 @@ A four-stage progression (needs-grounding, literature-mapped, methodology-valida
 | No quality scoring | specswarm | Closure decisions are qualitative, not quantitative; harder to set thresholds | Medium |
 | No codebase indexing | smart-ralph | No automated code discovery before speccing; relies on human knowledge of the codebase | Medium |
 | No hook enforcement | cc-spec-driven | Workflow rules are prompt-based and advisory, not enforced at the runtime level | High |
-| No dependency task graphs | claude-workflow + cc-spec-driven | `/sdd:decompose` produces flat task lists, does not model dependencies between tasks | Low |
+| No dependency task graphs | claude-workflow + cc-spec-driven | `/ccc:decompose` produces flat task lists, does not model dependencies between tasks | Low |
 
 ---
 
@@ -150,7 +150,7 @@ A four-stage progression (needs-grounding, literature-mapped, methodology-valida
 
 **Pattern:** Before every task, re-read the active spec and current git state to rebuild context. This prevents drift by ensuring the agent always starts from ground truth rather than relying on accumulated session context.
 
-**Application:** Add a pre-task hook or skill preamble that loads the spec frontmatter, diff since last commit, and current Linear issue state. Could be implemented as a `/sdd:anchor` command.
+**Application:** Add a pre-task hook or skill preamble that loads the spec frontmatter, diff since last commit, and current Linear issue state. Could be implemented as a `/ccc:anchor` command.
 
 ### 2. Receipt-based Gating (gmickel / flow-next)
 
@@ -180,7 +180,7 @@ A four-stage progression (needs-grounding, literature-mapped, methodology-valida
 
 **Pattern:** Auto-scan existing code into a searchable index that informs spec writing. When creating a new spec, the index surfaces relevant existing code, preventing redundant implementations and ensuring new specs account for existing patterns.
 
-**Application:** Add a `/sdd:index` command that scans the repo and produces a summary of modules, exports, and patterns. Feed this into the spec template as a "Current Codebase Context" section.
+**Application:** Add a `/ccc:index` command that scans the repo and produces a summary of modules, exports, and patterns. Feed this into the spec template as a "Current Codebase Context" section.
 
 ### 7. Quality Scoring (specswarm)
 
@@ -201,7 +201,7 @@ Claude Command Centre is an orchestration hub, not an execution plugin. Most com
 This document should be reviewed:
 
 - **Quarterly**, as a scheduled maintenance task.
-- **When a major competitor emerges**, defined as: a new SDD plugin crossing 50 GitHub stars, an official Anthropic plugin entering our territory, or community discussion (forums, Discord, social media) highlighting a gap we have not addressed.
+- **When a major competitor emerges**, defined as: a new CCC plugin crossing 50 GitHub stars, an official Anthropic plugin entering our territory, or community discussion (forums, Discord, social media) highlighting a gap we have not addressed.
 - **Before any v2 planning session**, to ensure the roadmap reflects the current landscape.
 
 Each review should update competitor profiles, re-score the feature matrix, and re-prioritize the gaps table.

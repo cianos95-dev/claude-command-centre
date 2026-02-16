@@ -1,11 +1,11 @@
 # Session Continuation Template
 
-Copy this template when resuming SDD plugin work in a new Claude Code session. Fill in the fields and paste as your opening message.
+Copy this template when resuming CCC plugin work in a new Claude Code session. Fill in the fields and paste as your opening message.
 
 ---
 
 ```
-Continue SDD Plugin work from session plan: ~/.claude/plans/<plan-file>.md
+Continue CCC Plugin work from session plan: ~/.claude/plans/<plan-file>.md
 
 Session context:
 - <last version> shipped (commit <hash>, tagged). <summary of what shipped>.

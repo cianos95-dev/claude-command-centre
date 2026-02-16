@@ -295,7 +295,7 @@ Routes adversarial review to external Linear-connected agents (cto.new, Codex, C
 - When Options E-G feel heavyweight for the spec complexity
 
 **When NOT to use Option H:**
-- When structured persona-based review is needed (agents don't support SDD's persona framework)
+- When structured persona-based review is needed (agents don't support CCC's persona framework)
 - When the spec requires codebase awareness (external agents may not have full repo context)
 - When immediate feedback is needed (async turnaround varies from minutes to hours)
 
@@ -335,7 +335,7 @@ Options are not mutually exclusive. Effective combinations include:
 
 **Option E + G (Tiered persona review):** Run Option G's 3-phase pipeline as the primary review pass. Use the tier diversity to identify convergent findings (highest confidence) and tier-exclusive findings (surface vs depth insights). The sonnet-only findings provide deep technical coverage; the haiku-only findings catch user-facing confusion and strategic identity issues at near-zero marginal cost.
 
-**Option E + H (Persona + external agent):** Run the persona panel (Option E) for SDD-native review, then dispatch to cto.new or Codex (Option H) for cross-model-family perspective. The external agent finds issues that all-Claude reviews miss. Synthesize both sets of findings manually. Best for high-impact specs where model diversity is worth the extra review cycle.
+**Option E + H (Persona + external agent):** Run the persona panel (Option E) for CCC-native review, then dispatch to cto.new or Codex (Option H) for cross-model-family perspective. The external agent finds issues that all-Claude reviews miss. Synthesize both sets of findings manually. Best for high-impact specs where model diversity is worth the extra review cycle.
 
 **Option H as A/B replacement:** For teams currently using Options A or B (GitHub Actions-triggered CI/premium agent review), Option H achieves the same async review pattern with simpler setup — Linear assignment instead of YAML workflows. Migration path: disable the GitHub Actions workflow, enable the agent in Linear, update the dispatch template to assign review issues to the agent.
 
@@ -441,7 +441,7 @@ Parse the human's response, update the RDR table, and re-post the updated table 
 
 ### Finding Normalization Protocol (Option H)
 
-When external agents (cto.new, Codex, Cyrus, Copilot) post review findings, their output is unstructured -- they do not follow the SDD severity format. The normalization protocol converts agent findings into RDR rows:
+When external agents (cto.new, Codex, Cyrus, Copilot) post review findings, their output is unstructured -- they do not follow the CCC severity format. The normalization protocol converts agent findings into RDR rows:
 
 1. **Read** the agent's comment on the review sub-issue
 2. **Extract** distinct findings (look for bullet points, numbered items, or paragraph-level concerns)

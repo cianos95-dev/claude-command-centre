@@ -1,11 +1,11 @@
 # Example: Codebase Index Output
 
-> **Funnel position:** Pre-funnel utility -- output of `/sdd:index`
+> **Funnel position:** Pre-funnel utility -- output of `/ccc:index`
 > **Purpose:** Produces a structured map of the repository before spec writing or implementation
-> **Next step:** Use the index to inform `/sdd:write-prfaq` (Stage 3) or `/sdd:start` (Stage 6)
+> **Next step:** Use the index to inform `/ccc:write-prfaq` (Stage 3) or `/ccc:start` (Stage 6)
 > **Related:** Codebase awareness skill governs the scanning protocol and index format
 
-This example shows what `/sdd:index --full` produces when run against the SDD plugin repository itself. It demonstrates the Module Map, Patterns, and Integration Points sections, followed by the summary report.
+This example shows what `/ccc:index --full` produces when run against the CCC plugin repository itself. It demonstrates the Module Map, Patterns, and Integration Points sections, followed by the summary report.
 
 ---
 
@@ -96,4 +96,4 @@ Indexed claude-command-centre at a3f7c21:
 
 4. **Warnings are actionable.** Each warning identifies a specific issue and suggests a concrete resolution. Warnings are not errors -- they are observations that might indicate drift between documented and actual state.
 
-5. **The summary is machine-parseable.** The final summary block uses a consistent format that other commands (like `/sdd:anchor`) can reference when checking index freshness.
+5. **The summary is machine-parseable.** The final summary block uses a consistent format that other commands (like `/ccc:anchor`) can reference when checking index freshness.

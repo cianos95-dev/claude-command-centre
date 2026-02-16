@@ -1,9 +1,9 @@
 # Example: Consolidated Adversarial Review Findings
 
-> **Funnel position:** Stage 4 (Adversarial Review) — output of `/sdd:review`
+> **Funnel position:** Stage 4 (Adversarial Review) — output of `/ccc:review`
 > **Prerequisite:** A completed PR/FAQ spec → see [sample-prfaq.md](sample-prfaq.md)
-> **Next step:** Address findings, then decompose via `/sdd:decompose` and implement via `/sdd:start`
-> **Later:** After implementation → close with evidence via `/sdd:close` → see [sample-closure-comment.md](sample-closure-comment.md)
+> **Next step:** Address findings, then decompose via `/ccc:decompose` and implement via `/ccc:start`
+> **Later:** After implementation → close with evidence via `/ccc:close` → see [sample-closure-comment.md](sample-closure-comment.md)
 
 This example shows the output of a synthesized adversarial review from 3 reviewer perspectives, applied to the "Collaborative Session Notes" spec.
 

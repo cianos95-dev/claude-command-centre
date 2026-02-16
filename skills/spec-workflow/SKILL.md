@@ -6,7 +6,7 @@ description: |
   Trigger with phrases like "what stage is this in", "development workflow overview", "what are the approval gates", "how does the funnel work", "intake process", "what happens after spec approval".
 ---
 
-# Spec-Driven Development Workflow
+# Claude Command Centre Workflow
 
 This is the complete funnel from idea to production. Every feature, fix, and infrastructure change flows through these stages. The funnel enforces three human approval gates and eliminates ambiguity about what is being built, why, and when it is done.
 
@@ -14,7 +14,7 @@ This is the complete funnel from idea to production. Every feature, fix, and inf
 
 ```mermaid
 flowchart TD
-    GO["/sdd:go"] --> DETECT{Auto-detect}
+    GO["/ccc:go"] --> DETECT{Auto-detect}
     DETECT -->|"new idea"| S0[Stage 0: Universal Intake]
     DETECT -->|"issue ID"| ROUTE[Route by status]
     DETECT -->|"in progress"| S6
@@ -53,12 +53,12 @@ flowchart TD
     style EXEC fill:#e8f5e9,stroke:#2e7d32
 ```
 
-## Unified Entry Point: `/sdd:go`
+## Unified Entry Point: `/ccc:go`
 
-The `/sdd:go` command is the recommended way to interact with the funnel. It auto-detects your context and routes to the correct stage. All existing commands remain directly invocable (dual access model).
+The `/ccc:go` command is the recommended way to interact with the funnel. It auto-detects your context and routes to the correct stage. All existing commands remain directly invocable (dual access model).
 
 ```
-/sdd:go [argument] [--quick] [--mode MODE] [--status] [--next]
+/ccc:go [argument] [--quick] [--mode MODE] [--status] [--next]
 ```
 
 | Argument | Behavior |
@@ -70,7 +70,7 @@ The `/sdd:go` command is the recommended way to interact with the funnel. It aut
 | `--quick` | Collapse funnel for small tasks |
 | `--next` | Pick up next unblocked task |
 
-See the `/sdd:go` command definition and the **execution-engine** skill for full details.
+See the `/ccc:go` command definition and the **execution-engine** skill for full details.
 
 ## Fast Paths
 
@@ -204,7 +204,7 @@ Scope creep is the primary risk to session success. These rules are **structural
 
 This workflow integrates with the other skills in this plugin:
 
-- **execution-engine** -- Powers Stage 6 (stop hook task loop, `.sdd-state.json`, `.sdd-progress.md`, gate pauses, retry budget)
+- **execution-engine** -- Powers Stage 6 (stop hook task loop, `.ccc-state.json`, `.ccc-progress.md`, gate pauses, retry budget)
 - **prfaq-methodology** -- Governs Stage 3 (PR/FAQ drafting process, templates, interactive questioning)
 - **adversarial-review** -- Governs Stage 4 (reviewer perspectives, architecture options A-H, Review Decision Record for Gate 2)
 - **execution-modes** -- Governs Stage 6 (quick, tdd, pair, checkpoint, swarm routing)

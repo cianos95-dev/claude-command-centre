@@ -84,6 +84,6 @@ After archiving, extract these actionable outputs:
 
 ## Related
 
-- `/sdd:insights` command — runs the archive-and-learn cycle.
+- `/ccc:insights` command — runs the archive-and-learn cycle.
 - CLAUDE.md — destination for extracted rules.
 - `~/.claude/skills/` — destination for extracted skill candidates.

@@ -13,23 +13,23 @@ description: |
 
 Before writing specs or plans, the agent must map the strategic landscape. Without this, planning sessions suffer from "tunnelling" -- the agent solves the literal question asked without checking what already exists in the codebase or project tracker. This leads to redundant specs, missed stale issues, plans invented without codebase context, and unjustified timeline deferrals.
 
-The preflight protocol runs automatically before any planning phase (`/sdd:go` routing to spec, `/sdd:write-prfaq`, Plan Mode). It produces a **Planning Context Bundle** -- a concise summary that becomes input to the plan or spec.
+The preflight protocol runs automatically before any planning phase (`/ccc:go` routing to spec, `/ccc:write-prfaq`, Plan Mode). It produces a **Planning Context Bundle** -- a concise summary that becomes input to the plan or spec.
 
 ## When Preflight Runs
 
 | Trigger | Auto-Invoke? | Mechanism |
 |---------|:---:|-----------|
-| `/sdd:go` routes to spec drafting (Stage 3) | YES | Step 1.5 in `go.md` |
-| `/sdd:write-prfaq` called directly | YES | Step 1.5 in `write-prfaq.md` |
+| `/ccc:go` routes to spec drafting (Stage 3) | YES | Step 1.5 in `go.md` |
+| `/ccc:write-prfaq` called directly | YES | Step 1.5 in `write-prfaq.md` |
 | `EnterPlanMode` invoked with planning keywords | YES | Skill keyword auto-trigger |
-| `/sdd:start` begins implementation | NO | Start loads task-specific context, not strategic context |
-| `/sdd:review` begins adversarial review | OPTIONAL | Only if reviewer needs landscape context |
+| `/ccc:start` begins implementation | NO | Start loads task-specific context, not strategic context |
+| `/ccc:review` begins adversarial review | OPTIONAL | Only if reviewer needs landscape context |
 
 ## When Preflight is Skipped
 
 - `--quick` flag is set (quick mode minimizes ceremony)
-- Resuming an existing execution loop (`.sdd-state.json` with `phase: execution`)
-- Running `/sdd:start` (implementation phase, not planning phase)
+- Resuming an existing execution loop (`.ccc-state.json` with `phase: execution`)
+- Running `/ccc:start` (implementation phase, not planning phase)
 - Preflight already ran this session and the cached bundle is still valid
 
 ## The 5-Step Protocol
@@ -38,14 +38,14 @@ The preflight protocol runs automatically before any planning phase (`/sdd:go` r
 
 Build or refresh the local understanding of the repository.
 
-1. **Auto-invoke `/sdd:index` in incremental mode.** If no codebase index exists (`.claude/codebase-index.md` missing), run a full index on first invocation.
+1. **Auto-invoke `/ccc:index` in incremental mode.** If no codebase index exists (`.claude/codebase-index.md` missing), run a full index on first invocation.
 2. **Load the index.** Read `.claude/codebase-index.md` for the module map, pattern inventory, and integration points.
 3. **Recent changes.** Run `git log --oneline -10` to surface the most recent commits. Note any that relate to the current planning topic.
 4. **Drift check.** Compare top-level files and directories against the index. Flag any new or deleted entries since the last index run.
 
 **Budget:** 5-10 seconds. Incremental indexing touches only changed files.
 
-**If the index is missing:** Run a full `/sdd:index`. This adds 10-15 seconds on first invocation only. Do not block -- show a progress indicator: "Preflight: building codebase index..."
+**If the index is missing:** Run a full `/ccc:index`. This adds 10-15 seconds on first invocation only. Do not block -- show a progress indicator: "Preflight: building codebase index..."
 
 ### Step 2: Linear Landscape Scan
 
@@ -170,7 +170,7 @@ This is a blocking pause, not an advisory footnote. Overlapping specs are expens
 
 ## Caching
 
-The Planning Context Bundle is cached in memory for the session. If preflight is invoked again within the same session (e.g., user runs `/sdd:write-prfaq` after `/sdd:go` already ran preflight), reuse the cached bundle rather than re-querying.
+The Planning Context Bundle is cached in memory for the session. If preflight is invoked again within the same session (e.g., user runs `/ccc:write-prfaq` after `/ccc:go` already ran preflight), reuse the cached bundle rather than re-querying.
 
 The cache is invalidated if:
 - The user explicitly requests a fresh preflight ("re-run preflight", "refresh context")
@@ -183,7 +183,7 @@ Target: **<30 seconds** total preflight time for an incremental index with a ~10
 
 | Step | Budget | Mechanism |
 |------|--------|-----------|
-| Codebase index | 5-10s | Incremental `/sdd:index` (only changed files) |
+| Codebase index | 5-10s | Incremental `/ccc:index` (only changed files) |
 | Linear landscape scan | 10-15s | `list_issues` with `limit: 10`, keyword search with `limit: 5` |
 | Zoom out | 3-5s | Single `get_issue` for parent, `list_issues` for milestone |
 | Timeline validation | 0-2s | Local analysis of preflight data (no new API calls) |
@@ -201,7 +201,7 @@ Never silently block. The user should always know the preflight is running.
 | Missing Component | Behavior |
 |-------------------|----------|
 | No project tracker connected | Skip Steps 2 and 3. Bundle contains codebase index only. |
-| No codebase index exists | Run full `/sdd:index` (adds 10-15s). Proceed normally after. |
+| No codebase index exists | Run full `/ccc:index` (adds 10-15s). Proceed normally after. |
 | No parent issue | Skip 2a and 3d. Sibling scan still runs against the project. |
 | No milestone assigned | Skip 3b. Note "No milestone assigned" in the bundle. |
 | No initiative | Skip 3a. Note "No initiative context" in the bundle. |
@@ -214,5 +214,5 @@ The preflight must always produce a bundle, even if partial. A partial bundle is
 - **Auto-cancel issues.** All overlap classifications are advisory. False positive supersession detection is high-impact -- the human always decides.
 - **Auto-merge issues.** Scope merges require human judgment about priority and sequencing.
 - **Replace domain expertise.** The preflight provides context, not decisions. The human or spec author uses the bundle to make better choices.
-- **Run during execution.** Implementation tasks load task-specific context via `.sdd-progress.md`, not strategic context. Preflight is for planning phases only.
+- **Run during execution.** Implementation tasks load task-specific context via `.ccc-progress.md`, not strategic context. Preflight is for planning phases only.
 - **Block on clean results.** If the landscape is clear (no overlaps, no timeline flags), the preflight completes silently with a minimal bundle and proceeds immediately.

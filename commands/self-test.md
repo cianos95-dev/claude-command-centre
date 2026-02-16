@@ -9,7 +9,7 @@ platforms: [cli, cowork]
 
 # Plugin Self-Test
 
-Run a comprehensive, zero-cost validation of the SDD plugin within the current Claude Code session. This replaces cc-plugin-eval Stages 2-4 for routine validation.
+Run a comprehensive, zero-cost validation of the CCC plugin within the current Claude Code session. This replaces cc-plugin-eval Stages 2-4 for routine validation.
 
 ## Step 1: Load Plugin Manifest
 
@@ -102,7 +102,7 @@ For each component, generate a synthetic user message that should trigger that c
 1. **From explicit triggers:** Use the first quoted trigger phrase directly as the test prompt.
 2. **From examples:** Use the first `user:` message from `<example>` blocks.
 3. **From implicit triggers:** Construct a prompt from the "Use when..." clause by rephrasing it as a user request.
-4. **Fallback:** If none of the above are available, construct a minimal prompt: `/sdd:[command-name]` for commands, or a brief description-derived phrase for skills/agents.
+4. **Fallback:** If none of the above are available, construct a minimal prompt: `/ccc:[command-name]` for commands, or a brief description-derived phrase for skills/agents.
 
 ### Uniqueness Check
 

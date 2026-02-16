@@ -119,7 +119,7 @@ Ship-state verification is not continuous. It is a gate check at specific moment
 
 ## Integration with Marketplace Publishing
 
-For SDD plugins distributed via marketplace, ship-state verification is mandatory before version bumps:
+For CCC plugins distributed via marketplace, ship-state verification is mandatory before version bumps:
 
 1. Run the full checklist above
 2. Verify `metadata.version` in `marketplace.json` matches the intended release

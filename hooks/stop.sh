@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SDD Hook: Stop
+# CCC Hook: Stop
 # Trigger: Session ends (graceful exit)
 # Purpose: Run hygiene check, remind about status updates, generate handoff summary
 #
@@ -17,7 +17,7 @@ PROJECT_ROOT="${SDD_PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null ||
 LOG_DIR="${SDD_LOG_DIR:-$PROJECT_ROOT/.claude/logs}"
 
 echo "============================================"
-echo "[SDD] Session Exit Checklist"
+echo "[CCC] Session Exit Checklist"
 echo "============================================"
 
 # --- 1. Git state summary ---
@@ -62,5 +62,5 @@ fi
 
 echo ""
 echo "============================================"
-echo "[SDD] Remember: Status normalization is mandatory"
+echo "[CCC] Remember: Status normalization is mandatory"
 echo "============================================"

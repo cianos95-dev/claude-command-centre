@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SDD Hook: PreToolUse
+# CCC Hook: PreToolUse
 # Trigger: Before file write operations (Write, Edit, MultiEdit, NotebookEdit)
 # Purpose: Verify write aligns with active spec's acceptance criteria and scope
 #
@@ -10,9 +10,9 @@
 # This hook receives tool call details via stdin as JSON.
 #
 # Environment variables:
-#   SDD_SPEC_PATH     - Path to active spec file
+#   CCC_SPEC_PATH     - Path to active spec file
 #   SDD_STRICT_MODE   - "true" to block writes outside spec scope (default: false)
-#   SDD_ALLOWED_PATHS - Colon-separated list of allowed path patterns
+#   CCC_ALLOWED_PATHS - Colon-separated list of allowed path patterns
 
 set -euo pipefail
 
@@ -32,9 +32,9 @@ fi
 
 # --- 1. Check against allowed paths ---
 
-if [[ -n "${SDD_ALLOWED_PATHS:-}" ]]; then
+if [[ -n "${CCC_ALLOWED_PATHS:-}" ]]; then
   ALLOWED=false
-  IFS=':' read -ra PATHS <<< "$SDD_ALLOWED_PATHS"
+  IFS=':' read -ra PATHS <<< "$CCC_ALLOWED_PATHS"
   for PATTERN in "${PATHS[@]}"; do
     if [[ "$FILE_PATH" == $PATTERN ]]; then
       ALLOWED=true
@@ -43,14 +43,14 @@ if [[ -n "${SDD_ALLOWED_PATHS:-}" ]]; then
   done
 
   if [[ "$ALLOWED" == "false" ]] && [[ "$STRICT_MODE" == "true" ]]; then
-    echo "[SDD] BLOCKED: Write to $FILE_PATH is outside spec scope"
-    echo "[SDD] Allowed paths: $SDD_ALLOWED_PATHS"
+    echo "[CCC] BLOCKED: Write to $FILE_PATH is outside spec scope"
+    echo "[CCC] Allowed paths: $CCC_ALLOWED_PATHS"
     exit 1
   elif [[ "$ALLOWED" == "false" ]]; then
-    echo "[SDD] WARNING: Write to $FILE_PATH is outside spec scope"
+    echo "[CCC] WARNING: Write to $FILE_PATH is outside spec scope"
   fi
 fi
 
 # --- 2. Log the write for audit trail ---
 
-echo "[SDD] Pre-write check passed: $FILE_PATH"
+echo "[CCC] Pre-write check passed: $FILE_PATH"

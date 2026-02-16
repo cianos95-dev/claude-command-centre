@@ -1,18 +1,18 @@
 ---
 name: hook-enforcement
 description: |
-  Claude Code hook patterns that enforce SDD workflow constraints at the runtime level.
+  Claude Code hook patterns that enforce CCC workflow constraints at the runtime level.
   Covers session-start context loading, pre-tool-use spec alignment checks, post-tool-use
   ownership boundary enforcement, and session-end hygiene automation.
   Use when configuring hooks for a project, understanding what hooks enforce, debugging
   hook-related failures, or deciding which enforcement level to adopt.
   Trigger with phrases like "set up hooks", "configure enforcement", "why did the hook block me",
-  "what do the hooks check", "install SDD hooks", "hook enforcement level".
+  "what do the hooks check", "install CCC hooks", "hook enforcement level".
 ---
 
 # Hook Enforcement
 
-Claude Code hooks enforce SDD workflow constraints at the runtime level. Unlike prompt-based rules (which are advisory), hooks make violations structurally impossible.
+Claude Code hooks enforce CCC workflow constraints at the runtime level. Unlike prompt-based rules (which are advisory), hooks make violations structurally impossible.
 
 ## Why Hooks
 
@@ -158,7 +158,7 @@ Not every project needs all four hooks. Choose the level that matches your workf
 
 Each hook script accepts environment variables for configuration:
 
-- `SDD_SPEC_PATH` -- Path to active spec file
+- `CCC_SPEC_PATH` -- Path to active spec file
 - `SDD_CONTEXT_THRESHOLD` -- Context budget warning threshold (default: 50%)
 - `SDD_STRICT_MODE` -- Enable strict enforcement (default: false)
 - `SDD_LOG_DIR` -- Directory for evidence logs

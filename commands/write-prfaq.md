@@ -40,7 +40,7 @@ Before gathering context in Step 2, invoke the `planning-preflight` skill. The P
 3. The bundle's codebase state, sibling issues, and strategic context feed directly into Step 2's context gathering -- use them instead of re-querying from scratch.
 
 **Skip preflight when:**
-- Invoked from `/sdd:go` with `--quick` flag (quick mode skips preflight)
+- Invoked from `/ccc:go` with `--quick` flag (quick mode skips preflight)
 - Preflight already ran this session (reuse the cached bundle)
 
 ## Step 2: Gather Context
@@ -132,8 +132,8 @@ After the PR/FAQ draft is complete and committed:
 
 ```
 ✓ PR/FAQ draft complete. Label set to spec:draft.
-  Next: Run `/sdd:go` to continue → will route to Gate 1 (spec approval)
-  Or: Run `/sdd:review [issue ID]` directly after human approves the spec
+  Next: Run `/ccc:go` to continue → will route to Gate 1 (spec approval)
+  Or: Run `/ccc:review [issue ID]` directly after human approves the spec
 ```
 
 The spec needs human approval (Gate 1) before proceeding to adversarial review.

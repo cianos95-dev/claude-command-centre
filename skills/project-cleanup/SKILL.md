@@ -3,21 +3,21 @@ name: project-cleanup
 description: |
   One-time project normalization: reclassify issues vs documents, enforce naming conventions,
   migrate deprecated labels, delete non-actionable items, and create structural project documents.
-  Use when onboarding a new project to SDD conventions, after importing issues from another tracker,
+  Use when onboarding a new project to CCC conventions, after importing issues from another tracker,
   or when a project has accumulated convention debt (wrong issue types, bracket prefixes, missing type labels).
-  Trigger with phrases like "clean up this project", "normalize project issues", "apply SDD conventions",
+  Trigger with phrases like "clean up this project", "normalize project issues", "apply CCC conventions",
   "convert research notes to documents", "fix bracket prefixes", "project cleanup".
 ---
 
 # Project Cleanup
 
-One-time structural normalization of a project's issues, documents, and metadata. This is distinct from ongoing hygiene (`/sdd:hygiene`) which audits health, and issue-lifecycle which governs day-to-day ownership. Cleanup handles destructive and structural changes that hygiene explicitly avoids.
+One-time structural normalization of a project's issues, documents, and metadata. This is distinct from ongoing hygiene (`/ccc:hygiene`) which audits health, and issue-lifecycle which governs day-to-day ownership. Cleanup handles destructive and structural changes that hygiene explicitly avoids.
 
 ## When to Use
 
 - Project has accumulated convention debt (bracket prefixes, missing type labels, inconsistent naming)
 - Non-actionable content stored as issues (research notes, decisions, session learnings)
-- Onboarding an existing project to SDD conventions for the first time
+- Onboarding an existing project to CCC conventions for the first time
 - Reclaiming issue tracker slots by converting reference material to documents
 
 ## Content Classification Matrix

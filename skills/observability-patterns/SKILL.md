@@ -13,7 +13,7 @@ description: |
 
 # Observability Patterns
 
-Observability for SDD projects operates at two levels: **application-level** (monitoring the software you build) and **plugin-level** (monitoring the SDD plugin itself). This skill covers both, with emphasis on Stage 7 verification tool selection and the three-layer plugin monitoring stack.
+Observability for CCC projects operates at two levels: **application-level** (monitoring the software you build) and **plugin-level** (monitoring the CCC plugin itself). This skill covers both, with emphasis on Stage 7 verification tool selection and the three-layer plugin monitoring stack.
 
 ## Application-Level Observability
 
@@ -41,7 +41,7 @@ Vercel:  Check: LCP/CLS/FID within thresholds on affected pages.
 Sentry:  Check: no new error groups from affected components.
 ```
 
-**Evidence for `/sdd:close`:**
+**Evidence for `/ccc:close`:**
 - PostHog screenshot showing feature activation rate
 - Vercel Analytics screenshot showing stable web vitals
 - Sentry confirmation: zero new issues from affected component
@@ -54,7 +54,7 @@ Sentry:    Check: no new error groups from the endpoint handler.
 PostHog:   Check: custom events fire correctly (if applicable).
 ```
 
-**Evidence for `/sdd:close`:**
+**Evidence for `/ccc:close`:**
 - Honeycomb trace query showing latency percentiles
 - Sentry confirmation: zero 5xx errors from the endpoint
 - PostHog event funnel (if user-facing analytics were part of the spec)
@@ -67,7 +67,7 @@ Sentry:    Monitor for regression: error rate should not increase post-deploy.
 Vercel:    Check build times, edge function cold starts (if applicable).
 ```
 
-**Evidence for `/sdd:close`:**
+**Evidence for `/ccc:close`:**
 - Before/after Honeycomb comparison showing no latency regression
 - Sentry error rate graph spanning deploy window
 
@@ -87,7 +87,7 @@ If the acceptance criteria don't mention performance, skip Honeycomb. If they do
 
 ## Plugin-Level Monitoring: Three-Layer Stack
 
-The SDD plugin itself needs monitoring to ensure methodology health. This operates at three layers, each independent but feeding into the next.
+The CCC plugin itself needs monitoring to ensure methodology health. This operates at three layers, each independent but feeding into the next.
 
 ### Layer 1: Structural Validation (Pre-Release)
 
@@ -105,7 +105,7 @@ The SDD plugin itself needs monitoring to ensure methodology health. This operat
 
 **What it measures:** Which skills actually triggered during sessions. Where users got stuck (friction points). Context efficiency. Tool usage distribution.
 
-**When it runs:** After sessions, on-demand via `/sdd:insights`.
+**When it runs:** After sessions, on-demand via `/ccc:insights`.
 
 **Key metrics from /insights:**
 - Skill trigger frequency (which skills are used, which are dormant)
@@ -149,8 +149,8 @@ Before marking a feature's Stage 7 as complete:
 1. **Identify verification type** (UI, API, infrastructure) from the section above
 2. **Select minimum tooling** based on acceptance criteria types
 3. **Collect evidence** using the tool-specific patterns above
-4. **Attach evidence to `/sdd:close`** — screenshots, query results, or metric summaries
-5. **Record in `.sdd-progress.md`** — which tools were used and what they showed
+4. **Attach evidence to `/ccc:close`** — screenshots, query results, or metric summaries
+5. **Record in `.ccc-progress.md`** — which tools were used and what they showed
 
 ### Adding Plugin Monitoring to a Release
 
@@ -167,4 +167,4 @@ Before bumping the plugin version:
 - **insights-pipeline** -- Archives /insights reports that feed Layer 2 runtime observability
 - **ship-state-verification** -- Structural validation (Layer 1) complements file existence checks; together they verify both content and behavior
 - **execution-engine** -- Stage 7 verification happens after the execution loop completes; observability tools provide the evidence
-- **issue-lifecycle** -- Closure evidence from observability tools feeds the `/sdd:close` protocol
+- **issue-lifecycle** -- Closure evidence from observability tools feeds the `/ccc:close` protocol

@@ -104,9 +104,9 @@ After the issue is closed or closure is proposed:
 
 ```
 ✓ Issue closure evaluated. Evidence posted.
-  Next: Run `/sdd:go` to continue → will check for remaining work
-  Or: Run `/sdd:go --next` to pick up the next unblocked task
-  Or: Run `/sdd:go --status` to see the full project status
+  Next: Run `/ccc:go` to continue → will check for remaining work
+  Or: Run `/ccc:go --next` to pick up the next unblocked task
+  Or: Run `/ccc:go --status` to see the full project status
 ```
 
 ## What If

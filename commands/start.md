@@ -29,7 +29,7 @@ Verify the task is ready for implementation:
 - Has a parent spec that is at least `spec:ready`
 - Has a project assigned (not unassigned/orphaned)
 
-If any of these are missing, warn the user and suggest running `/decompose` or `/review` first. For missing project assignment, suggest the project based on topic (SDD/tooling → Claude Command Centre (CCC), Alteri features → Alteri, new ideas → Ideas & Prototypes, SoilWorx → Cognito SoilWorx).
+If any of these are missing, warn the user and suggest running `/decompose` or `/review` first. For missing project assignment, suggest the project based on topic (CCC/tooling → Claude Command Centre (CCC), Alteri features → Alteri, new ideas → Ideas & Prototypes, SoilWorx → Cognito SoilWorx).
 
 ## Step 2: Route to Execution Mode
 
@@ -106,8 +106,8 @@ After all acceptance criteria are addressed and verification passes:
 
 ```
 ✓ Task implementation complete. All acceptance criteria met.
-  Next: Run `/sdd:go` to continue → will route to next task or closure
-  Or: Run `/sdd:close [issue ID]` to evaluate closure conditions
+  Next: Run `/ccc:go` to continue → will route to next task or closure
+  Or: Run `/ccc:close [issue ID]` to evaluate closure conditions
 ```
 
 If the stop hook is active, the execution loop will automatically advance to the next task when you signal TASK_COMPLETE.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SDD Stop Hook Handler — Autonomous Task Execution Engine
+# CCC Stop Hook Handler — Autonomous Task Execution Engine
 #
 # This script is the core loop driver for Stage 6 (Implementation) of the
 # Spec-Driven Development funnel. It runs as a Claude Code stop hook, reading
@@ -11,12 +11,12 @@
 # session fresh context. It respects the 3 human approval gates, the 5
 # execution modes, and per-task/global iteration safety caps.
 #
-# State file: $PROJECT_ROOT/.sdd-state.json
-# Progress file: $PROJECT_ROOT/.sdd-progress.md (persists after completion)
+# State file: $PROJECT_ROOT/.ccc-state.json
+# Progress file: $PROJECT_ROOT/.ccc-progress.md (persists after completion)
 #
 # Install: Configure in .claude/settings.json:
 #   "hooks": { "Stop": [{ "matcher": "", "hooks": [{ "type": "command",
-#     "command": ".claude/hooks/scripts/sdd-stop-handler.sh" }] }] }
+#     "command": ".claude/hooks/scripts/ccc-stop-handler.sh" }] }] }
 
 set -euo pipefail
 
@@ -40,11 +40,11 @@ TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/null)
 # 2. Locate project root and state file
 # ---------------------------------------------------------------------------
 
-PROJECT_ROOT="${SDD_PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
-STATE_FILE="$PROJECT_ROOT/.sdd-state.json"
+PROJECT_ROOT="${CCC_PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
+STATE_FILE="$PROJECT_ROOT/.ccc-state.json"
 
 if [[ ! -f "$STATE_FILE" ]]; then
-    # No active SDD session — allow stop.
+    # No active CCC session — allow stop.
     exit 0
 fi
 
@@ -54,7 +54,7 @@ if [[ -z "$STATE" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# 2.5. Load preferences from .sdd-preferences.yaml (via yq)
+# 2.5. Load preferences from .ccc-preferences.yaml (via yq)
 # ---------------------------------------------------------------------------
 # All preferences have safe defaults. If yq is missing or the file does not
 # exist, every preference variable is set to its default value.
@@ -62,10 +62,10 @@ fi
 # Requires: yq (https://github.com/mikefarah/yq) — install with:
 #   brew install yq
 #
-# Preference file: $PROJECT_ROOT/.sdd-preferences.yaml
+# Preference file: $PROJECT_ROOT/.ccc-preferences.yaml
 # Schema reference: examples/sample-preferences.yaml
 
-PREFS_FILE="$PROJECT_ROOT/.sdd-preferences.yaml"
+PREFS_FILE="$PROJECT_ROOT/.ccc-preferences.yaml"
 
 # --- Set all defaults first ---
 GATE1_ENABLED="true"
@@ -244,7 +244,7 @@ fi
 if [[ $TASK_INDEX -ge $TOTAL_TASKS ]]; then
     # All tasks done. Remove state file but preserve progress.
     rm -f "$STATE_FILE"
-    # .sdd-progress.md is intentionally kept for historical reference.
+    # .ccc-progress.md is intentionally kept for historical reference.
     exit 0
 fi
 
@@ -265,7 +265,7 @@ if echo "$LAST_OUTPUT" | grep -q "REPLAN"; then
     elif [[ $REPLAN_COUNT -ge $MAX_REPLANS ]]; then
         # Max replans reached — halt the loop
         jq -n --argjson count "$REPLAN_COUNT" --argjson max "$MAX_REPLANS" \
-            --arg reason "Max replans ($MAX_REPLANS) reached after $REPLAN_COUNT replans. Halting — review .sdd-progress.md and adjust tasks manually." \
+            --arg reason "Max replans ($MAX_REPLANS) reached after $REPLAN_COUNT replans. Halting — review .ccc-progress.md and adjust tasks manually." \
             '{"decision": "block", "reason": $reason}'
         exit 0
     else
@@ -288,10 +288,10 @@ if echo "$LAST_OUTPUT" | grep -q "REPLAN"; then
         fi
 
         REASON="REPLAN triggered for ${LINEAR_ISSUE:-unknown issue} (replan $NEW_REPLAN_COUNT of $MAX_REPLANS)."
-        REASON="$REASON Read the spec${SPEC_PATH:+ at $SPEC_PATH} and .sdd-progress.md."
+        REASON="$REASON Read the spec${SPEC_PATH:+ at $SPEC_PATH} and .ccc-progress.md."
         REASON="$REASON Compare completed work against ALL acceptance criteria."
         REASON="$REASON Regenerate remaining tasks based on what actually exists in the codebase."
-        REASON="$REASON Update .sdd-state.json: set phase back to execution, update totalTasks and taskIndex."
+        REASON="$REASON Update .ccc-state.json: set phase back to execution, update totalTasks and taskIndex."
         REASON="$REASON Then continue executing from the first new task. Signal TASK_COMPLETE when done."
 
         jq -n --arg reason "$REASON" '{"decision": "block", "reason": $reason}'
@@ -325,8 +325,8 @@ if ! echo "$LAST_OUTPUT" | grep -q "TASK_COMPLETE"; then
     fi
 
     # Build the retry continue prompt.
-    REASON="Continue SDD execution for ${LINEAR_ISSUE:-unknown issue}. Mode: ${EXEC_MODE}."
-    REASON="$REASON Read .sdd-progress.md for completed task context."
+    REASON="Continue CCC execution for ${LINEAR_ISSUE:-unknown issue}. Mode: ${EXEC_MODE}."
+    REASON="$REASON Read .ccc-progress.md for completed task context."
     REASON="$REASON Task $TASK_INDEX did not signal TASK_COMPLETE. Retry attempt $NEW_TASK_ITER of $MAX_TASK_ITER."
     REASON="$REASON Execute task $TASK_INDEX from the decomposed task list."
 
@@ -338,10 +338,10 @@ if ! echo "$LAST_OUTPUT" | grep -q "TASK_COMPLETE"; then
         REASON="$REASON Pause at any checkpoint gates for human review before proceeding."
     fi
 
-    # Prompt enrichments (configurable via .sdd-preferences.yaml)
+    # Prompt enrichments (configurable via .ccc-preferences.yaml)
     [[ "$PREF_SUBAGENT" == "true" ]] && REASON="$REASON Use parallel subagents for codebase reads; single subagent for build/test."
     [[ "$PREF_SEARCH" == "true" ]] && REASON="$REASON Before implementing, search the codebase for existing solutions. Don't assume functionality is missing."
-    [[ "$PREF_AGENTS_FILE" == "true" ]] && [[ -f "$PROJECT_ROOT/.sdd-agents.md" ]] && REASON="$REASON Read .sdd-agents.md for project-specific build commands and codebase patterns."
+    [[ "$PREF_AGENTS_FILE" == "true" ]] && [[ -f "$PROJECT_ROOT/.ccc-agents.md" ]] && REASON="$REASON Read .ccc-agents.md for project-specific build commands and codebase patterns."
     [[ "$PREF_ALWAYS_RECOMMEND" == "true" ]] && REASON="$REASON When presenting options, always highlight your recommended choice."
     # Prioritization framework enrichment
     case "$PREF_PRIORITIZATION_FW" in
@@ -397,8 +397,8 @@ fi
 # 13. Build continue prompt for the next task
 # ---------------------------------------------------------------------------
 
-REASON="Continue SDD execution for ${LINEAR_ISSUE:-unknown issue}. Mode: ${EXEC_MODE}."
-REASON="$REASON Read .sdd-progress.md for completed task context."
+REASON="Continue CCC execution for ${LINEAR_ISSUE:-unknown issue}. Mode: ${EXEC_MODE}."
+REASON="$REASON Read .ccc-progress.md for completed task context."
 REASON="$REASON Execute task $NEW_TASK_INDEX of $TOTAL_TASKS from the decomposed task list."
 
 if [[ -n "$SPEC_PATH" ]]; then
@@ -413,10 +413,10 @@ if [[ "$EXEC_MODE" == "checkpoint" ]]; then
     REASON="$REASON Pause at any checkpoint gates for human review before proceeding."
 fi
 
-# Prompt enrichments (configurable via .sdd-preferences.yaml)
+# Prompt enrichments (configurable via .ccc-preferences.yaml)
 [[ "$PREF_SUBAGENT" == "true" ]] && REASON="$REASON Use parallel subagents for codebase reads; single subagent for build/test."
 [[ "$PREF_SEARCH" == "true" ]] && REASON="$REASON Before implementing, search the codebase for existing solutions. Don't assume functionality is missing."
-[[ "$PREF_AGENTS_FILE" == "true" ]] && [[ -f "$PROJECT_ROOT/.sdd-agents.md" ]] && REASON="$REASON Read .sdd-agents.md for project-specific build commands and codebase patterns."
+[[ "$PREF_AGENTS_FILE" == "true" ]] && [[ -f "$PROJECT_ROOT/.ccc-agents.md" ]] && REASON="$REASON Read .ccc-agents.md for project-specific build commands and codebase patterns."
 [[ "$PREF_ALWAYS_RECOMMEND" == "true" ]] && REASON="$REASON When presenting options, always highlight your recommended choice."
 # Prioritization framework enrichment
 case "$PREF_PRIORITIZATION_FW" in

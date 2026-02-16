@@ -57,7 +57,7 @@ Read the current issue from the project tracker:
 
 Check for unresolved feedback:
 
-- Adversarial review findings (from `/sdd:review` output)
+- Adversarial review findings (from `/ccc:review` output)
 - PR review threads with unresolved comments
 - Carry-forward items from previous implementation rounds
 
@@ -70,7 +70,7 @@ Check for unresolved feedback:
 | Switching between tasks | Anchor to the new task's spec |
 | After debugging a tangent | Anchor to verify you're back on track |
 | Before claiming "done" | Final anchor to verify all criteria met |
-| Manual trigger (`/sdd:anchor`) | Full protocol execution |
+| Manual trigger (`/ccc:anchor`) | Full protocol execution |
 
 ## Anchor Output Format
 
@@ -101,7 +101,7 @@ After re-reading all sources, produce a concise alignment summary:
 ## Automatic vs Manual
 
 - **Automatic**: The skill activates as a background check when session length or context usage crosses thresholds. It surfaces a warning if drift is detected.
-- **Manual**: `/sdd:anchor` runs the full protocol and produces the alignment summary output.
+- **Manual**: `/ccc:anchor` runs the full protocol and produces the alignment summary output.
 
 ## Integration with Other Skills
 

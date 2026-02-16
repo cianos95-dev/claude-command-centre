@@ -138,7 +138,7 @@ Replace Claude-generated random names (e.g., `composed-crunching-raven`) with st
 
 | Project | Short |
 |---------|-------|
-| claude-command-centre | `sdd` |
+| claude-command-centre | `ccc` |
 | alteri | `alteri` |
 | prototypes | `proto` |
 | ObsidianVault | `vault` |
@@ -171,7 +171,7 @@ Update this table when each session starts (session name is visible in the termi
 
 ## 7. Cross-System Feedback Routing
 
-Feedback from external agents routes back into the SDD pipeline as follows:
+Feedback from external agents routes back into the CCC pipeline as follows:
 
 | Source | Feedback Type | Routing |
 |--------|---------------|---------|
@@ -180,7 +180,7 @@ Feedback from external agents routes back into the SDD pipeline as follows:
 | GitHub Copilot | PR review suggestions | Implementer addresses before merge |
 | Sentry | Error alerts post-deploy | New issue via spec-author, or reopen if regression |
 | Linear Bot | Issue-PR linking | Automatic, no agent action needed |
-| Cursor | Quick fix PRs (<5 lines) | Copilot review, merge, bypass SDD |
+| Cursor | Quick fix PRs (<5 lines) | Copilot review, merge, bypass CCC |
 | cto.new | Implementation PR or branch | Review via standard PR process; compare with Claude Code output if both assigned |
 | Codex | PR code review findings (P1/P2) | Implementer addresses P1 before merge; P2 at discretion |
 | Cyrus | Self-verified PR (3 iterations) | Light review — Cyrus self-verifies, but human spot-checks |
@@ -230,7 +230,7 @@ When dispatching parallel sessions to different agents, additional constraints a
 
 - **One agent per session.** Do not assign the same issue to multiple agents simultaneously. Linear assignment is exclusive.
 - **Branch conventions differ.** Claude Code uses `claude/{issue-id}-{slug}`. External agents use their own conventions (Cursor: `cursor/{issue-id}`, Copilot: auto-named). Document the branch in the session registry.
-- **Only Claude Code sessions have full SDD awareness.** External agents (cto.new, Cursor, Codex) do not read SDD skill files. Provide essential context (acceptance criteria, constraints) in the issue description, not in skill references. Use the Dispatch Issue Template from CONNECTORS.md § Agent Dispatch Protocol.
+- **Only Claude Code sessions have full CCC awareness.** External agents (cto.new, Cursor, Codex) do not read CCC skill files. Provide essential context (acceptance criteria, constraints) in the issue description, not in skill references. Use the Dispatch Issue Template from CONNECTORS.md § Agent Dispatch Protocol.
 - **Feedback reconciliation.** If two agents produce PRs for related issues, follow the Feedback Reconciliation Protocol in **CONNECTORS.md § Agent Dispatch Protocol**. External agents do not have cross-session awareness.
 
 > For agent adoption status, routing tables, the selection decision tree, and dispatch architecture, see **CONNECTORS.md § Agent Connectors**.
@@ -240,5 +240,5 @@ When dispatching parallel sessions to different agents, additional constraints a
 - **execution-modes** -- `exec:swarm` for 5+ independent subagent tasks within a single session; parallel dispatch is for multiple independent _sessions_. See also the **Agent Selection** section for mode-to-agent routing.
 - **context-management** -- Session exit summary tables, subagent return discipline, context budget protocol
 - **adversarial-review** -- Multi-model consensus protocol for reconciling parallel session outputs; Options A-H for review timing
-- **execution-engine** -- State persistence across session boundaries via `.sdd-state.json` and `.sdd-progress.md`
+- **execution-engine** -- State persistence across session boundaries via `.ccc-state.json` and `.ccc-progress.md`
 - **spec-workflow** -- Master plan pattern governs the phase decomposition that feeds dispatch decisions

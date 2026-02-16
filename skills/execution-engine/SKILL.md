@@ -8,7 +8,7 @@ description: |
 
 # Execution Engine
 
-The execution engine is the autonomous loop that powers Stage 6 (Implementation) of the SDD funnel. It uses a Claude Code stop hook to intercept session exits and re-feed the next task, giving each task a fresh context window. This prevents drift and context accumulation across multi-task implementations.
+The execution engine is the autonomous loop that powers Stage 6 (Implementation) of the CCC funnel. It uses a Claude Code stop hook to intercept session exits and re-feed the next task, giving each task a fresh context window. This prevents drift and context accumulation across multi-task implementations.
 
 ## Core Design
 
@@ -20,7 +20,7 @@ Three control mechanisms keep the loop safe:
 | **Retry budget** | Cap retries per task before escalating to a human | 5 iterations per task |
 | **Safety cap** | Hard limit on total loop iterations across all tasks | 50 global iterations |
 
-The loop is designed for unattended execution. A human starts it with `/sdd:go`, walks away, and returns to find either completed work or a clear explanation of where and why the loop stopped.
+The loop is designed for unattended execution. A human starts it with `/ccc:go`, walks away, and returns to find either completed work or a clear explanation of where and why the loop stopped.
 
 > See [references/replan-protocol.md](references/replan-protocol.md) for the Disposable Plan Principle, authority hierarchy, REPLAN signal, and replan limits.
 
@@ -30,19 +30,19 @@ The loop is designed for unattended execution. A human starts it with `/sdd:go`,
 
 ### Step-by-step flow
 
-1. **`/sdd:go` or `/sdd:start`** creates `.sdd-state.json` with the task list from `/sdd:decompose`. The agent begins executing the first task (taskIndex 0).
+1. **`/ccc:go` or `/ccc:start`** creates `.ccc-state.json` with the task list from `/ccc:decompose`. The agent begins executing the first task (taskIndex 0).
 
-2. **Agent executes the task.** It reads `.sdd-progress.md` for context from prior tasks, implements the current task, runs verification (tests, lint, build), commits changes, and updates the progress log.
+2. **Agent executes the task.** It reads `.ccc-progress.md` for context from prior tasks, implements the current task, runs verification (tests, lint, build), commits changes, and updates the progress log.
 
 3. **Agent signals `TASK_COMPLETE`.** This exact string (case-sensitive) must appear in the agent's response after all acceptance criteria for the task are met.
 
 4. **The stop hook intercepts the session exit.** It detects `TASK_COMPLETE` in the transcript and:
-   - Increments `taskIndex` in `.sdd-state.json`
+   - Increments `taskIndex` in `.ccc-state.json`
    - Resets `taskIteration` to 1
    - Increments `globalIteration`
    - Returns a `block` decision with the next task's prompt injected
 
-5. **Claude Code restarts with fresh context.** The new session receives the next task prompt, reads `.sdd-progress.md` for accumulated context from prior tasks, and begins execution.
+5. **Claude Code restarts with fresh context.** The new session receives the next task prompt, reads `.ccc-progress.md` for accumulated context from prior tasks, and begins execution.
 
 6. **Repeat** until all tasks complete, a gate is reached, or a budget limit is hit.
 
@@ -52,14 +52,14 @@ Each task gets a clean context window. The stop hook's `block` decision causes C
 
 - No stale assumptions from prior tasks leak into the new session
 - Context budget resets to zero for each task
-- The only carry-forward is the explicit `.sdd-progress.md` file
+- The only carry-forward is the explicit `.ccc-progress.md` file
 - Drift prevention is structural, not prompt-based
 
 ## State Files
 
 The engine maintains two files in the project root. Both are gitignored.
 
-### `.sdd-state.json` -- Execution Loop State
+### `.ccc-state.json` -- Execution Loop State
 
 ```json
 {
@@ -101,7 +101,7 @@ The engine maintains two files in the project root. Both are gitignored.
 | `createdAt` | ISO 8601 | When execution started. |
 | `lastUpdatedAt` | ISO 8601 | When the state file was last modified. |
 
-### `.sdd-progress.md` -- Append-Only Memory
+### `.ccc-progress.md` -- Append-Only Memory
 
 ```markdown
 ## Goal
@@ -127,7 +127,7 @@ Task 2: Build preference sync service
 
 | Section | Purpose | Who Writes |
 |---------|---------|------------|
-| Goal | One-sentence summary from the spec. Set once. | `/sdd:go` |
+| Goal | One-sentence summary from the spec. Set once. | `/ccc:go` |
 | Completed Tasks | Append-only log with commit hash and duration. | Agent, before TASK_COMPLETE |
 | Learnings | Discoveries for future tasks. | Agent, during execution |
 | Current Task | Overwritten each session. | Agent, at session start |
@@ -146,7 +146,7 @@ Before outputting `TASK_COMPLETE`, the agent must verify:
 1. **All acceptance criteria for the task are met.** Not "most" -- all of them.
 2. **Verification passes.** Run tests, lint, and build. All must pass.
 3. **Changes are committed.** Unstaged work will be lost when context resets.
-4. **`.sdd-progress.md` is updated.** Add to Completed Tasks with commit hash and duration. Note any Learnings.
+4. **`.ccc-progress.md` is updated.** Add to Completed Tasks with commit hash and duration. Note any Learnings.
 
 If `TASK_COMPLETE` is missing, the stop hook assumes incomplete, increments `taskIteration` (consuming retry budget), and re-injects the same task. If premature, the hook trusts the signal and advances — failures surface during verification (Stage 7).
 
@@ -166,8 +166,8 @@ The stop hook respects the three human approval gates from spec-workflow.
 
 | Gate | When It Blocks | How It Resumes |
 |------|---------------|----------------|
-| Gate 1 (Approve spec) | Before execution starts | Must be in `gatesPassed` before `/sdd:go` creates state |
-| Gate 2 (Accept review) | Before execution starts | Must be in `gatesPassed` before `/sdd:go` creates state |
+| Gate 1 (Approve spec) | Before execution starts | Must be in `gatesPassed` before `/ccc:go` creates state |
+| Gate 2 (Accept review) | Before execution starts | Must be in `gatesPassed` before `/ccc:go` creates state |
 | Gate 3 (Review PR) | After all tasks complete | Agent opens PR, sets `awaitingGate: 3`, loop stops |
 
 Gates 1 and 2 are preconditions. Gate 3 is a postcondition.
@@ -180,5 +180,5 @@ Gates 1 and 2 are preconditions. Gate 3 is a postcondition.
 - **execution-modes** -- Defines the 5 modes and their decision heuristic; determines loop behavior
 - **issue-lifecycle** -- Defines closure rules triggered after execution completes (Stage 7.5)
 - **context-management** -- Defines delegation tiers used during task execution within each session
-- **drift-prevention** -- The `/sdd:anchor` protocol runs automatically at the start of each task in the loop
+- **drift-prevention** -- The `/ccc:anchor` protocol runs automatically at the start of each task in the loop
 - **hook-enforcement** -- Defines the broader hook framework; the execution engine extends the Stop hook

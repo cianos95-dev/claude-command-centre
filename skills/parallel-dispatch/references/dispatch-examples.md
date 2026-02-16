@@ -42,7 +42,7 @@ Implement CIA-410 and CIA-405 from master plan CIA-379 (Phase 1B: Preferences & 
 CCC plugin repo: ~/Repositories/claude-command-centre/
 
 Context:
-- CIA-410: Preferences/config system for SDD plugin
+- CIA-410: Preferences/config system for CCC plugin
 - CIA-405: User preference expansion (review frequency, model routing)
 - These two issues share the same config surface area
 - No dependency on Phase 1A or 2A
@@ -55,7 +55,7 @@ Tasks:
 3. Wire preferences into execution-modes routing
 4. Update both issues with results
 
-Deliverable: Working /sdd:config command with preferences. CIA-410 and CIA-405 closed.
+Deliverable: Working /ccc:config command with preferences. CIA-410 and CIA-405 closed.
 ```
 
 **Result:** Session did not start -- user did not see confirmation. Session sat idle.
@@ -64,7 +64,7 @@ Deliverable: Working /sdd:config command with preferences. CIA-410 and CIA-405 c
 
 ## Example 3: luminous-meandering-zephyr Batch 1 (3-way)
 
-**Context:** CIA-423 master plan, 3-way parallel dispatch for SDD Plugin v2.0.
+**Context:** CIA-423 master plan, 3-way parallel dispatch for CCC Plugin v2.0.
 
 **Dispatch table presented before launch:**
 

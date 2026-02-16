@@ -1,6 +1,6 @@
 # Communication Style Guide
 
-Rules for all SDD plugin content: skills, commands, hooks, README, Linear issues, and session output.
+Rules for all CCC plugin content: skills, commands, hooks, README, Linear issues, and session output.
 
 ## Writing Rules
 

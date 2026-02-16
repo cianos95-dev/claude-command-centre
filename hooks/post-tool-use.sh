@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SDD Hook: PostToolUse
+# CCC Hook: PostToolUse
 # Trigger: After tool execution completes
 # Purpose: Check for ownership boundary violations and log evidence
 #
@@ -46,10 +46,10 @@ PROTECTED_BRANCHES="main master production"
 for BRANCH in $PROTECTED_BRANCHES; do
   if [[ "$CURRENT_BRANCH" == "$BRANCH" ]]; then
     if [[ "$STRICT_MODE" == "true" ]]; then
-      echo "[SDD] VIOLATION: Direct modification on protected branch '$BRANCH'"
+      echo "[CCC] VIOLATION: Direct modification on protected branch '$BRANCH'"
       exit 1
     else
-      echo "[SDD] WARNING: Working directly on protected branch '$BRANCH'"
+      echo "[CCC] WARNING: Working directly on protected branch '$BRANCH'"
     fi
   fi
 done
@@ -59,5 +59,5 @@ done
 
 UNCOMMITTED=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
 if [[ "$UNCOMMITTED" -gt 20 ]]; then
-  echo "[SDD] WARNING: $UNCOMMITTED uncommitted files. Consider committing or running /sdd:anchor"
+  echo "[CCC] WARNING: $UNCOMMITTED uncommitted files. Consider committing or running /ccc:anchor"
 fi

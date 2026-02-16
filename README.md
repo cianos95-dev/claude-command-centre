@@ -13,7 +13,7 @@ claude plugins add /path/to/claude-command-centre
 # Expected: quick, tdd, pair, checkpoint, swarm
 
 # 3. Use
-# Tell Claude about your feature idea. Run /sdd:write-prfaq.
+# Tell Claude about your feature idea. Run /ccc:write-prfaq.
 # The plugin guides you from there.
 ```
 
@@ -75,8 +75,8 @@ The spec-driven development space for AI coding agents is active, with 30+ plugi
 - Context window management as codified agent behavior
 
 **What others do better (and we acknowledge):**
-- **Autonomous execution loops** -- Tools like claude-workflow ship shell scripts for unattended task queue processing. Our `/sdd:start` handles single-task routing with mode awareness. For unattended processing of tasks decomposed by `/sdd:decompose`, pair with a dedicated execution framework.
-- **Dependency task graphs** -- Several plugins model bidirectional dependencies between tasks. Our `/sdd:decompose` produces ordered task lists with dependency annotations but does not enforce execution order programmatically.
+- **Autonomous execution loops** -- Tools like claude-workflow ship shell scripts for unattended task queue processing. Our `/ccc:start` handles single-task routing with mode awareness. For unattended processing of tasks decomposed by `/ccc:decompose`, pair with a dedicated execution framework.
+- **Dependency task graphs** -- Several plugins model bidirectional dependencies between tasks. Our `/ccc:decompose` produces ordered task lists with dependency annotations but does not enforce execution order programmatically.
 
 **Complementary tools:**
 These plugins address adjacent concerns and pair well with CCC:
@@ -169,18 +169,18 @@ flowchart TD
 
 ## Commands
 
-Commands are user-invoked workflows triggered with `/sdd:<command>`.
+Commands are user-invoked workflows triggered with `/ccc:<command>`.
 
 | Command | Description |
 |---------|-------------|
-| `/sdd:write-prfaq` | Interactive PR/FAQ drafting with template selection and research grounding |
-| `/sdd:review` | Trigger adversarial spec review (Options A-D, including multi-model runtime) |
-| `/sdd:decompose` | Break an epic/spec into atomic implementation tasks with mode labels |
-| `/sdd:start` | Begin implementation with automatic execution mode routing |
-| `/sdd:close` | Evaluate closure with quality scoring (0-100) and structured evidence |
-| `/sdd:hygiene` | Audit open issues for label consistency, staleness, and ownership gaps |
-| `/sdd:index` | Scan codebase for modules, patterns, and integration points before spec writing |
-| `/sdd:anchor` | Re-read active spec, git state, and issue context to prevent drift |
+| `/ccc:write-prfaq` | Interactive PR/FAQ drafting with template selection and research grounding |
+| `/ccc:review` | Trigger adversarial spec review (Options A-D, including multi-model runtime) |
+| `/ccc:decompose` | Break an epic/spec into atomic implementation tasks with mode labels |
+| `/ccc:start` | Begin implementation with automatic execution mode routing |
+| `/ccc:close` | Evaluate closure with quality scoring (0-100) and structured evidence |
+| `/ccc:hygiene` | Audit open issues for label consistency, staleness, and ownership gaps |
+| `/ccc:index` | Scan codebase for modules, patterns, and integration points before spec writing |
+| `/ccc:anchor` | Re-read active spec, git state, and issue context to prevent drift |
 
 ## Skills
 
@@ -262,7 +262,7 @@ GitHub Actions workflows for Options A and C are included in `skills/adversarial
 
 ## Quality Scoring
 
-`/sdd:close` evaluates issues across three weighted dimensions:
+`/ccc:close` evaluates issues across three weighted dimensions:
 
 | Dimension | Weight | What It Measures |
 |-----------|--------|-----------------|
@@ -282,7 +282,7 @@ Scores are deterministic given the same inputs. The rubric is documented in `ski
 
 ## Drift Prevention
 
-Before every task, `/sdd:anchor` re-reads:
+Before every task, `/ccc:anchor` re-reads:
 
 1. **Active spec** -- Frontmatter, acceptance criteria, and open questions from the PR/FAQ
 2. **Git state** -- Diff since last commit, uncommitted changes, branch status
@@ -291,7 +291,7 @@ Before every task, `/sdd:anchor` re-reads:
 
 This prevents the most common failure mode in long sessions: the agent drifting from the spec as context accumulates. The re-anchoring protocol rebuilds ground truth from source artifacts rather than relying on accumulated session context.
 
-The `drift-prevention` skill activates automatically when session length exceeds configurable thresholds, or can be triggered manually with `/sdd:anchor` at any time.
+The `drift-prevention` skill activates automatically when session length exceeds configurable thresholds, or can be triggered manually with `/ccc:anchor` at any time.
 
 ## Hook Enforcement
 
@@ -310,13 +310,13 @@ Hooks are in `hooks/` -- install by copying to your project's `.claude/hooks/` d
 
 ## Codebase Indexing
 
-`/sdd:index` scans your repository and produces:
+`/ccc:index` scans your repository and produces:
 
 - **Module map** -- Directories, key exports, internal dependencies
 - **Pattern summary** -- Frameworks, conventions, test patterns, naming schemes
 - **Integration points** -- APIs, shared state, event buses, external service calls
 
-The index feeds into `/sdd:write-prfaq` as a "Current Codebase Context" section, ensuring new specs account for existing patterns rather than proposing redundant implementations. The index is cached and incrementally updated on subsequent runs.
+The index feeds into `/ccc:write-prfaq` as a "Current Codebase Context" section, ensuring new specs account for existing patterns rather than proposing redundant implementations. The index is cached and incrementally updated on subsequent runs.
 
 ## Issue Closure Rules
 
@@ -482,7 +482,7 @@ claude-command-centre/
 │   ├── post-tool-use.sh          # Check ownership boundary violations
 │   ├── stop.sh                   # Hygiene check, status update, handoff
 │   └── scripts/
-│       └── sdd-stop-handler.sh   # Execution engine stop handler
+│       └── ccc-stop-handler.sh   # Execution engine stop handler
 ├── examples/
 │   ├── sample-prfaq.md           # Filled-out PR/FAQ
 │   ├── sample-closure-comment.md # Closure comment with quality score
@@ -500,15 +500,15 @@ claude-command-centre/
 
 A typical end-to-end flow using CCC:
 
-1. **Index:** Run `/sdd:index` -- scan the codebase to understand existing patterns and modules
+1. **Index:** Run `/ccc:index` -- scan the codebase to understand existing patterns and modules
 2. **Intake:** Idea arrives via chat, voice memo, or planning session
-3. **Draft:** Run `/sdd:write-prfaq` -- select template, answer prompts, get a structured spec with codebase context
-4. **Review:** Run `/sdd:review` -- choose Option D for immediate feedback, or commit spec to trigger Options A-C (including multi-model runtime)
+3. **Draft:** Run `/ccc:write-prfaq` -- select template, answer prompts, get a structured spec with codebase context
+4. **Review:** Run `/ccc:review` -- choose Option D for immediate feedback, or commit spec to trigger Options A-C (including multi-model runtime)
 5. **Address findings:** Revise spec based on Critical and Important findings
-6. **Decompose:** Run `/sdd:decompose` -- spec breaks into atomic tasks with execution mode labels
-7. **Implement:** Run `/sdd:start PROJ-042` -- task routes to the right execution mode. `/sdd:anchor` fires before each task to prevent drift
-8. **Close:** Run `/sdd:close` -- quality score evaluates test/coverage/review, closure rules determine action, evidence is structured automatically
-9. **Audit:** Run `/sdd:hygiene` periodically to catch label drift, stale issues, and ownership gaps
+6. **Decompose:** Run `/ccc:decompose` -- spec breaks into atomic tasks with execution mode labels
+7. **Implement:** Run `/ccc:start PROJ-042` -- task routes to the right execution mode. `/ccc:anchor` fires before each task to prevent drift
+8. **Close:** Run `/ccc:close` -- quality score evaluates test/coverage/review, closure rules determine action, evidence is structured automatically
+9. **Audit:** Run `/ccc:hygiene` periodically to catch label drift, stale issues, and ownership gaps
 
 ## Label Taxonomy
 
