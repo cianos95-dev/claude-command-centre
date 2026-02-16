@@ -161,6 +161,21 @@ You are NOT a reviewer. You do NOT add new findings. You consolidate, reconcile,
 
 **If REVISE:** List the specific findings that must be addressed, in priority order.
 **If RETHINK:** Explain which fundamental assumption is challenged and what alternative should be explored.
+
+## Review Decision Record
+
+**Issue:** [Issue ID] | **Review date:** YYYY-MM-DD | **Option:** F (Structured Debate)
+**Reviewers:** Security Skeptic, Performance Pragmatist, Architectural Purist, UX Advocate | **Recommendation:** [APPROVE / REVISE / RETHINK]
+
+| ID | Severity | Finding | Reviewer | Decision | Response |
+|----|----------|---------|----------|----------|----------|
+| C1 | Critical | [Finding from UNANIMOUS/MAJORITY] | [Contributing personas] | | |
+| I1 | Important | [Finding] | [Contributing personas] | | |
+| N1 | Consider | [Finding] | [Persona] | | |
+
+**Decision values:** `agreed` (will address) | `override` (disagree, see Response) | `deferred` (valid, tracked as new issue) | `rejected` (not applicable)
+**Response required for:** override, deferred (with issue link), rejected
+**Gate 2 passes when:** All Critical + Important rows have a Decision value
 ```
 
 **Behavioral Rules:**

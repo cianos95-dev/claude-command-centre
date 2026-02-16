@@ -107,17 +107,44 @@ After presenting results, offer two actions:
 1. **Update the spec** — Apply the critical and important findings directly to the spec document.
 2. **Create follow-up issues** — Create issues in the project tracker for findings the user wants to address separately.
 
+## Step 5.5: Post Review Decision Record
+
+After presenting the review findings, generate a **Review Decision Record (RDR)** table and post it to the project tracker.
+
+1. **Generate the RDR table** — Convert the synthesized findings into the canonical RDR format (see the `adversarial-review` skill, "Review Decision Record" section). Every Critical, Important, and Consider finding gets a row with ID, Severity, Finding, and Reviewer columns. Leave Decision and Response columns empty.
+
+2. **Post to the project tracker** — Add the RDR table as a comment on the parent issue. If the spec was identified by issue ID (Step 1, method 2), post directly. If identified by file path, inform the user to post manually or provide the issue ID.
+
+3. **Collect inline decisions** — Prompt the human to fill in decisions:
+
+```
+✓ Review Decision Record posted to [issue ID].
+
+Gate 2 requires decisions on all Critical and Important findings.
+Quick options:
+  "agree all" — accept all findings
+  "agree all except C2, I3" — selective override
+  "agree C1-C3, override I2: [reason], defer I3 to CIA-456"
+
+Or review in the project tracker and come back.
+```
+
+4. **Parse and update** — If the human provides inline decisions, parse their natural language response (commas = list, hyphens = range), update the RDR table, and re-post the updated table to the project tracker comment.
+
+5. **Verify Gate 2** — If all Critical and Important findings have decisions, confirm Gate 2 is passed. If any remain unfilled, report which findings still need decisions.
+
 ## Next Step
 
-After the adversarial review findings are posted:
+After the Review Decision Record is posted:
 
 ```
-✓ Adversarial review complete. Findings posted.
-  Next: Run `/sdd:go` to continue → will route to Gate 2 (accept findings)
-  Or: Run `/sdd:decompose [issue ID]` directly after human accepts findings
+✓ Adversarial review complete. Review Decision Record posted.
+  → Fill decisions on Critical/Important findings to pass Gate 2
+  → Then: Run `/sdd:go` to continue → will verify Gate 2 and route to decomposition
+  → Or: Run `/sdd:decompose [issue ID]` after Gate 2 decisions are filled
 ```
 
-The review findings need human acceptance (Gate 2) before proceeding to decomposition.
+Gate 2 is passed when all Critical and Important findings in the RDR have a Decision value (`agreed`, `override`, `deferred`, or `rejected`).
 
 ## What If
 

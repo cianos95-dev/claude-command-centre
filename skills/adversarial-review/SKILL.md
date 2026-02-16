@@ -372,32 +372,89 @@ The recommendation is one of:
 - **REVISE** -- Spec needs significant changes to address Critical findings
 - **RETHINK** -- Fundamental approach is questioned; consider alternative solutions
 
-## Review Findings Storage
+## Review Decision Record (RDR)
 
-Store adversarial review findings in a persistent, version-controlled location so they can be referenced during implementation and closure.
+Every review synthesis output (regardless of Option A-H) must end with a **Review Decision Record** table. The RDR is the artifact that Gate 2 operates on -- it transforms implicit approval ("I ran `/decompose` so I guess I approve") into explicit, traceable decisions on each finding.
 
-**Recommended pattern:** Create a `REVIEW-GATE-FINDINGS.md` file at the root of the feature branch (or in `docs/reviews/`). This file captures the full synthesis output and tracks resolution status.
+This format extends the Decision/Response column pattern from CIA-378 (triage tables) to adversarial review findings.
+
+### RDR Table Format
 
 ```markdown
-# Review Gate Findings: [Spec Title]
+## Review Decision Record
 
-**Review date:** YYYY-MM-DD
-**Recommendation:** APPROVE / REVISE / RETHINK
-**Spec:** [link to spec or issue]
+**Issue:** CIA-XXX | **Review date:** YYYY-MM-DD | **Option:** D/E/F/G/H
+**Reviewers:** [names/agents] | **Recommendation:** APPROVE / REVISE / RETHINK
 
-## Critical
-- [ ] C1: [Finding description] — [Resolution status]
+| ID | Severity | Finding | Reviewer | Decision | Response |
+|----|----------|---------|----------|----------|----------|
+| C1 | Critical | [Finding description] | Challenger | | |
+| C2 | Critical | [Finding description] | Security | | |
+| I1 | Important | [Finding description] | Devil's Advocate | | |
+| I2 | Important | [Finding description] | Security | | |
+| N1 | Consider | [Finding description] | Challenger | | |
 
-## Important
-- [ ] I1: [Finding description] — [Resolution status]
-
-## Consider
-- [ ] R1: [Finding description] — [Resolution status]
-
-## Carry-Forward Items
-Items deferred to future issues (with issue links):
-- I3: [Description] → [CIA-XXX]
+**Decision values:** `agreed` (will address) | `override` (disagree, see Response) | `deferred` (valid, tracked as new issue) | `rejected` (not applicable)
+**Response required for:** override, deferred (with issue link), rejected
+**Gate 2 passes when:** All Critical + Important rows have a Decision value
 ```
+
+### Decision Vocabulary
+
+| Value | Meaning | Response Required? | Gate 2 Effect |
+|-------|---------|-------------------|---------------|
+| `agreed` | Will address before implementation | No (optional clarification) | Passes |
+| `override` | Disagree with finding, proceeding anyway | Yes (explain rationale) | Passes |
+| `deferred` | Valid finding, tracked as separate issue | Yes (include issue link) | Passes |
+| `rejected` | Finding is not applicable to this context | Yes (explain why) | Passes |
+| (empty) | No decision yet | N/A | **Blocks Gate 2** (Critical/Important only) |
+
+### ID Convention
+
+Severity-initial + sequential number: `C1`, `C2`, `I1`, `I2`, `N1`, `N2`. This matches the existing convention in `sample-review-findings.md` and is stable across re-reviews.
+
+### Inline Decision Collection
+
+When presenting the RDR in-session, offer the human a natural language shorthand:
+
+```
+Gate 2 requires decisions on all Critical and Important findings.
+Quick options:
+  "agree all" — accept all findings
+  "agree all except C2, I3" — selective override
+  "agree C1-C3, override I2: [reason], defer I3 to CIA-456"
+
+Syntax: commas = list (C1, C3), hyphens = range (C1-C3)
+```
+
+Parse the human's response, update the RDR table, and re-post the updated table to the project tracker.
+
+### Where the RDR Lives
+
+**Primary: Project tracker comment on the parent issue.** External agents (Option H) already post findings as comments. The human can reply or edit in-place. The `/decompose` command reads the latest RDR comment via the project tracker API.
+
+**Secondary: `REVIEW-GATE-FINDINGS.md`** at feature branch root or in `docs/reviews/`. Committed for repo audit trail after decisions are filled. This preserves the version-controlled record for future reference.
+
+**Why the tracker comment is primary:** (1) External agents already post to the tracker as comments. (2) The human reviewer works in the tracker, not in the IDE. (3) `/decompose` can verify Gate 2 by reading comments. (4) Comments preserve edit history for audit trail.
+
+### Finding Normalization Protocol (Option H)
+
+When external agents (cto.new, Codex, Cyrus, Copilot) post review findings, their output is unstructured -- they do not follow the SDD severity format. The normalization protocol converts agent findings into RDR rows:
+
+1. **Read** the agent's comment on the review sub-issue
+2. **Extract** distinct findings (look for bullet points, numbered items, or paragraph-level concerns)
+3. **Classify** each finding by severity (Critical / Important / Consider) based on content
+4. **Assign** the agent name to the Reviewer column
+5. **Append** normalized rows to the parent issue's RDR table
+6. **Deduplicate** against existing RDR rows (same finding from different reviewers = note both in Reviewer column, keep higher severity)
+
+When multiple external agents review the same spec, run the normalizer after each agent completes. The final RDR table is the union of all agent findings plus any in-session review findings.
+
+## Review Findings Storage
+
+The Review Decision Record (above) is the primary findings format. For repo audit trail, also store findings in a version-controlled file:
+
+**Pattern:** Create a `REVIEW-GATE-FINDINGS.md` file at the root of the feature branch (or in `docs/reviews/`). This file captures the RDR table with decisions filled in after Gate 2 passes.
 
 **Why a separate file:** Review findings are implementation guidance, not spec content. Keeping them in a dedicated file prevents spec bloat and gives the implementer a checklist to work through. The file is committed to the feature branch and merged with the PR, preserving the review trail.
 

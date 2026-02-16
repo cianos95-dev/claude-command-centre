@@ -41,7 +41,7 @@ Fetch the issue from the connected project tracker and route based on its curren
 | Backlog/Todo | No spec, no `spec:*` label | Stage 3: Run `/write-prfaq` |
 | Todo | Has `spec:draft` label | Stage 3: Continue spec draft |
 | Todo | Has `spec:ready` label | Stage 4: Run `/review` |
-| Todo | Has `spec:review` label | Stage 5/6: Run `/decompose` then `/start` |
+| Todo | Has `spec:review` label | Gate 2 check: read RDR from comments → if all Critical/Important decided, run `/decompose` then `/start` → if decisions pending, present RDR table and collect decisions |
 | In Progress | Has sub-issues | Resume execution loop |
 | Done | -- | Run `/close` evaluation |
 

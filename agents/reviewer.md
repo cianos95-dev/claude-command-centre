@@ -90,4 +90,19 @@ You are the Reviewer agent for the Spec-Driven Development workflow. You handle 
 
 ### What Works Well
 - [Positive observation]
+
+### Review Decision Record
+
+**Issue:** [Issue ID] | **Review date:** YYYY-MM-DD | **Option:** D (In-Session Subagents)
+**Reviewers:** Challenger, Security, Devil's Advocate | **Recommendation:** [PASS / REVISE / REJECT]
+
+| ID | Severity | Finding | Reviewer | Decision | Response |
+|----|----------|---------|----------|----------|----------|
+| C1 | Critical | [Finding] | [Reviewer] | | |
+| I1 | Important | [Finding] | [Reviewer] | | |
+| N1 | Consider | [Finding] | [Reviewer] | | |
+
+**Decision values:** `agreed` (will address) | `override` (disagree, see Response) | `deferred` (valid, tracked as new issue) | `rejected` (not applicable)
+**Response required for:** override, deferred (with issue link), rejected
+**Gate 2 passes when:** All Critical + Important rows have a Decision value
 ```

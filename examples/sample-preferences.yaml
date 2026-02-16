@@ -138,6 +138,9 @@ review:
                                 #   neurofoo — Structured category prompting (systematic coverage)
                                 #   combined — Both: inversion first, then category sweep
   structured_categories: false  # Add groupthink-prevention categories to pre-mortem prompts
+  gate2_require_consider: false # Also require decisions on Consider findings for Gate 2
+                                #   false (default) — only Critical + Important block Gate 2
+                                #   true  — all findings (including Consider) must have decisions
 
 # ---------------------------------------------------------------------------
 # Scoring — Quality score display                             [Tier: Stable]

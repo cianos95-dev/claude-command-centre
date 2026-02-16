@@ -94,7 +94,7 @@ Not every task needs the full 9-stage funnel. The execution mode determines whic
 | 1 | Ideation | Collaborative session / chat | ~~project-tracker~~ MCP | None |
 | 2 | Analytics Review | Coding tool | ~~analytics-platform~~ | None (informational) |
 | 3 | PR/FAQ Draft | Collaborative session | PR/FAQ templates, ~~project-tracker~~ MCP | **Human: approve spec** |
-| 4 | Adversarial Review | ~~ci-cd~~ | Review options A-D | **Human: accept findings** |
+| 4 | Adversarial Review | ~~ci-cd~~ | Review options A-H, RDR table | **Human: accept findings (via RDR)** |
 | 5 | Visual Prototype | ~~design-tool~~ | ~~version-control~~ integration | None (skip for non-UI) |
 | 6 | Implementation | Coding tool | Subagents, model mixing | **Human: review PR** |
 | 7 | Verification | ~~deployment-platform~~ | Preview deploy, analytics check | Merge to production |
@@ -114,6 +114,7 @@ Not every task needs the full 9-stage funnel. The execution mode determines whic
 
 **Who:** Human (spec author)
 **Decision:** Are the review findings acceptable? Do any Critical items need to be addressed first?
+**Mechanism:** The human fills Decision and Response columns in the **Review Decision Record** (RDR) table posted as a project tracker comment. Gate 2 passes when all Critical and Important findings have a Decision value (`agreed`, `override`, `deferred`, or `rejected`). See the `adversarial-review` skill for the RDR format and decision vocabulary.
 **On acceptance:** Proceed to Stage 5 (or Stage 6 if non-UI). Update label to `spec:review`.
 **On REVISE:** Return to Stage 3 to address Critical and Important findings.
 **On RETHINK:** Return to Stage 1 to reconsider the fundamental approach.
@@ -205,7 +206,7 @@ This workflow integrates with the other skills in this plugin:
 
 - **execution-engine** -- Powers Stage 6 (stop hook task loop, `.sdd-state.json`, `.sdd-progress.md`, gate pauses, retry budget)
 - **prfaq-methodology** -- Governs Stage 3 (PR/FAQ drafting process, templates, interactive questioning)
-- **adversarial-review** -- Governs Stage 4 (reviewer perspectives, architecture options A-D)
+- **adversarial-review** -- Governs Stage 4 (reviewer perspectives, architecture options A-H, Review Decision Record for Gate 2)
 - **execution-modes** -- Governs Stage 6 (quick, tdd, pair, checkpoint, swarm routing)
 - **issue-lifecycle** -- Governs Stage 7.5 (closure rules, evidence requirements, ownership boundaries)
 - **context-management** -- Applies across all stages (subagent delegation, output brevity, model mixing)

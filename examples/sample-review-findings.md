@@ -98,3 +98,29 @@ Consider rate limiting updates per user per second to prevent accidental or mali
 **Overall assessment:** The spec is strong on the customer problem and solution framing. The main gaps are in the technical specification of edge cases (conflicts, offline, accuracy thresholds) and security architecture (authentication, data retention). These should be addressed before implementation begins.
 
 **Recommended next step:** Address all 3 Critical items and I1 (GDPR). Then proceed to implementation with `exec:tdd` -- the edge cases identified here make a test-first approach essential.
+
+---
+
+## Review Decision Record
+
+**Issue:** PROJ-042 | **Review date:** 2026-02-15 | **Option:** D (In-Session Subagents)
+**Reviewers:** Challenger, Security, Devil's Advocate | **Recommendation:** REVISE
+
+| ID | Severity | Finding | Reviewer | Decision | Response |
+|----|----------|---------|----------|----------|----------|
+| C1 | Critical | No conflict resolution strategy specified | Challenger | agreed | |
+| C2 | Critical | Action item extraction accuracy threshold undefined | Challenger | agreed | Will define precision 95%, recall 80% targets |
+| C3 | Critical | No authentication for shared session links | Security | override | Guest access is a feature, not a gap — will add rate limiting instead |
+| I1 | Important | Data retention policy needs GDPR consideration | Security | agreed | |
+| I2 | Important | "Zero new tools" claim is misleading | Devil's Advocate | override | Syntax is optional; NLP extraction works without it. Keeping current messaging. |
+| I3 | Important | No offline-first architecture described | Challenger | deferred | Created PROJ-048 for offline architecture spec |
+| I4 | Important | Competitor differentiation is weak | Devil's Advocate | agreed | Will reframe around real-time extraction |
+| N1 | Consider | Session templates for meeting types | Devil's Advocate | | |
+| N2 | Consider | Analytics on session effectiveness | Challenger | | |
+| N3 | Consider | Rate limiting for real-time sync | Security | | |
+
+**Decision values:** `agreed` (will address) | `override` (disagree, see Response) | `deferred` (valid, tracked as new issue) | `rejected` (not applicable)
+**Response required for:** override, deferred (with issue link), rejected
+**Gate 2 passes when:** All Critical + Important rows have a Decision value
+
+> **Gate 2 status: PASSED** — All 3 Critical and 4 Important findings have decisions. 2 overrides documented with rationale. 1 deferral tracked as PROJ-048. Consider findings left open (not required for Gate 2).

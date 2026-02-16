@@ -89,6 +89,7 @@ Session [Session]
 Review [Stable]
   pre_mortem_style:          sdd    (default)
   structured_categories:     false  (default)
+  gate2_require_consider:    false  (default)
 
 Scoring [Stable]
   display_format:            stars  (default)
@@ -147,6 +148,7 @@ Mark overridden values with `← overridden` to distinguish from defaults.
 | `session.max_parallel_subagents` | int | 1-10 | 3 | Session |
 | `review.pre_mortem_style` | enum | sdd, neurofoo, combined | sdd | Stable |
 | `review.structured_categories` | bool | true/false | false | Stable |
+| `review.gate2_require_consider` | bool | true/false | false | Stable |
 | `scoring.display_format` | enum | stars, letter, numeric, fibonacci | stars | Stable |
 
 ## Step 5: Interactive Mode (no args, CLI)
@@ -245,9 +247,10 @@ The artifact must include:
     - Checkpoint % — number input (30-95, default 70) — "Insist on session split threshold"
     - Max Parallel Subagents — number input (1-10, default 3)
 
-12. **Review Section** [Stable] — 2 controls:
+12. **Review Section** [Stable] — 3 controls:
     - Pre-mortem Style — dropdown: SDD (default), Neurofoo, Combined
     - Structured Categories — toggle (default: false) — "Add groupthink-prevention categories"
+    - Gate 2 Require Consider — toggle (default: false) — "Also require decisions on Consider findings for Gate 2"
 
 13. **Scoring Section** [Stable] — 1 control:
     - Display Format — dropdown: Stars (default), Letter, Numeric, Fibonacci

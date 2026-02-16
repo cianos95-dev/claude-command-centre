@@ -13,6 +13,24 @@ Break an epic or specification into atomic, independently implementable tasks. E
 
 ## Step 1: Read the Spec
 
+### Gate 2 Pre-Check
+
+Before reading the spec, verify that Gate 2 (Accept Findings) has passed. This ensures all Critical and Important review findings have explicit human decisions.
+
+1. **Read issue comments** from the connected project tracker.
+2. **Find the RDR** — Search for the most recent comment containing `## Review Decision Record`.
+3. **Parse the RDR table** — Extract all rows with their ID, Severity, Decision, and Response values.
+4. **Verify decisions:**
+   - Every row where Severity = `Critical` or `Important` must have a non-empty Decision value.
+   - Every row where Decision = `override` or `rejected` must have a non-empty Response.
+   - Every row where Decision = `deferred` must have an issue link in Response.
+5. **Gate 2 outcome:**
+   - **All checks pass** → Gate 2 = PASSED. Proceed to read the spec.
+   - **Any check fails** → Report which findings lack decisions. Do NOT proceed. Prompt the human to fill decisions using the inline shorthand or in the project tracker.
+   - **No RDR found** → Fallback: if the issue has `spec:implementing` label (work already started in a prior session), proceed. Otherwise, suggest running `/review` first.
+
+### Read the Spec
+
 Fetch the epic or spec using the provided argument:
 
 - **Issue ID** — Fetch from the connected project tracker. Read the description, acceptance criteria, and any linked documents or child issues.
@@ -145,3 +163,5 @@ The execution loop will process tasks one at a time with fresh context per task 
 | **Spec has no acceptance criteria** | Warn the user (as noted in Step 1). Suggest running `/write-prfaq` or `/review` to generate acceptance criteria before decomposing. Decomposition without AC produces tasks that cannot be verified. |
 | **Circular dependencies detected** | Flag the cycle explicitly (e.g., "Task A blocks Task B which blocks Task A"). This indicates a spec ambiguity. Ask the user to clarify which task should come first, or whether the tasks should be merged. |
 | **Project tracker not connected** | Output the decomposition summary table to the user but skip Step 5 (tracker creation). Note the tasks and suggest the user create them manually or connect a tracker and re-run. |
+| **Gate 2 not passed — some findings lack decisions** | Report which Critical/Important findings in the Review Decision Record still need decisions. Show the RDR table with unfilled rows highlighted. Prompt the human to fill decisions inline or in the project tracker. Do NOT proceed to decomposition until Gate 2 passes. |
+| **No Review Decision Record found** | If the issue has `spec:implementing` (prior session started work), proceed as backward-compatible. Otherwise, suggest running `/review` first to generate the RDR. |
