@@ -1,6 +1,8 @@
 # Connectors
 
-This plugin works best with the following data sources connected. Configure them in `.mcp.json` or through your organization's MCP setup.
+This plugin works best with the following data sources connected. Configure them in your global `~/.mcp.json` or through your organization's MCP setup.
+
+> **Note:** This plugin does NOT ship active MCP configs. Plugins expose skills, commands, and agents — not MCP servers. All MCP fragments shown below are **reference configurations** that you merge into your own `~/.mcp.json`. See [Troubleshooting](#troubleshooting) in README.md if you encounter MCP auth errors.
 
 ## Required
 
@@ -426,9 +428,9 @@ These rules prevent token waste, credit exhaustion, and context bloat:
 7. **Cache with `maxAge`.** Set `maxAge: 172800000` (48h) for documentation pages that don't change frequently. 500% faster on cache hits.
 8. **Delegate to subagent.** All Firecrawl results should be processed by a Task subagent, never pasted into the main context. Subagent summarizes in 2-3 bullets.
 
-#### `.mcp.json` Fragment
+#### `.mcp.json` Fragment (Reference Only)
 
-Research MCPs can be bundled as a recommended `.mcp.json` fragment that users merge into their project config:
+The following is a **reference configuration** — merge it into your global `~/.mcp.json`, do not place it in the repo root (Claude Code treats repo-level `.mcp.json` as active project config, which can conflict with your global MCPs):
 
 ```json
 {
@@ -517,7 +519,7 @@ Anthropic's [`enterprise-search`](https://github.com/anthropics/knowledge-work-p
 
 Replace `~~placeholder~~` values with your team's specific tools. The plugin's methodology is tool-agnostic -- it works with any project tracker, version control system, or CI/CD platform that has MCP support.
 
-To customize, edit `.mcp.json` and update the server URLs to match your organization's tools.
+To customize, update the server URLs in your global `~/.mcp.json` to match your organization's tools.
 
 ---
 

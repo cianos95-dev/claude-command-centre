@@ -360,7 +360,7 @@ CCC works best with these connected services (see [CONNECTORS.md](CONNECTORS.md)
 
 CCC's methodology is tool-agnostic (see [Customization](#customization)), but we test and document integration patterns for these specific tools:
 
-### Core (configured in .mcp.json)
+### Core (configured in ~/.mcp.json)
 
 | Tool | Funnel Role | Why |
 |------|-------------|-----|
@@ -403,9 +403,8 @@ v1.3.0 follows the [Anthropic plugin-dev](https://github.com/anthropics/claude-p
 ```
 claude-command-centre/
 ├── .claude-plugin/
-│   ├── plugin.json               # Canonical plugin manifest (v1.3.0)
+│   ├── plugin.json               # Canonical plugin manifest (v1.4.0)
 │   └── marketplace.json          # Marketplace metadata
-├── .mcp.json                     # Connector configuration
 ├── agents/
 │   ├── spec-author.md            # Stages 0-3: intake → spec approval
 │   ├── reviewer.md               # Stage 4: adversarial review
@@ -522,6 +521,66 @@ Optional labels for additional workflows:
 - `needs:human-decision` -- blocks agent from auto-closing
 - `research:needs-grounding` → `research:literature-mapped` → `research:methodology-validated` → `research:expert-reviewed`
 - `template:prfaq-feature` | `template:prfaq-infra` | `template:prfaq-research` | `template:prfaq-quick`
+
+## Troubleshooting
+
+### Plugin fails to load ("failed to load · 1 error")
+
+This typically means the plugin cache is stale or the marketplace reference is broken.
+
+1. **Check for stale marketplace references** (common after repo renames):
+   ```bash
+   cat ~/.claude/plugins/known_marketplaces.json | grep ai-pm-plugin-marketplace
+   ```
+   If the repo name is wrong, clean and reinstall:
+   ```bash
+   rm -rf ~/.claude/plugins/cache/ai-pm-plugin-marketplace/
+   rm -rf ~/.claude/plugins/marketplaces/ai-pm-plugin-marketplace/
+   ```
+   Then remove the stale entry from `~/.claude/plugins/known_marketplaces.json` and reinstall:
+   ```
+   /plugin marketplace add cianos95-dev/claude-command-centre
+   /plugin install claude-command-centre@ai-pm-plugin-marketplace
+   ```
+
+2. **Verify the cache exists** after installation:
+   ```bash
+   ls ~/.claude/plugins/cache/ai-pm-plugin-marketplace/claude-command-centre/
+   ```
+
+### MCP auth errors ("does not support dynamic client registration")
+
+This plugin does **not** ship MCP servers. If you see MCP auth errors:
+
+- Check if a project-level `.mcp.json` exists in the repo root — delete it (this repo gitignores it)
+- HTTP MCPs using OAuth (e.g. Linear at `mcp.linear.app`, GitHub at `api.githubcopilot.com`) require authentication via **Claude Desktop Settings UI** or **Cowork**, not project-level `.mcp.json`
+- Configure all MCPs in your global `~/.mcp.json` instead
+
+### Plugin source types
+
+| Source | Works in Claude Code | Works in Cowork | Auto-updates | Notes |
+|--------|---------------------|-----------------|-------------|-------|
+| `github` | Yes | Yes | With `GITHUB_TOKEN` | **Production default** |
+| `directory` | Yes | No | N/A | Development-only; Cowork runs in sandboxed VM |
+| `url` | Yes | Yes | With credentials | Alternative to `github` |
+
+For private repos, set `GITHUB_TOKEN` with `repo` scope in your shell environment for background auto-updates.
+
+### After repo renames
+
+Claude Code's `known_marketplaces.json` retains the old repo reference after a rename. GitHub redirects handle git operations, but metadata gets stale. To fix:
+
+1. Remove the stale entry from `~/.claude/plugins/known_marketplaces.json`
+2. Delete the marketplace clone: `rm -rf ~/.claude/plugins/marketplaces/<marketplace-name>/`
+3. Re-add: `/plugin marketplace add <owner>/<new-repo-name>`
+
+### Marketplace vs plugin
+
+- A **marketplace** is a git repo with `.claude-plugin/marketplace.json` listing one or more plugins
+- A **plugin** is a directory with `.claude-plugin/plugin.json` plus `skills/`, `commands/`, `agents/`, `hooks/`
+- The marketplace wrapper is **always required** — there is no direct plugin install in Claude Code
+- Single-plugin repos use `"source": "./"` (plugin content at repo root alongside marketplace.json)
+- Multi-plugin repos use `"source": "./plugins/<name>"` for each plugin
 
 ## License
 
