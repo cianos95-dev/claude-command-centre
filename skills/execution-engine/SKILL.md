@@ -55,6 +55,24 @@ Each task gets a clean context window. The stop hook's `block` decision causes C
 - The only carry-forward is the explicit `.ccc-progress.md` file
 - Drift prevention is structural, not prompt-based
 
+### Intra-task progress tracking (TodoWrite)
+
+At the start of each task session, create a TodoWrite list from the task's acceptance criteria. This provides visible progress tracking within a single task execution and helps the agent stay on track.
+
+```
+TodoWrite([
+  { content: "Acceptance criterion 1", status: "pending", activeForm: "Implementing criterion 1" },
+  { content: "Acceptance criterion 2", status: "pending", activeForm: "Implementing criterion 2" },
+  { content: "Run verification (tests, lint, build)", status: "pending", activeForm: "Running verification" },
+  { content: "Commit changes", status: "pending", activeForm: "Committing changes" },
+  { content: "Update .ccc-progress.md", status: "pending", activeForm: "Updating progress log" }
+])
+```
+
+Mark each item as `completed` when verified. The last three items (verify, commit, update progress) are standard for every task.
+
+This tracking is **ephemeral** -- it disappears when the session ends and `TASK_COMPLETE` fires. The persistent record lives in `.ccc-progress.md`.
+
 ## State Files
 
 The engine maintains two files in the project root. Both are gitignored.

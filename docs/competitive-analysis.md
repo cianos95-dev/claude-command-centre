@@ -49,6 +49,12 @@ These are plugins that directly overlap with our scope and could plausibly repla
 - **Core feature:** Change request lifecycle management, release candidate previews, Claude Code hook enforcement (SessionStart, PostToolUse, Stop), and bidirectional dependency tracking between tasks.
 - **Threat assessment:** MEDIUM-HIGH. The hook enforcement is notable -- their workflow constraints are enforced at the Claude Code runtime level, not just via prompts. This is architecturally stronger than our prompt-based approach.
 
+#### 7. Deep Trilogy (pierce-lamb)
+
+- **Core feature:** Three-plugin suite (`/deep-project`, `/deep-plan`, `/deep-implement`) with file-based state management, environment validation in SessionStart hooks, SubagentStop hooks for output interception, and TodoWrite/AskUserQuestion for interactive checkpoints. Published detailed learnings article (Feb 2, 2026).
+- **Threat assessment:** MEDIUM. The individual patterns are strong (environment validation, SubagentStop, structured user prompts) but the suite is more of a general-purpose workflow than a methodology. Key learning: Pierce found Claude Code's Tasks API hallucination-prone at 40+ chained calls and bypassed it by writing Task files directly -- validating our decision to use `.ccc-state.json` instead.
+- **Key patterns adopted:** Environment validation in SessionStart (CIA-494), TodoWrite for intra-task tracking (CIA-495), AskUserQuestion for structured routing (CIA-496). See ADR-002 for Tasks API non-adoption rationale.
+
 ### Tier 2: Adjacent Tools
 
 These overlap partially with our scope or serve a related but distinct purpose.
@@ -87,9 +93,9 @@ These are not direct competitors but contain patterns worth studying.
 | Context Management Methodology | 3-tier codified | No | Fresh context per task (engineering) | No | No | Tiered context loading | Re-anchoring (engineering) |
 | Quality Scoring | No (gap) | No | No | 0-100 across 6 dims (stronger) | No | No | No |
 | Codebase Indexing | No (gap) | No | /ralph-specum:index (stronger) | No | No | No | No |
-| Drift Detection | No (gap) | No | No | No | No | No | Re-anchoring before tasks (stronger) |
-| Autonomous Loop | No (gap) | No | Self-contained loop | No | Shell scripts cw-loop (stronger) | No | Ralph mode (stronger) |
-| Hook Enforcement | No (gap) | No | No | No | No | SessionStart / PostToolUse / Stop hooks (stronger) | No |
+| Drift Detection | `/ccc:anchor` re-anchoring | No | No | No | No | No | Re-anchoring before tasks (comparable) |
+| Autonomous Loop | Stop hook with gates + retry budgets | No | Self-contained loop | No | Shell scripts cw-loop (comparable) | No | Ralph mode (comparable) |
+| Hook Enforcement | SessionStart + PreToolUse + PostToolUse + Stop | No | No | No | No | SessionStart / PostToolUse / Stop hooks (comparable) | No |
 | Dependency Task Graphs | No (gap) | No | No | No | Bidirectional deps (stronger) | Bidirectional deps (stronger) | No |
 | Research Grounding | 4-stage progression | No | No | No | No | No | No |
 | Issue Hygiene Audit | 0-100 scoring | No | No | No | No | No | No |
@@ -135,11 +141,11 @@ A four-stage progression (needs-grounding, literature-mapped, methodology-valida
 | Gap | Who Has It Best | Impact | v2 Priority |
 |---|---|---|---|
 | No runtime multi-model review tooling | adversarial-spec | Cannot execute our Option C (multi-LLM adversarial) without custom integration work | Medium |
-| No drift detection / re-anchoring | gmickel / flow-next | Agent can drift from spec mid-session with no automated correction mechanism | High |
-| No autonomous execution loop | claude-workflow | No unattended task queue processing; every task requires human initiation | Medium |
+| ~~No drift detection / re-anchoring~~ | ~~gmickel / flow-next~~ | RESOLVED (Feb 15): `/ccc:anchor` re-anchoring implemented | ~~High~~ |
+| ~~No autonomous execution loop~~ | ~~claude-workflow~~ | RESOLVED (Feb 15): Stop hook execution engine with gates, retry budgets, REPLAN. Not yet tested end-to-end (CIA-493). | ~~Medium~~ |
 | No quality scoring | specswarm | Closure decisions are qualitative, not quantitative; harder to set thresholds | Medium |
 | No codebase indexing | smart-ralph | No automated code discovery before speccing; relies on human knowledge of the codebase | Medium |
-| No hook enforcement | cc-spec-driven | Workflow rules are prompt-based and advisory, not enforced at the runtime level | High |
+| ~~No hook enforcement~~ | ~~cc-spec-driven~~ | RESOLVED (Feb 15): Full hook suite -- SessionStart, PreToolUse (circuit breaker), PostToolUse (circuit breaker), Stop (execution engine) | ~~High~~ |
 | No dependency task graphs | claude-workflow + cc-spec-driven | `/ccc:decompose` produces flat task lists, does not model dependencies between tasks | Low |
 
 ---

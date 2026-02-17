@@ -26,7 +26,7 @@ If no argument is given, look for existing work in progress:
    - **Found AND `phase` is NOT `execution` or `replan`** -- Show the status view and suggest the next action for the current phase.
 2. If no state file exists, query the connected project tracker for agent-assigned issues with status "In Progress".
    - **Found one** -- Load that issue and resume (route through the Issue ID logic in 1C).
-   - **Found multiple** -- List all in-progress agent issues and ask the user to choose one.
+   - **Found multiple** -- Use `AskUserQuestion` with single-select to let the user choose. Each option should show the issue ID and title (e.g., label: "CIA-042", description: "Add user preference sync -- In Progress since Feb 14").
    - **Found none** -- Ask "What would you like to build?" and wait for input.
 
 ### 1B: `--status` Flag -- Show Status Only
@@ -275,9 +275,9 @@ Task 4/8 complete. Signaling TASK_COMPLETE.
 | Situation | Response |
 |-----------|----------|
 | **No project tracker connected** | Show a warning. Offer to work without project tracker integration (file-based state only). Skip project-tracker-specific routing (label checks, status queries). Issue ID arguments will not work -- only text descriptions and `--status` are available. |
-| **`.ccc-state.json` exists but is stale** | If `lastUpdatedAt` is >24 hours ago, warn the user: "State file is N hours old. Resume this work or start fresh?" Wait for confirmation before proceeding. |
-| **Multiple in-progress issues** | List all in-progress agent-assigned issues with their titles, priorities, and last activity timestamps. Ask the user to choose one. |
-| **Issue has no `exec:*` label** | Apply the execution-modes decision heuristic to infer the correct mode. Apply the label and inform the user which mode was selected and why. |
+| **`.ccc-state.json` exists but is stale** | If `lastUpdatedAt` is >24 hours ago, use `AskUserQuestion` with single-select: options "Resume" (description: "Continue from task N/M where you left off") and "Start fresh" (description: "Delete state file and begin a new execution"). |
+| **Multiple in-progress issues** | Use `AskUserQuestion` with single-select. Each option: label is the issue ID (e.g., "CIA-042"), description includes the title, priority, and last activity timestamp. |
+| **Issue has no `exec:*` label** | Apply the execution-modes decision heuristic to infer the correct mode. If the heuristic produces a tie or low confidence between two modes, use `AskUserQuestion` with single-select to let the user choose. Otherwise, apply the label and inform the user which mode was selected and why. |
 | **Issue is blocked by dependencies** | Show the blocking issues with their current statuses. Suggest running `/ccc:go --next` to find an unblocked task instead. |
 | **User passes both `--quick` and `--mode`** | `--mode` takes precedence for the execution mode label. `--quick` still applies the funnel collapsing behavior (skip stages 1, 2, 4, 5). |
 | **Execution loop is already running** | If `.ccc-state.json` exists with `phase: execution`, resume from the current `taskIndex` rather than restarting. Do not recreate state files. |
