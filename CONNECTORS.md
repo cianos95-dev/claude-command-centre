@@ -179,13 +179,86 @@ Agents differ in how they receive delegation signals. This distinction determine
 | Reactivity | Agents | How It Works | Latency |
 |------------|--------|-------------|---------|
 | **Push-based** (fully async) | cto.new, Cursor, Codex, Copilot, Sentry, Cyrus | Agent server receives Linear webhook on delegation. Agent processes autonomously. | Minutes to hours |
-| **Pull-based** (session-required) | Claude (`dd0797a4`) | Claude reads delegated issues when a Claude Code session starts. No webhook server. | Next session start |
+| **Hybrid** (push for intents, pull for implementation) | Claude (`dd0797a4`) | Webhook receiver handles `@mention`/`delegateId` for status/expand/help intents. Full implementation requires Claude Code session. | Seconds (intents), next session (implementation) |
 
-**Implication for Claude's agent:** Claude cannot reactively process Linear events without a session. To achieve push-based dispatch for Claude, you would need either:
-- A webhook receiver (e.g., n8n workflow, Cloudflare Worker) that receives Linear delegation events and invokes the Claude API
-- A polling service that periodically checks for newly delegated issues
+**Implication for Claude's agent:** Claude now has a webhook receiver (`/api/agent-session` on the alteri deployment) that converts push events to async GitHub Actions runs. The pipeline: Linear webhook → Vercel Edge → intent parsing → GitHub Actions `workflow_dispatch` → handler execution → Linear response activity. This makes Claude push-based for `@mention` and `delegateId` events.
 
-Neither is required for the CCC workflow — Claude's pull-based model works well when sessions are frequent. Push-based dispatch is a future enhancement (see CIA-431 Option C).
+#### Agent Handoff Patterns
+
+Two complementary primitives enable agent-to-agent handoff in Linear. Use them together for the hybrid pattern.
+
+##### Primary: `delegateId` Handoff
+
+Transfers active ownership of an issue from one agent to another.
+
+```
+Agent A completes work
+  → issueUpdate(delegateId: agentBId)
+    → Linear creates AgentSessionEvent for Agent B
+      → Agent B receives webhook, reads promptContext, starts work
+```
+
+**Effect:** Agent B becomes the active delegate. Agent A's session is implicitly complete. Linear UI shows the delegation in the activity trail.
+
+**When to use:** Sequential pipeline stages. Spec-author → reviewer → implementer → closer.
+
+##### Secondary: `@mention` Notification
+
+Parallel notification without transferring ownership.
+
+```
+Agent A posts comment with @agentB
+  → Linear creates AgentSessionEvent for Agent B
+    → Agent B receives webhook, responds independently
+```
+
+**Effect:** Agent B gets notified but ownership stays with Agent A. Useful for fan-out.
+
+**Constraint:** Max 1 app user `@mention` per comment. Multiple mentions require multiple comments.
+
+**When to use:** Parallel notifications (e.g., notify reviewer while implementer continues). Heads-up alerts.
+
+##### Hybrid Pattern
+
+Combine both for the CCC agent pipeline:
+
+```
+spec-author completes spec
+  → delegateId to reviewer (primary — transfers ownership)
+  → @mention to Codex (secondary — heads-up to prepare code review)
+
+reviewer completes review
+  → delegateId to implementer (primary)
+
+implementer completes work
+  → delegateId to closer (primary)
+```
+
+##### Intent Taxonomy
+
+When Claude receives a webhook (via `@mention` or `delegateId`), the comment text is parsed into intents:
+
+| Intent | Keywords | Handler | Output |
+|--------|----------|---------|--------|
+| **status** | `status`, `update`, `progress`, `where are we`, `how is` | `handleStatus` | Sub-issues table, linked PRs, recent activity |
+| **expand** | `expand`, `spec`, `flesh`, `elaborate`, `detail`, `break down` | `handleExpand` | Acceptance criteria, edge cases, tech considerations |
+| **help** | `help`, `what can you do`, `commands`, `capabilities` | `handleHelp` | Available intents and usage examples |
+| **unknown** | _(fallback)_ | `handleHelp` | Same as help |
+
+##### Architecture
+
+```
+Linear (webhook POST)
+  → Vercel Edge (/api/agent-session)
+    → Signature verification
+    → Intent parsing
+    → Ack thought (ephemeral, <5s)
+    → GitHub Actions workflow_dispatch
+      → Handler execution (status/expand/help)
+      → Linear GraphQL: post response activity
+```
+
+The Edge function returns 200 within 5 seconds (Linear's deadline). Heavy work runs async in GitHub Actions.
 
 #### Dispatch by CCC Stage
 
@@ -243,7 +316,7 @@ When selecting an agent for a task, first determine the execution mode (see **ex
 | `exec:checkpoint` | Claude Code | — | Human-gated; no agent substitution appropriate |
 | `exec:swarm` | Claude Code | **Copilot Agent** (label-based dispatch), Tembo (future orchestrator) | Copilot Agent for GitHub-native parallel dispatch; Tembo deferred |
 
-**Claude pull-based caveat:** Claude Code (`dd0797a4`) is session-local — it has no webhook server and cannot reactively process Linear delegation events. When Claude is the default agent, delegation only takes effect when a human starts a Claude Code session. For truly async dispatch, use a push-based agent (cto.new, Cursor, Codex, Copilot).
+**Claude hybrid model:** Claude Code (`dd0797a4`) has a webhook receiver that handles `@mention` and `delegateId` events asynchronously via GitHub Actions. For intent-based responses (status, expand, help), Claude responds automatically. For full implementation work, Claude Code sessions are still human-initiated.
 
 #### Agent Selection Decision Tree
 
