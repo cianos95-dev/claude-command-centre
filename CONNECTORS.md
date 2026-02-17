@@ -112,7 +112,7 @@ Adoption depends on budget and specific workflow needs. Not required for core CC
 |-------|-----------|--------------|------|-----------|
 | **Codex** (OpenAI) | 4 (code review), 6-7 | Structured PR code review with P1/P2 findings — no other agent offers this | $20/mo (ChatGPT Plus) | Adopt if GPT diversity + PR review automation is valued |
 | **Cyrus** (Ceedar AI) | 6 (exec:tdd, exec:pair) | Git worktree isolation per issue, self-verification loop, MCP connections, live metrics | Community $0 (self-host CLI), Pro $50/mo (cloud, 5 repos), Team $120/mo (10 repos). Uses Claude Code subscription token. | Validated on Pro trial (CIA-463): delegation → PR in ~5 min. Self-verification not yet tested on non-trivial task. Pro trial expires ~23 Feb 2026. Promote to Adopted after 3+ non-trivial mergeable PRs. |
-| **Tembo** (Tembo AI) | Orchestration (Layer 2 meta-agent) | Agent-agnostic orchestrator — coordinates Cursor, Codex, Claude Code across repos. Multi-repo, auto-configures MCPs. | Free to start (all plans include Linear) | Adopt if multi-agent coordination or multi-repo dispatch is needed. CIA-459 tracks setup. |
+| **Tembo** (Tembo AI) | Orchestration (Layer 2) | **ADOPTED.** Cloud-hosted agent orchestrator — dispatches Claude Code, Codex, Cursor, Amp, Opencode in isolated VM sandboxes. Production-grade Linear bot (auto-status, repo selection UI), multi-repo coordinated PRs, 25+ models, `@tembo-io/mcp` npm package for dispatch from Claude Code. 4 built-in MCPs + auto-configures Linear/GitHub MCPs for agents. Signed/verified commits. | Pro $60/mo (100 credits/month) | **Adopted (CIA-459 spike complete, 17 Feb 2026).** Default background executor. CCC handles spec/planning/review, Tembo handles background execution. Superseded CIA-484–490 (31pt). Credit burn: ~1 for trivial, 3–8 for features, 8–15+ for complex. BYOK = Enterprise-only (Pro credits cover infra + LLM). |
 | **Devin** (Cognition) | 4 (feasibility scoping), 6 (implement) | Batch parallel scoping with confidence scoring. Autonomous PR creation. | Core $20/mo (9 ACUs ≈ 2.25h), Team $500/mo | Adopt if batch feasibility scoping adds value beyond Claude Code estimation. CIA-461 tracks evaluation. |
 
 ### Demoted Agents
@@ -314,9 +314,9 @@ When selecting an agent for a task, first determine the execution mode (see **ex
 | `exec:tdd` | Claude Code | **Cyrus** (self-verification, ~5 min), **Cursor** ($20/mo) | Cyrus validated for delegation pipeline (CIA-463); Cursor for IDE pairing |
 | `exec:pair` | Claude Code | Cursor (IDE pairing), Cyrus (async pairing) | Claude Code for interactive; Cursor for IDE context; Cyrus for fully async |
 | `exec:checkpoint` | Claude Code | — | Human-gated; no agent substitution appropriate |
-| `exec:swarm` | Claude Code | **Copilot Agent** (label-based dispatch), Tembo (future orchestrator) | Copilot Agent for GitHub-native parallel dispatch; Tembo deferred |
+| `exec:swarm` | Claude Code | **Tembo** (adopted — multi-agent orchestrator), **Copilot Agent** (label-based dispatch) | Tembo for cross-agent/cross-repo orchestration (default); Copilot Agent for GitHub-native parallel dispatch |
 
-**Claude hybrid model:** Claude Code (`dd0797a4`) has a webhook receiver that handles `@mention` and `delegateId` events asynchronously via GitHub Actions. For intent-based responses (status, expand, help), Claude responds automatically. For full implementation work, Claude Code sessions are still human-initiated.
+**Claude hybrid model:** Claude Code (`dd0797a4`) handles interactive pair-programming and spec workflow (CCC skills). For background implementation, **Tembo** is the default executor — dispatched via Linear delegation or `mcp__tembo__create_task`. The webhook receiver (GitHub Actions) remains available for intent-based responses but is secondary to Tembo for implementation tasks.
 
 #### Agent Selection Decision Tree
 
@@ -334,7 +334,7 @@ Is this an exec:quick task with clear acceptance criteria?
 |          |
 |          +-- NO --> Is this exec:swarm (batch/parallel)?
 |                     |
-|                     +-- YES --> Copilot Agent (label-based) or Tembo (future)
+|                     +-- YES --> **Tembo** (default, adopted) or Copilot Agent (label-based)
 |                     +-- NO  --> Claude Code (default for pair/checkpoint)
 |
 Is this Stage 4 (code review)?
@@ -412,19 +412,23 @@ Full log: [Agent Performance Log](https://linear.app/cianclaude/document/agent-p
 | cto.new | — | No data | 0 | — |
 | Codex | — | No data | 0 | — |
 | Copilot Agent | — | No data | 0 | — |
+| Tembo (Pro) | exec:quick (trivial) | ~2 min | 2 | 2026-02-17 |
 
 ##### Quality Summary
 
 | Agent | Avg PR Quality (0-5) | Avg Revisions | Sample Size |
 |-------|---------------------|---------------|-------------|
 | Cyrus (Pro) | 2.0 | 0 | 1 |
+| Tembo (Pro) | 3.5 | 0 | 2 (CIA-459 spike: CONNECTORS.md update + CIA-507) |
 
 ##### Dispatch Latency Guidance
 
 When selecting an agent, consider latency requirements:
-- **< 10 min needed:** Cyrus (~5 min observed), cto.new (expected similar)
+- **< 5 min needed:** Tembo (~2 min observed), Cyrus (~5 min observed), cto.new (expected similar)
 - **< 1 hour OK:** Cursor, Codex, Copilot (push-based, variable)
 - **Next session OK:** Claude (pull-based, session-required)
+
+**Tembo credit cost guidance:** ~1 credit/trivial task, 1-3/small fix, 3-8/feature, 8-15+/complex refactor. Each `/tembo` PR feedback round = 1-3 additional credits. Budget: 100 credits/month on Pro ($60/mo). BYOK = Enterprise-only.
 
 #### Agent Configuration Status
 
@@ -440,7 +444,7 @@ Tracks per-agent setup progress. Updated as agents are configured and tested.
 | cto.new | OAuth authorized (not App user) | — | Blocked | **Needs cto.new-side setup** | Connect from cto.new dashboard |
 | Sentry | App user (Feb 9) | — | Partial | Active (monitoring) | Verify issue creation |
 | ChatPRD | App user (Jan 15) | N/A | Default | Low priority | Re-evaluate later |
-| Tembo | App user (Feb 16) | — | Default | Deferred | Free tier limits |
+| Tembo | App user (Feb 16) | GitHub (3 repos) | MCP installed, Pro ($60/mo, 100 credits), Linear + Sentry + Supabase integrations | **Adopted (Pro tier)** | CIA-459 spike complete. Default background executor. Superseded 31pt pipeline (CIA-484–490). |
 | Devin | App user (Feb 16) | — | Default | Deferred | $20/mo evaluation |
 | Vercel Agent | N/A (GitHub-native) | Vercel GitHub App | OFF (Hobby, out of credit) | Deferred | Pro ($20/mo) + Observability Plus ($10/mo). Revisit when deploying to Vercel. |
 
