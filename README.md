@@ -429,6 +429,7 @@ claude-command-centre/
 │   ├── reviewer-security-skeptic.md      # Adversarial perspective: security
 │   ├── reviewer-ux-advocate.md           # Adversarial perspective: UX
 │   ├── debate-synthesizer.md     # Synthesize multi-perspective review findings
+│   ├── code-reviewer.md          # Stage 6: spec-aware code review
 │   └── implementer.md            # Stages 5-7.5: implementation → closure
 ├── commands/
 │   ├── write-prfaq.md            # Interactive PR/FAQ drafting

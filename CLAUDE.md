@@ -13,7 +13,7 @@ When working on this repo, use these conventions:
 
 ## Repo Structure
 
-- `agents/` — Agent definitions (8 agents: reviewer personas, spec-author, implementer, debate-synthesizer)
+- `agents/` — Agent definitions (9 agents: reviewer personas, spec-author, implementer, debate-synthesizer, code-reviewer)
 - `commands/` — Slash commands (17 commands: go, start, close, review, decompose, etc.)
 - `hooks/` — Session and tool hooks (session-start, stop, pre/post-tool-use)
 - `skills/` — Skill definitions (33 skills: execution modes, issue lifecycle, adversarial review, etc.)
