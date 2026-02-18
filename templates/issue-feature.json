@@ -1,0 +1,44 @@
+{
+  "name": "Feature",
+  "type": "issue",
+  "description": "New functionality or capability",
+  "linearId": "9ba890c6-858f-4eab-9b42-7321f1127fd9",
+  "templateData": {
+    "title": "[Verb] [what]",
+    "priority": 0,
+    "estimate": 3,
+    "labels": ["spec:draft", "type:feature"],
+    "state": "Backlog",
+    "team": "Claudian",
+    "descriptionData": {
+      "type": "doc",
+      "content": [
+        {"type": "heading", "attrs": {"level": 2}, "content": [{"type": "text", "text": "Problem"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "<!-- What pain point does this solve? Do NOT mention the solution here. -->"}]},
+        {"type": "heading", "attrs": {"level": 2}, "content": [{"type": "text", "text": "Solution"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "<!-- How will we solve it? -->"}]},
+        {"type": "heading", "attrs": {"level": 2}, "content": [{"type": "text", "text": "Acceptance Criteria"}]},
+        {"type": "todo_list", "content": [{"type": "todo_item", "attrs": {"done": false}, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "..."}]}]}]},
+        {"type": "heading", "attrs": {"level": 2}, "content": [{"type": "text", "text": "Spec"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "<!-- Link to PR/FAQ document if applicable -->"}]}
+      ]
+    }
+  },
+  "variants": [
+    {
+      "name": "Feature (CCC)",
+      "project": "Claude Command Centre (CCC)",
+      "overrides": {
+        "delegateId": "Claude",
+        "labels": ["+exec:tdd"]
+      }
+    },
+    {
+      "name": "Feature (Alteri)",
+      "project": "Alteri",
+      "overrides": {
+        "delegateId": "Claude"
+      }
+    }
+  ]
+}

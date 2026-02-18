@@ -1,0 +1,22 @@
+{
+  "name": "ADR (Architecture Decision Record)",
+  "type": "document",
+  "description": null,
+  "linearId": "c6a4af4c-91b3-4a14-95bf-907411bc3e65",
+  "templateData": {
+    "title": "ADR (Architecture Decision Record)",
+    "descriptionData": {
+      "type": "doc",
+      "content": [
+        {"type": "heading", "attrs": {"level": 1}, "content": [{"type": "text", "text": "Status"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "<!-- Proposed | Accepted | Deprecated | Superseded -->"}]},
+        {"type": "heading", "attrs": {"level": 1}, "content": [{"type": "text", "text": "Context"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "<!-- What forces are at play? -->"}]},
+        {"type": "heading", "attrs": {"level": 1}, "content": [{"type": "text", "text": "Decision"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "<!-- What did we decide? -->"}]},
+        {"type": "heading", "attrs": {"level": 1}, "content": [{"type": "text", "text": "Consequences"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "<!-- What becomes easier or harder? -->"}]}
+      ]
+    }
+  }
+}

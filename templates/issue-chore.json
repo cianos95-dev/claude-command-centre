@@ -1,0 +1,41 @@
+{
+  "name": "Chore",
+  "type": "issue",
+  "description": "Maintenance, config, cleanup, or infrastructure",
+  "linearId": "c8b3b8ff-db14-4074-bb32-5a9cf3115b73",
+  "templateData": {
+    "title": "[Verb] [what]",
+    "priority": 0,
+    "estimate": 1,
+    "labels": ["type:chore"],
+    "state": "Backlog",
+    "team": "Claudian",
+    "descriptionData": {
+      "type": "doc",
+      "content": [
+        {"type": "heading", "attrs": {"level": 2}, "content": [{"type": "text", "text": "What"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "<!-- What needs to be done? -->"}]},
+        {"type": "heading", "attrs": {"level": 2}, "content": [{"type": "text", "text": "Why Now"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "<!-- Why is this being prioritized? -->"}]},
+        {"type": "heading", "attrs": {"level": 2}, "content": [{"type": "text", "text": "Done When"}]},
+        {"type": "todo_list", "content": [{"type": "todo_item", "attrs": {"done": false}, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "..."}]}]}]}
+      ]
+    }
+  },
+  "variants": [
+    {
+      "name": "Chore (CCC)",
+      "project": "Claude Command Centre (CCC)",
+      "overrides": {
+        "delegateId": "Claude"
+      }
+    },
+    {
+      "name": "Chore (Alteri)",
+      "project": "Alteri",
+      "overrides": {
+        "delegateId": "Claude"
+      }
+    }
+  ]
+}
