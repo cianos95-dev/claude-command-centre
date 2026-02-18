@@ -86,6 +86,8 @@ After gathering sibling issues, pass each issue's description through the **depe
 
 For BLOCKS and BLOCKED-BY classifications, use the `DependencySignal.type` field returned by `dependency-management`'s `detectDependencies` to populate these entries. Do not duplicate the signal detection logic here — delegate it.
 
+For BLOCKS and BLOCKED-BY classifications, use the `DependencySignal.type` field returned by `dependency-management`'s `detectDependencies` to populate these entries. Do not duplicate the signal detection logic here — delegate it.
+
 **2e. Same-coverage check.** Look for issues with the same `exec:*` mode AND overlapping stage coverage. These are candidates for batching or sequencing.
 
 **2f. Velocity-aware staleness detection.** Detect issues that are statistical outliers in age relative to the project's current velocity. The sibling scan from Step 2b already provides the issue set — no additional API calls are needed.
