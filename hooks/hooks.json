@@ -18,6 +18,15 @@
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/style-injector.sh\""
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/conformance-cache.sh\""
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -58,6 +67,15 @@
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/circuit-breaker-post.sh\""
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/conformance-log.sh\""
+          }
+        ]
       }
     ],
     "Stop": [
@@ -76,6 +94,15 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/stop.sh\""
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/conformance-check.sh\""
           }
         ]
       }
