@@ -175,9 +175,10 @@ Maintain a mapping table in the master plan issue or plan file:
 
 ```markdown
 ## Session Registry
-| Session Name | Issue | Phase | Agent | Status |
-|--------------|-------|-------|-------|--------|
-| composed-crunching-raven | [CIA-413](https://linear.app/claudian/issue/CIA-413) | 1A | Claude Code | Done |
+| Session Name | Issue | Phase | Agent | Worktree | Branch | Status |
+|--------------|-------|-------|-------|----------|--------|--------|
+| lucid-euler | [CIA-540](https://linear.app/claudian/issue/CIA-540) | 1A | Claude Code | yes | claude/lucid-euler | Done |
+| (direct main) | [CIA-541](https://linear.app/claudian/issue/CIA-541) | 1B | Claude Code | no | main | Done |
 | luminous-meandering-zephyr | [CIA-387](https://linear.app/claudian/issue/CIA-387) | 1B | Claude Code | Active |
 ```
 
@@ -237,6 +238,20 @@ Each session must, on completion:
 2. Write a session summary to the plan file (see context-management session exit tables)
 3. Update the session registry table in the master plan
 4. If merge conflicts are anticipated, flag in a Linear comment on the master plan issue -- human resolves
+
+### Merging Completed Sessions (Desktop Code UI)
+
+When a session finishes, the Desktop Code UI presents merge controls at the bottom of the session:
+
+| Session type | UI shows | What to do |
+|-------------|----------|------------|
+| **Worktree session** | `main ← claude/{session-name}` + **"Commit changes"** | Click to push branch and create PR. Review diff in GitHub, then merge. This is the standard path. |
+| **Non-worktree on main** | `main ← main` + **"Create PR"** | Do NOT click "Create PR" (main→main PR is meaningless). Instead, push main directly via terminal when ready: `git push`. |
+| **Tembo / external agent** | N/A (managed by agent platform) | Tembo auto-creates PR. Review and merge in GitHub. |
+
+**Worktree sessions are preferred** precisely because they produce clean PRs with reviewable diffs. The "Commit changes" button is the expected exit action for worktree dispatch sessions.
+
+**Session name tracking:** The Desktop Code UI assigns each worktree session a name (e.g., `lucid-euler`). Record this in the session registry table alongside the issue ID — it identifies the branch (`claude/{session-name}`) and helps trace which session produced which PR.
 
 ### Conflict Resolution
 
