@@ -11,7 +11,9 @@
 #   SDD_LOG_DIR       - Directory for evidence logs (default: .claude/logs/)
 #   SDD_PROJECT_ROOT  - Project root directory (default: git root)
 
-set -euo pipefail
+set -uo pipefail
+# NOTE: Do NOT use set -e in hooks. Non-zero exit codes are treated as
+# hook failures by Claude Code. Only exit non-zero to BLOCK an action.
 
 PROJECT_ROOT="${SDD_PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 LOG_DIR="${SDD_LOG_DIR:-$PROJECT_ROOT/.claude/logs}"
@@ -22,9 +24,16 @@ echo "============================================"
 
 # --- 1. Git state summary ---
 
-BRANCH=$(git branch --show-current 2>/dev/null || echo "detached")
-UNCOMMITTED=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
-UNPUSHED=$(git log --oneline @{upstream}..HEAD 2>/dev/null | wc -l | tr -d ' ')
+if git rev-parse --is-inside-work-tree &>/dev/null; then
+  BRANCH=$(git branch --show-current 2>/dev/null || echo "detached")
+  UNCOMMITTED=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+  UNPUSHED=$(git log --oneline @{upstream}..HEAD 2>/dev/null | wc -l || echo "0")
+  UNPUSHED=$(echo "$UNPUSHED" | tr -d ' ')
+else
+  BRANCH="(not a git repo)"
+  UNCOMMITTED="0"
+  UNPUSHED="0"
+fi
 
 echo ""
 echo "Git State:"
@@ -64,3 +73,6 @@ echo ""
 echo "============================================"
 echo "[CCC] Remember: Status normalization is mandatory"
 echo "============================================"
+
+# Hooks must exit 0 unless blocking an action
+exit 0

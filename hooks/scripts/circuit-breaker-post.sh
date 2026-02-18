@@ -15,7 +15,9 @@
 #   0 — Normal (circuit remains closed or was just opened)
 #   2 — Circuit opened (stderr warning sent to Claude)
 
-set -euo pipefail
+set -uo pipefail
+# NOTE: Do NOT use set -e in hooks. Non-zero exit = hook failure in Claude Code.
+# Exit 2 is used intentionally by this hook when opening the circuit breaker.
 
 # ---------------------------------------------------------------------------
 # 0. Prerequisite check

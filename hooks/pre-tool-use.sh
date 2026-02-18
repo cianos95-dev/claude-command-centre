@@ -14,7 +14,8 @@
 #   SDD_STRICT_MODE   - "true" to block writes outside spec scope (default: false)
 #   CCC_ALLOWED_PATHS - Colon-separated list of allowed path patterns
 
-set -euo pipefail
+set -uo pipefail
+# NOTE: Do NOT use set -e in hooks. Non-zero exit = hook failure in Claude Code.
 
 STRICT_MODE="${SDD_STRICT_MODE:-false}"
 

@@ -12,7 +12,10 @@
 #   SDD_CONTEXT_THRESHOLD - Context budget warning threshold (default: 50)
 #   SDD_PROJECT_ROOT - Project root directory (default: git root)
 
-set -euo pipefail
+set -uo pipefail
+# NOTE: Do NOT use set -e in hooks. Hooks must always exit 0 on informational
+# messages. Non-zero exits are treated as hook failures by Claude Code.
+# Only exit non-zero when the hook needs to BLOCK the action.
 
 PROJECT_ROOT="${SDD_PROJECT_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 CONTEXT_THRESHOLD="${SDD_CONTEXT_THRESHOLD:-50}"
@@ -70,9 +73,13 @@ fi
 
 # --- 3. Git state summary ---
 
-BRANCH=$(git branch --show-current 2>/dev/null || echo "detached")
-UNCOMMITTED=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
-echo "[CCC] Branch: $BRANCH | Uncommitted files: $UNCOMMITTED"
+if git rev-parse --is-inside-work-tree &>/dev/null; then
+  BRANCH=$(git branch --show-current 2>/dev/null || echo "detached")
+  UNCOMMITTED=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+  echo "[CCC] Branch: $BRANCH | Uncommitted files: $UNCOMMITTED"
+else
+  echo "[CCC] Not in a git repository. Git state checks skipped."
+fi
 
 # --- 4. Ownership scope ---
 # Log which files are expected to be modified in this session
@@ -103,3 +110,6 @@ if [[ -f "$STATE_FILE" ]] && command -v jq &>/dev/null; then
 fi
 
 echo "[CCC] Session initialized. Context threshold: ${CONTEXT_THRESHOLD}%"
+
+# Hooks must exit 0 unless blocking an action
+exit 0

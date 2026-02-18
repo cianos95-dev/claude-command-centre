@@ -18,7 +18,8 @@
 #   "hooks": { "Stop": [{ "matcher": "", "hooks": [{ "type": "command",
 #     "command": ".claude/hooks/scripts/ccc-stop-handler.sh" }] }] }
 
-set -euo pipefail
+set -uo pipefail
+# NOTE: Do NOT use set -e in hooks. Non-zero exit = hook failure in Claude Code.
 
 # ---------------------------------------------------------------------------
 # 0. Prerequisite check — jq must be available
