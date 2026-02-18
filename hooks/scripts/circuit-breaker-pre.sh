@@ -14,7 +14,9 @@
 #   0 — Tool allowed (or circuit breaker not active)
 #   2 — Tool blocked (circuit open + destructive operation)
 
-set -euo pipefail
+set -uo pipefail
+# NOTE: Do NOT use set -e in hooks. Non-zero exit = hook failure in Claude Code.
+# Exit 2 is used intentionally by this hook to block destructive operations.
 
 # ---------------------------------------------------------------------------
 # 0. Prerequisite check

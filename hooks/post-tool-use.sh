@@ -11,7 +11,8 @@
 #   SDD_LOG_DIR       - Directory for evidence logs (default: .claude/logs/)
 #   SDD_STRICT_MODE   - "true" to enforce ownership boundaries strictly
 
-set -euo pipefail
+set -uo pipefail
+# NOTE: Do NOT use set -e in hooks. Non-zero exit = hook failure in Claude Code.
 
 PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 LOG_DIR="${SDD_LOG_DIR:-$PROJECT_ROOT/.claude/logs}"
