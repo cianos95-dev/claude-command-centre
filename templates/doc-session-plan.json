@@ -1,0 +1,35 @@
+{
+  "name": "Session Plan",
+  "type": "document",
+  "description": null,
+  "linearId": "23072124-f070-4878-b2be-65a0dd1bfe4d",
+  "templateData": {
+    "title": "Session Plan",
+    "descriptionData": {
+      "type": "doc",
+      "content": [
+        {"type": "heading", "attrs": {"level": 1}, "content": [{"type": "text", "text": "Scope"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "<!-- What are we trying to accomplish this session? -->"}]},
+        {"type": "heading", "attrs": {"level": 1}, "content": [{"type": "text", "text": "Pre-requisites"}]},
+        {"type": "todo_list", "content": [{"type": "todo_item", "attrs": {"done": false}, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "..."}]}]}]},
+        {"type": "heading", "attrs": {"level": 1}, "content": [{"type": "text", "text": "Tasks"}]},
+        {"type": "todo_list", "content": [{"type": "todo_item", "attrs": {"done": false}, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "..."}]}]}]},
+        {"type": "heading", "attrs": {"level": 1}, "content": [{"type": "text", "text": "Verification"}]},
+        {"type": "todo_list", "content": [{"type": "todo_item", "attrs": {"done": false}, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "..."}]}]}]},
+        {"type": "heading", "attrs": {"level": 1}, "content": [{"type": "text", "text": "Issues Touched"}]},
+        {"type": "table", "content": [
+          {"type": "table_row", "content": [
+            {"type": "table_header", "attrs": {"colspan": 1, "rowspan": 1, "colwidth": [200]}, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Issue"}]}]},
+            {"type": "table_header", "attrs": {"colspan": 1, "rowspan": 1, "colwidth": [200]}, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Action"}]}]},
+            {"type": "table_header", "attrs": {"colspan": 1, "rowspan": 1, "colwidth": [200]}, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Status"}]}]}
+          ]},
+          {"type": "table_row", "content": [
+            {"type": "table_cell", "attrs": {"colspan": 1, "rowspan": 1, "colwidth": [200]}, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "CIA-XXX"}]}]},
+            {"type": "table_cell", "attrs": {"colspan": 1, "rowspan": 1, "colwidth": [200]}, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "..."}]}]},
+            {"type": "table_cell", "attrs": {"colspan": 1, "rowspan": 1, "colwidth": [200]}, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "..."}]}]}
+          ]}
+        ]}
+      ]
+    }
+  }
+}

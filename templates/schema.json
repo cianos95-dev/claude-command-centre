@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CCC Template Manifest",
+  "description": "Defines a Linear template in code with symbolic label references instead of raw UUIDs. Used by template-sync and template-validate commands.",
+  "type": "object",
+  "required": ["name", "type", "templateData"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Template display name as shown in Linear UI"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["issue", "document", "project"],
+      "description": "Linear template type"
+    },
+    "description": {
+      "type": ["string", "null"],
+      "description": "Short description shown in template picker"
+    },
+    "linearId": {
+      "type": ["string", "null"],
+      "description": "Linear template UUID. Populated after first sync. Null for new templates not yet synced."
+    },
+    "templateData": {
+      "type": "object",
+      "description": "Template default values. Uses symbolic names for labels, states, and teams instead of UUIDs.",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Default issue/document/project title template"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4,
+          "description": "Default priority: 0=None, 1=Urgent, 2=High, 3=Normal, 4=Low"
+        },
+        "estimate": {
+          "type": "integer",
+          "description": "Default estimate in points (Fibonacci: 1,2,3,5,8,13)"
+        },
+        "labels": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Symbolic label names (e.g., 'type:feature', 'spec:draft'). Resolved to UUIDs at sync time via list_issue_labels."
+        },
+        "state": {
+          "type": "string",
+          "description": "Symbolic state name (e.g., 'Backlog', 'Todo'). Resolved to UUID at sync time via list_issue_statuses."
+        },
+        "team": {
+          "type": ["string", "null"],
+          "description": "Symbolic team name (e.g., 'Claudian'). Null for workspace-level templates. Resolved to UUID at sync time."
+        },
+        "assignee": {
+          "type": ["string", "null"],
+          "description": "Symbolic assignee (email, name, or 'me'). Resolved to UUID at sync time."
+        },
+        "descriptionData": {
+          "type": "object",
+          "description": "ProseMirror document structure for the template body. Stored as-is (no symbolic resolution needed)."
+        }
+      },
+      "additionalProperties": true
+    },
+    "projectTemplateData": {
+      "type": "object",
+      "description": "Additional fields specific to project templates.",
+      "properties": {
+        "leadId": {
+          "type": ["string", "null"],
+          "description": "Symbolic lead (email, name, or 'me'). Resolved at sync time."
+        },
+        "statusId": {
+          "type": ["string", "null"],
+          "description": "Symbolic project status name. Resolved at sync time."
+        },
+        "teamIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Symbolic team names. Resolved to UUIDs at sync time."
+        },
+        "labelIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Symbolic label names for project-level labels."
+        },
+        "memberIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Symbolic member names/emails."
+        },
+        "initiativeIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Symbolic initiative names."
+        },
+        "projectMilestones": {
+          "type": "array",
+          "description": "Milestone definitions for the project."
+        },
+        "initialIssues": {
+          "type": "array",
+          "description": "Issues to create when project is created from template."
+        }
+      },
+      "additionalProperties": true
+    },
+    "variants": {
+      "type": "array",
+      "description": "Project-scoped variants of this template. Each variant specifies a target project and templateData overrides. Unoverridden fields inherit from the base templateData.",
+      "items": {
+        "type": "object",
+        "required": ["name", "project"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Variant display name, e.g., 'Feature (CCC)'. Used for selection and reporting."
+          },
+          "project": {
+            "type": "string",
+            "description": "Symbolic project name (e.g., 'Claude Command Centre (CCC)'). Resolved to projectId UUID at sync time via list_projects."
+          },
+          "overrides": {
+            "type": "object",
+            "description": "templateData field overrides. Scalars replace base values. Labels support prefix operators: '+label' (additive), '-label' (removal), or plain array (full replacement). descriptionData is fully replaced if present (no deep merge). Fields not specified here inherit from the base templateData.",
+            "properties": {
+              "labels": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Label overrides. Prefix '+' to add to base labels, '-' to remove from base labels, or provide a full array to replace."
+              },
+              "estimate": {
+                "type": "integer",
+                "description": "Override estimate in points"
+              },
+              "priority": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4,
+                "description": "Override priority"
+              },
+              "state": {
+                "type": "string",
+                "description": "Override state"
+              },
+              "assignee": {
+                "type": ["string", "null"],
+                "description": "Override assignee"
+              },
+              "delegateId": {
+                "type": ["string", "null"],
+                "description": "Symbolic agent name (e.g., 'Claude'). Resolved to agent user UUID at sync time."
+              },
+              "descriptionData": {
+                "type": "object",
+                "description": "Full replacement of base descriptionData (no deep merge)"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
