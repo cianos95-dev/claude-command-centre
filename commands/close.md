@@ -37,7 +37,9 @@ Apply the closure rules matrix to determine the appropriate action:
 | Human assignee (any condition) | **NEVER** auto-close — propose only |
 | `needs:human-decision` label present | **PROPOSE** — always require human confirmation |
 | `exec:pair` label present | **PROPOSE** with evidence — paired work needs human sign-off |
-| No PR linked | **PROPOSE** with deliverable summary — explain what was done without a PR |
+| Agent assignee + no PR + (`type:spike` OR `type:chore`) + all ACs checked | **AUTO-CLOSE** with deliverable summary — non-code tasks with evidence |
+| Agent assignee + no PR + (`type:feature` OR `type:bug`) | **PROPOSE** with deliverable summary — missing expected PR |
+| No PR linked (other types) | **PROPOSE** with deliverable summary — explain what was done without a PR |
 | Unresolved comments or discussion | **BLOCK** — flag unresolved threads |
 
 If multiple conditions apply, use the **most restrictive** action.
@@ -153,5 +155,5 @@ After the issue is closed or closure is proposed:
 | Situation | Response |
 |-----------|----------|
 | **Deployment status cannot be checked** | Treat as "no deploy pipeline configured." Auto-close is still permitted for agent-assigned single-PR issues, but add a note in the closing comment that deployment was not verified. |
-| **No PRs are linked to the issue** | This is a research, design, or planning task. Use the PROPOSE path with a deliverable summary explaining what was produced (document, decision, analysis) instead of PR evidence. |
+| **No PRs are linked to the issue** | Check the issue type. Agent-owned spikes and chores with all ACs checked → AUTO-CLOSE with deliverable summary. Agent-owned features/bugs with no PR → PROPOSE (a PR is expected). Human-owned → always PROPOSE regardless. |
 | **Issue was re-opened after a previous closure** | Acknowledge the premature closure. Review what was missed, address it, and do not re-close until the reason for re-opening has been fully resolved. |
