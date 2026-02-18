@@ -119,6 +119,7 @@ Every field in braces is required. All issue references must use linked format (
 {Action verb} on [{ISSUE_ID}: {TITLE}](https://linear.app/claudian/issue/{ISSUE_ID})
 ({PHASE_NAME}) from master plan [{MASTER_ISSUE}: {MASTER_TITLE}](https://linear.app/claudian/issue/{MASTER_ISSUE}).
 {PLUGIN_REPO_OR_PROJECT}: {REPO_PATH}
+Launch from: {REPO_PATH} (required — repo-specific sessions must launch from the repo directory)
 
 Context:
 - {3-5 bullet points with essential context}
