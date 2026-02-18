@@ -53,11 +53,14 @@ Search the connected project tracker for related work. This prevents creating sp
 
 **2a. Parent context.** If the current issue has a parent, fetch the parent issue. Read its description and list its children. Understand the broader initiative this work belongs to.
 
-**2b. Sibling issues.** Fetch issues in the same project and milestone. Produce a compact table:
+**2b. Sibling issues.** Fetch issues in the same project and milestone. Produce a compact table with **linked issue IDs**:
 
 ```
 | ID | Title | Status | Labels | Estimate |
+| [CIA-XXX](https://linear.app/claudian/issue/CIA-XXX) | Title here | Todo | type:feature | 3pt |
 ```
+
+All issue references in plan output must use clickable markdown links: `[CIA-XXX](https://linear.app/claudian/issue/CIA-XXX)` in table ID columns, or `[CIA-XXX: Title](https://linear.app/claudian/issue/CIA-XXX)` in inline references. Plain text issue IDs are not permitted in plan files.
 
 Limit to 10 issues. Sort by priority descending, then by most recently updated.
 
@@ -160,12 +163,14 @@ Assemble the findings into a structured markdown summary. This bundle becomes th
 
 | ID | Title | Classification | Rationale |
 |----|-------|----------------|-----------|
+| [CIA-XXX](https://linear.app/claudian/issue/CIA-XXX) | Title | OVERLAPPING | Rationale |
 
 ### Research Dependencies
 [Table of blocking/informing spikes, or OMITTED if no unresolved spikes found]
 
 | Spike | Title | Status | Classification | Impact |
 |-------|-------|--------|----------------|--------|
+| [CIA-XXX](https://linear.app/claudian/issue/CIA-XXX) | Title | Backlog | BLOCKING | Impact |
 
 ### Strategic Context
 - Initiative: [name] ([status])
