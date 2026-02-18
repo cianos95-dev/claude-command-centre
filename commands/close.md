@@ -42,6 +42,40 @@ Apply the closure rules matrix to determine the appropriate action:
 
 If multiple conditions apply, use the **most restrictive** action.
 
+## Step 2.5: Outcome Validation
+
+Run the **outcome-validation** skill to evaluate whether the completed work achieved its intended business outcome.
+
+### Skip Check
+
+Outcome validation is **skipped** when any of these conditions is true:
+
+- Issue has `type:chore` label
+- Issue has `type:spike` label
+- `--quick` flag was used (check `.ccc-state.json` or command flags)
+- Issue has `exec:quick` label AND estimate is 2 points or less (unestimated counts as 1pt)
+
+If skipped, log the reason (e.g., "Outcome validation: Skipped (type:chore)") and proceed to Step 3.
+
+### Run Validation
+
+If not skipped, execute the four sequential persona passes defined in the outcome-validation skill:
+
+1. **Customer Advocate** — Does the delivered feature solve the user's problem?
+2. **CFO Lens** — Was the investment proportionate to the value?
+3. **Product Strategist** — Does this advance the product direction?
+4. **Skeptic** — Are the prior verdicts well-supported?
+
+Each persona produces a sub-verdict: `ACHIEVED`, `PARTIALLY_ACHIEVED`, `NOT_ACHIEVED`, or `UNDETERMINABLE`.
+
+The consolidated final verdict feeds a score adjustment into quality scoring:
+- `ACHIEVED` → +0 adjustment
+- `PARTIALLY_ACHIEVED` → -5 adjustment
+- `NOT_ACHIEVED` → -15 adjustment
+- `UNDETERMINABLE` → -10 adjustment
+
+Include the full outcome validation output in the closing comment (Step 3), between the "Verification Evidence" and "What Was Delivered" sections.
+
 ## Step 3: Compose Closing Comment
 
 Write a structured closing comment that includes all relevant evidence:
@@ -65,6 +99,10 @@ Write a structured closing comment that includes all relevant evidence:
 - [ ] Tests passing
 - [ ] Build green
 - [ ] No unresolved review comments
+
+### Outcome Validation
+[Outcome validation output — 4 persona verdicts + final consolidated verdict]
+[OR: "Outcome validation: Skipped ([reason])"]
 
 ### What Was Delivered
 [2-3 sentence summary of what this issue accomplished]
