@@ -65,7 +65,8 @@
         "./agents/reviewer-performance-pragmatist.md",
         "./agents/reviewer-architectural-purist.md",
         "./agents/reviewer-ux-advocate.md",
-        "./agents/debate-synthesizer.md"
+        "./agents/debate-synthesizer.md",
+        "./agents/code-reviewer.md"
       ],
       "skills": [
         "./skills/adversarial-review",
