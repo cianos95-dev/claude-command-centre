@@ -324,7 +324,7 @@ Task 4/8 complete. Signaling TASK_COMPLETE.
 | **State file is corrupt or malformed** | Warn the user. Offer to delete the state file and recreate it from the project tracker issue and its sub-issues. Progress in `.ccc-progress.md` is preserved regardless. |
 | **`--next` finds no unblocked tasks** | Report that all agent-assigned tasks are either complete, in progress, or blocked. List the blocked tasks with their blockers. Suggest checking on the blocking issues. |
 | **`--scan` finds no dispatch-ready issues** | Report that no newly-unblocked issues were found. Show API call usage and cache status. Suggest `/go --next` as an alternative. |
-| **`--scan` exhausts API budget** | Return partial results with a warning. Show how many issues were not scanned. Suggest `--force` with a note that it will also be budget-capped. |
+| **`--scan` exhausts API budget** | Return partial results with a warning. Show how many issues were not scanned. Note that `--force` bypasses cache but is still budget-capped (20 calls). Suggest reducing Pass 1 limit or running the scan later when fewer Done issues exist. |
 
 ## Integration Notes
 
