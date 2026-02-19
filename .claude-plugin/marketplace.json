@@ -54,6 +54,7 @@
         "./commands/template-validate.md",
         "./commands/template-bootstrap.md",
         "./commands/template-sync.md",
+        "./commands/checkpoint.md",
         "./commands/deps.md",
         "./commands/status-update.md",
         "./commands/plan.md"
