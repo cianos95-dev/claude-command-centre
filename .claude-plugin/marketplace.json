@@ -55,7 +55,8 @@
         "./commands/template-bootstrap.md",
         "./commands/template-sync.md",
         "./commands/deps.md",
-        "./commands/status-update.md"
+        "./commands/status-update.md",
+        "./commands/plan.md"
       ],
       "agents": [
         "./agents/spec-author.md",
@@ -106,7 +107,8 @@
         "./skills/tembo-dispatch",
         "./skills/agent-session-intents",
         "./skills/milestone-forecast",
-        "./skills/mechanism-router"
+        "./skills/mechanism-router",
+        "./skills/plan-promotion"
       ]
     }
   ],

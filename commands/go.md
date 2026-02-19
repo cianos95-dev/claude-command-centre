@@ -266,6 +266,13 @@ For execution-phase work, follow the **execution-engine** skill protocol: read `
 After completing any stage-level work, always suggest the next action. This ensures the user knows how to continue, whether they prefer `/go` or direct commands.
 
 ```
+Plan complete for CIA-042.
+  Next: Run `/ccc:plan --promote` to save to Linear (accessible from Cowork)
+  Then: Run `/ccc:go` to continue (will route to adversarial review)
+  Or: Run `/ccc:review CIA-042` directly
+```
+
+```
 PR/FAQ draft complete for CIA-042.
   Next: Run `/ccc:go` to continue (will route to adversarial review)
   Or: Run `/ccc:review CIA-042` directly
