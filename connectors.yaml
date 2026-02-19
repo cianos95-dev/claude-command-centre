@@ -1,0 +1,365 @@
+# connectors.yaml — CCC Connector Registry
+# Machine-readable catalog of all service integrations.
+# Human-readable documentation: CONNECTORS.md
+#
+# Schema version: 1
+# Last updated: 2026-02-19
+#
+# Design decisions (from adversarial review):
+#   - config_check: what the session-start hook verifies (config presence, NOT connectivity)
+#   - health_check_tool: what /ccc:go verifies (live connectivity via MCP tool call)
+#   - health_check_tool values are NOT trusted from YAML at invocation — validated against hardcoded allowlist
+#   - official_plugin: structured object with name + fallback_config
+#   - funnel_stages: named stages, not numbers
+
+schema_version: 1
+
+connectors:
+  # ============================================================
+  # REQUIRED — Core connectors for CCC methodology
+  # ============================================================
+
+  - name: project-tracker
+    display: "Project Tracker"
+    tier: required
+    purpose: "Issue tracking, status transitions, label management"
+    funnel_stages: [intake, spec, review, implement, verify, close]
+    default_impl: linear
+    implementations:
+      linear:
+        mcp_type: http
+        mcp_url: "https://mcp.linear.app/mcp"
+        auth: oauth
+        config_check: "jq_path:.mcpServers.linear"
+        health_check_tool: "list_teams"
+        official_plugin: null
+        free_tier: true
+        notes: "See docs/LINEAR-SETUP.md for full configuration checklist"
+      jira:
+        mcp_type: stdio
+        mcp_package: "@modelcontextprotocol/server-jira"
+        auth: api_token
+        config_check: "jq_path:.mcpServers.jira"
+        health_check_tool: null
+        official_plugin: null
+        free_tier: true
+
+  - name: version-control
+    display: "Version Control"
+    tier: required
+    purpose: "Pull requests, code review, spec file management"
+    funnel_stages: [spec, review, implement, verify]
+    default_impl: github
+    implementations:
+      github:
+        mcp_type: http
+        mcp_url: "https://api.githubcopilot.com/mcp/"
+        auth: oauth
+        config_check: "jq_path:.mcpServers.github"
+        health_check_tool: "list_pull_requests"
+        official_plugin: null
+        free_tier: true
+      gitlab:
+        mcp_type: stdio
+        mcp_package: "@modelcontextprotocol/server-gitlab"
+        auth: api_token
+        config_check: "jq_path:.mcpServers.gitlab"
+        health_check_tool: null
+        official_plugin: null
+        free_tier: true
+
+  # ============================================================
+  # RECOMMENDED — Extend methodology with deployment & monitoring
+  # ============================================================
+
+  - name: ci-cd
+    display: "CI/CD"
+    tier: recommended
+    purpose: "Automated spec review triggers, deployment checks"
+    funnel_stages: [review, verify]
+    default_impl: github-actions
+    implementations:
+      github-actions:
+        mcp_type: null  # Not an MCP — native platform feature
+        auth: github_app
+        config_check: "file_exists:.github/workflows"
+        health_check_tool: null
+        official_plugin: null
+        free_tier: true
+
+  - name: deployment
+    display: "Deployment Platform"
+    tier: recommended
+    purpose: "Preview deployments, production verification"
+    funnel_stages: [implement, verify]
+    default_impl: vercel
+    implementations:
+      vercel:
+        mcp_type: http
+        auth: oauth
+        config_check: "command_exists:vercel"
+        health_check_tool: null
+        official_plugin: null
+        free_tier: true
+        notes: "Vercel Agent requires Pro plan ($20/mo)"
+      netlify:
+        mcp_type: stdio
+        auth: api_token
+        config_check: "command_exists:netlify"
+        health_check_tool: null
+        official_plugin: null
+        free_tier: true
+      railway:
+        mcp_type: stdio
+        mcp_package: "@railway/mcp-server"
+        auth: api_token
+        config_check: "jq_path:.mcpServers.railway"
+        health_check_tool: "list-projects"
+        official_plugin: null
+        free_tier: true
+
+  - name: analytics
+    display: "Analytics"
+    tier: recommended
+    purpose: "Data-informed spec drafting, post-launch verification"
+    funnel_stages: [spec, verify]
+    default_impl: posthog
+    implementations:
+      posthog:
+        mcp_type: stdio
+        mcp_package: "posthog-mcp"
+        auth: api_key
+        config_check: "jq_path:.mcpServers.posthog"
+        health_check_tool: null
+        official_plugin: null
+        free_tier: true
+
+  - name: error-tracking
+    display: "Error Tracking"
+    tier: recommended
+    purpose: "Production error monitoring, auto-issue creation"
+    funnel_stages: [verify]
+    default_impl: sentry
+    implementations:
+      sentry:
+        mcp_type: stdio
+        mcp_package: "sentry-mcp"
+        auth: dsn
+        config_check: "jq_path:.mcpServers.sentry"
+        health_check_tool: null
+        official_plugin: null
+        free_tier: true
+
+  - name: component-gen
+    display: "Component Generator"
+    tier: recommended
+    purpose: "UI component generation for visual prototyping"
+    funnel_stages: [implement]
+    default_impl: v0
+    implementations:
+      v0:
+        mcp_type: http
+        auth: oauth
+        config_check: "jq_path:.mcpServers.v0"
+        health_check_tool: null
+        official_plugin: null
+        free_tier: false
+        notes: "v0 requires paid subscription"
+
+  - name: email-marketing
+    display: "Email Marketing"
+    tier: recommended
+    purpose: "Mailing list management, subscriber segmentation, campaign triggers"
+    funnel_stages: [implement, verify]
+    default_impl: resend
+    implementations:
+      resend:
+        mcp_type: stdio
+        auth: api_key
+        config_check: null
+        health_check_tool: null
+        official_plugin: null
+        free_tier: true
+
+  - name: geolocation
+    display: "Geolocation"
+    tier: recommended
+    purpose: "IP-based region inference, geo-aware features"
+    funnel_stages: [implement]
+    default_impl: vercel-headers
+    implementations:
+      vercel-headers:
+        mcp_type: null  # Platform-native (x-vercel-ip-country header)
+        auth: null
+        config_check: null
+        health_check_tool: null
+        official_plugin: null
+        free_tier: true
+
+  # ============================================================
+  # OPTIONAL — Research, design, and communication
+  # ============================================================
+
+  - name: research-library
+    display: "Research Library"
+    tier: optional
+    purpose: "Literature grounding for research-based features"
+    funnel_stages: [intake, spec]
+    default_impl: zotero
+    implementations:
+      zotero:
+        mcp_type: stdio
+        mcp_package: "zotero-mcp"
+        auth: api_key
+        config_check: "jq_path:.mcpServers.zotero"
+        health_check_tool: "zotero_get_collections"
+        official_plugin: null
+        free_tier: true
+        notes: "Requires Zotero desktop app running"
+
+  - name: web-research
+    display: "Web Research"
+    tier: optional
+    purpose: "Web data for spec grounding and competitive analysis"
+    funnel_stages: [intake, spec]
+    default_impl: firecrawl
+    implementations:
+      firecrawl:
+        mcp_type: stdio
+        mcp_package: "@anthropic/firecrawl-mcp"
+        auth: api_key
+        config_check: "jq_path:.mcpServers.firecrawl"
+        health_check_tool: "firecrawl_search"
+        official_plugin: null
+        free_tier: false
+        notes: "500 credits/mo free, then paid"
+
+  - name: academic-search
+    display: "Academic Search"
+    tier: optional
+    purpose: "Paper discovery, citation analysis, author lookup"
+    funnel_stages: [intake, spec]
+    default_impl: semanticscholar
+    implementations:
+      semanticscholar:
+        mcp_type: stdio
+        mcp_package: "@xbghc/semanticscholar-mcp"
+        auth: null
+        config_check: "jq_path:.mcpServers.semanticscholar"
+        health_check_tool: "search_papers"
+        official_plugin: null
+        free_tier: true
+        notes: "Rate-limited without API key"
+      arxiv:
+        mcp_type: stdio
+        mcp_package: "arxiv-mcp-server"
+        auth: null
+        config_check: "jq_path:.mcpServers.arxiv"
+        health_check_tool: "search_papers"
+        official_plugin: null
+        free_tier: true
+      openalex:
+        mcp_type: stdio
+        mcp_package: "openalex-research-mcp"
+        auth: null
+        config_check: "jq_path:.mcpServers.openalex"
+        health_check_tool: "health_check"
+        official_plugin: null
+        free_tier: true
+        notes: "Email for polite pool recommended"
+
+  - name: model-registry
+    display: "Model & Dataset Registry"
+    tier: optional
+    purpose: "ML model/dataset/space search for technical grounding"
+    funnel_stages: [intake, spec]
+    default_impl: huggingface
+    implementations:
+      huggingface:
+        mcp_type: stdio
+        mcp_package: "huggingface-mcp-server"
+        auth: api_token
+        config_check: "jq_path:.mcpServers.huggingface"
+        health_check_tool: "search-models"
+        official_plugin: null
+        free_tier: true
+      kaggle:
+        mcp_type: stdio
+        mcp_package: "kaggle-mcp"
+        auth: api_token
+        config_check: "jq_path:.mcpServers.kaggle"
+        health_check_tool: "prepare_kaggle_dataset"
+        official_plugin: null
+        free_tier: true
+
+  - name: community-signal
+    display: "Community Signal"
+    tier: optional
+    purpose: "Developer sentiment, launch analysis, tutorial discovery"
+    funnel_stages: [intake, spec]
+    implementations:
+      hackernews:
+        mcp_type: stdio
+        mcp_package: "mcp-hacker-news"
+        auth: null
+        config_check: "jq_path:.mcpServers.hackernews"
+        health_check_tool: null
+        official_plugin: null
+        free_tier: true
+      youtube:
+        mcp_type: stdio
+        mcp_package: "@kirbah/mcp-youtube"
+        auth: api_key
+        config_check: "jq_path:.mcpServers.youtube"
+        health_check_tool: null
+        official_plugin: null
+        free_tier: true
+        notes: "Uses YouTube Data API v3"
+
+  - name: communication
+    display: "Communication"
+    tier: optional
+    purpose: "Stakeholder notifications, decision tracking"
+    funnel_stages: [intake, spec, review, implement, verify, close]
+    default_impl: slack
+    implementations:
+      slack:
+        mcp_type: stdio
+        auth: oauth
+        config_check: "jq_path:.mcpServers.slack"
+        health_check_tool: null
+        official_plugin: null
+        free_tier: true
+
+  - name: design
+    display: "Design"
+    tier: optional
+    purpose: "Visual prototyping, design capture, code extraction"
+    funnel_stages: [implement]
+    default_impl: figma
+    implementations:
+      figma:
+        mcp_type: http
+        mcp_url: "https://mcp.figma.com/mcp"
+        auth: oauth
+        config_check: "jq_path:.mcpServers.figma"
+        health_check_tool: "whoami"
+        official_plugin: null
+        free_tier: false
+        notes: "Education plan = Pro equivalent (200 calls/day)"
+
+  - name: observability
+    display: "Observability"
+    tier: optional
+    purpose: "Traces, metrics, health monitoring"
+    funnel_stages: [verify]
+    default_impl: honeycomb
+    implementations:
+      honeycomb:
+        mcp_type: null  # OTEL SDK, not MCP
+        auth: api_key
+        config_check: "env_var:HONEYCOMB_API_KEY"
+        health_check_tool: null
+        official_plugin: null
+        free_tier: true
+        notes: "Integrated via OpenTelemetry, not MCP"
