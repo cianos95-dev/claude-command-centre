@@ -2,8 +2,8 @@
 name: hook-enforcement
 description: |
   Documents the Claude Code hooks shipped with the CCC plugin and what each one enforces.
-  Covers session-start checks, pre/post-tool-use gates, stop hygiene, circuit breaker,
-  conformance auditing, prompt enrichment, style injection, and Agent Teams hooks.
+  Covers circuit-breaker error-loop protection, task-loop driving, session lifecycle,
+  prompt enrichment, style injection, and Agent Teams hooks.
   Use when configuring hooks, understanding what a hook enforces, debugging hook failures,
   or choosing which hooks to enable for a project.
 ---
@@ -11,6 +11,8 @@ description: |
 # Hook Enforcement
 
 The CCC plugin ships shell-based Claude Code hooks that enforce workflow constraints at runtime. Unlike prompt-based rules (which are advisory), hooks block or enrich tool calls structurally.
+
+> **Audit note:** This document was rewritten per CIA-522 audit findings to match actual implementation. Spec-enforcement (conformance auditing) hooks are documented separately as planned work (CIA-396).
 
 ## Why Hooks
 
@@ -26,13 +28,51 @@ All hooks are registered in `hooks/hooks.json`. The plugin uses seven event type
 
 | Event | Scripts | Purpose |
 |-------|---------|---------|
-| SessionStart | `session-start.sh`, `style-injector.sh`, `conformance-cache.sh` | Initialize session context, inject style preferences, cache acceptance criteria |
+| SessionStart | `session-start.sh`, `style-injector.sh` | Initialize session context, inject style preferences |
 | PreToolUse | `pre-tool-use.sh`, `circuit-breaker-pre.sh` | Scope-check file writes, block destructive ops during error loops |
-| PostToolUse | `post-tool-use.sh`, `circuit-breaker-post.sh`, `conformance-log.sh` | Audit tool usage, detect error loops, log writes for conformance |
-| Stop | `ccc-stop-handler.sh`, `stop.sh`, `conformance-check.sh` | Drive task loop, report session hygiene, generate conformance report |
+| PostToolUse | `post-tool-use.sh`, `circuit-breaker-post.sh` | Audit tool usage, detect error loops |
+| Stop | `ccc-stop-handler.sh`, `stop.sh` | Drive task loop, report session hygiene |
 | UserPromptSubmit | `prompt-enrichment.sh` | Inject worktree/issue context into prompts |
 | TeammateIdle | `teammate-idle-gate.sh` | Prevent idle when tasks remain (Agent Teams) |
 | TaskCompleted | `task-completed-gate.sh` | Validate task completion claims (Agent Teams) |
+
+## Circuit Breaker
+
+The circuit breaker is the primary runtime safety mechanism. It detects error loops and blocks destructive operations to prevent the agent from compounding mistakes.
+
+### How It Works
+
+1. **`circuit-breaker-post.sh`** (PostToolUse) monitors every tool execution for errors.
+2. On each error, it builds a signature from the tool name + first 200 chars of the error message.
+3. If the same error signature repeats consecutively, a counter increments.
+4. At the threshold (default 3, configurable via `.ccc-preferences.yaml`), the circuit **opens**.
+5. On open, the script writes `.ccc-circuit-breaker.json` and auto-escalates execution mode from `quick` to `pair` (human-in-the-loop).
+6. Successful tool executions reset the counter (but do not close an already-open circuit).
+
+### Blocking Behavior
+
+When the circuit is open, **`circuit-breaker-pre.sh`** (PreToolUse) classifies each tool call:
+
+| Classification | Tools | When Circuit Open |
+|---------------|-------|-------------------|
+| Destructive | `Write`, `Edit`, `MultiEdit`, `NotebookEdit`, `Bash` | **Blocked** (exit 2, `permissionDecision: "deny"`) |
+| Destructive (MCP) | `mcp__*__create`, `mcp__*__update`, `mcp__*__delete`, etc. | **Blocked** |
+| Read-only | `Read`, `Glob`, `Grep`, `Ls`, `WebFetch`, `WebSearch`, `Task`, `TodoWrite` | **Allowed** |
+
+### Recovery
+
+- **Recommended:** Use `/rewind` to undo the last few tool calls and try a different approach.
+- **Manual reset:** Delete `.ccc-circuit-breaker.json` from the project root.
+- The circuit does not auto-close on success — explicit reset is required once opened.
+
+### Configuration
+
+In `.ccc-preferences.yaml`:
+
+```yaml
+circuit_breaker:
+  threshold: 3  # consecutive identical errors before opening (default: 3)
+```
 
 ## Hook Details
 
@@ -43,11 +83,13 @@ All hooks are registered in `hooks/hooks.json`. The plugin uses seven event type
 
 What it does:
 
-- Validates that `git`, `jq`, and `yq` are available
+- Validates that `git` and `jq` are available (warns if missing)
+- Notes if `yq` is missing (preferences will use defaults)
 - Loads the active spec path from `CCC_SPEC_PATH`
 - Reports git state (branch, uncommitted files)
 - Warns if `.ccc-state.json` is stale (>24h old)
 - Checks for `.claude/codebase-index.md` freshness
+- Reports active execution state (issue, phase, task progress) if `.ccc-state.json` exists
 
 Fail-open: exits 0 on all paths. Informational only.
 
@@ -65,20 +107,6 @@ Reads the `style.explanatory` preference from `.ccc-preferences.yaml`:
 | `educational` | Injects `styles/educational.md` |
 
 Strips YAML frontmatter from the style file and returns it via `hookSpecificOutput.additionalContext`.
-
-### conformance-cache.sh
-
-**Event:** SessionStart
-**Purpose:** Parse acceptance criteria from the active spec for later audit.
-
-What it does:
-
-- Reads the spec file at `CCC_SPEC_PATH`
-- Extracts unchecked checkboxes (`- [ ] text`)
-- Tokenizes each criterion into keywords (lowercase, >=4 chars, stop words removed)
-- Writes `.ccc-conformance-cache.json` with criteria IDs, raw text, keywords, and spec hash
-
-Fail-open: exits silently if `CCC_SPEC_PATH` is unset or spec is missing.
 
 ### pre-tool-use.sh
 
@@ -127,40 +155,29 @@ What it does:
 
 What it does:
 
-- Tracks error signatures (200-char hash of tool name + error message)
+- Tracks error signatures (tool name + first 200 chars of error message)
 - Increments counter on consecutive identical errors
 - At threshold (default 3, configurable via `.ccc-preferences.yaml`): opens circuit breaker
 - Writes state to `.ccc-circuit-breaker.json`
 - Auto-escalates execution mode from `quick` to `pair` (human-in-the-loop)
-- Resets counter on successful tool execution
-
-### conformance-log.sh
-
-**Event:** PostToolUse
-**Matcher:** `Write|Edit|MultiEdit|NotebookEdit`
-**Purpose:** Log write operations for end-of-session conformance audit.
-
-What it does:
-
-- Appends a JSONL entry to `.ccc-conformance-queue.jsonl` with timestamp, tool name, file path, and parameter keys
-- Only activates when `.ccc-conformance-cache.json` exists (i.e., conformance audit is active)
-- Always exits 0, never blocks
+- Resets counter on successful tool execution (when circuit is closed)
 
 ### ccc-stop-handler.sh
 
 **Event:** Stop
-**Purpose:** Drive the autonomous task loop across decomposed tasks.
+**Purpose:** Drive the autonomous task execution loop across decomposed tasks.
 
 What it does:
 
 - Reads `.ccc-state.json` for execution phase, task index, and iteration counts
 - Checks for `TASK_COMPLETE` signal in the last assistant output
-- If task incomplete: increments retry counter, generates continue prompt
+- If task incomplete: increments retry counter, generates continue prompt with enrichments
 - If task complete: advances to next task, resets per-task counter
-- Detects `REPLAN` signal for mid-execution task regeneration (max 2 replans)
+- Detects `REPLAN` signal for mid-execution task regeneration (max 2 replans, configurable)
 - Safety caps: global iteration limit (default 50), per-task limit (default 5)
 - Allows immediate stop when awaiting human approval gates
-- Reads preferences from `.ccc-preferences.yaml`
+- Only loops during the `execution` phase; `pair` and `swarm` modes do not loop
+- Reads preferences from `.ccc-preferences.yaml` for iteration limits, prompt enrichments, eval settings, and context budgets
 
 ### stop.sh
 
@@ -173,21 +190,6 @@ What it does:
 - Displays session exit protocol checklist (issue normalization, evidence, sub-issues)
 - Counts tool executions from today's evidence log
 - Reports Agent Teams activity if `.ccc-agent-teams-log.jsonl` exists
-
-### conformance-check.sh
-
-**Event:** Stop
-**Purpose:** Batch-audit all session writes against acceptance criteria.
-
-What it does:
-
-- Reads `.ccc-conformance-queue.jsonl` (writes logged during session)
-- Reads `.ccc-conformance-cache.json` (acceptance criteria keywords)
-- For each write: tokenizes file path and parameters, calculates keyword overlap with each criterion
-- A write is "conforming" if it matches any criterion at >=50% keyword overlap
-- Checks drifting files for `// ccc:suppress` comments
-- Writes `.ccc-conformance-report.json` with conforming/drifting counts, drift details, and per-criterion coverage
-- Cleans up queue and cache files after reporting
 
 ### prompt-enrichment.sh
 
@@ -221,9 +223,27 @@ Configurable via `agent_teams.idle_gate` in `.ccc-preferences.yaml`:
 Configurable via `agent_teams.task_gate` in `.ccc-preferences.yaml`:
 
 - `off`: no validation
-- `basic`: rejects if description is <=10 chars or contains error keywords (error, failed, exception, traceback, cannot, unable)
+- `basic` (default): rejects if description is <=10 chars or contains error keywords (error, failed, exception, traceback, cannot, unable)
 
 Updates `.ccc-agent-teams.json` task counters and appends to `.ccc-agent-teams-log.jsonl`.
+
+## Planned: Spec-Enforcement Hooks (CIA-396)
+
+The following conformance auditing hooks are implemented as scripts but not yet fully integrated into the standard workflow. They are gated behind `CCC_SPEC_PATH` and require a spec file to activate:
+
+| Script | Event | Purpose |
+|--------|-------|---------|
+| `conformance-cache.sh` | SessionStart | Parse acceptance criteria from active spec into keyword cache |
+| `conformance-log.sh` | PostToolUse (writes) | Append write metadata to conformance queue |
+| `conformance-check.sh` | Stop | Batch-audit writes against acceptance criteria, produce conformance report |
+
+These hooks form a three-stage pipeline:
+
+1. **Cache** (session start): Extracts unchecked `- [ ]` checkboxes from the spec, tokenizes each criterion into keywords (lowercase, >=4 chars, stop words removed), writes `.ccc-conformance-cache.json`.
+2. **Log** (each write): Appends tool name, file path, and parameter keys to `.ccc-conformance-queue.jsonl`. O(1) append, never blocks.
+3. **Check** (session stop): For each logged write, tokenizes file path and parameters, calculates keyword overlap with each criterion. A write is "conforming" at >=50% overlap. Checks for `// ccc:suppress` comments. Produces `.ccc-conformance-report.json`.
+
+Full integration — including automatic spec path detection and workflow-level gating — is tracked in CIA-396.
 
 ## State Files
 
@@ -232,47 +252,53 @@ The hooks use these state files in the project root:
 | File | Purpose | Lifecycle |
 |------|---------|-----------|
 | `.ccc-state.json` | Task loop state (phase, task index, iterations) | Persistent across sessions |
-| `.ccc-circuit-breaker.json` | Error loop detection state | Cleared on reset |
+| `.ccc-circuit-breaker.json` | Error loop detection state | Cleared on manual reset |
 | `.ccc-agent-teams.json` | Agent Teams task counters | Persistent |
 | `.ccc-preferences.yaml` | User preferences for all hooks | User-managed |
-| `.ccc-conformance-cache.json` | Acceptance criteria keywords | Session-scoped, cleared on Stop |
-| `.ccc-conformance-queue.jsonl` | Write event buffer | Session-scoped, cleared on Stop |
-| `.ccc-conformance-report.json` | End-of-session conformance audit | Generated on Stop |
 | `.ccc-agent-teams-log.jsonl` | Task completion audit trail | Append-only |
 | `.claude/logs/tool-log-YYYYMMDD.jsonl` | Daily tool evidence log | Daily rotation |
 
+### Planned State Files (CIA-396)
+
+| File | Purpose | Lifecycle |
+|------|---------|-----------|
+| `.ccc-conformance-cache.json` | Acceptance criteria keywords | Session-scoped, cleared on Stop |
+| `.ccc-conformance-queue.jsonl` | Write event buffer | Session-scoped, cleared on Stop |
+| `.ccc-conformance-report.json` | End-of-session conformance audit | Generated on Stop |
+
 ## Fail-Open Design
 
-All hooks exit 0 when prerequisites or input files are missing. Only two hooks intentionally block operations:
+All hooks exit 0 when prerequisites or input files are missing. Only three hooks intentionally block operations:
 
-- **circuit-breaker-pre.sh**: denies destructive tools when circuit is open
-- **task-completed-gate.sh**: rejects incomplete task completion claims (when gate is `basic`)
+- **circuit-breaker-pre.sh**: denies destructive tools when circuit is open (exit 2)
+- **teammate-idle-gate.sh**: re-prompts teammate when pending tasks remain (exit 2, when gate is `block_without_tasks`)
+- **task-completed-gate.sh**: rejects incomplete task completion claims (exit 2, when gate is `basic`)
 
 ## Environment Variables
 
 | Variable | Used By | Purpose |
 |----------|---------|---------|
-| `CCC_SPEC_PATH` | conformance-cache.sh, session-start.sh | Path to active spec file |
+| `CCC_SPEC_PATH` | session-start.sh, conformance-cache.sh | Path to active spec file |
 | `CCC_ALLOWED_PATHS` | pre-tool-use.sh | Colon-separated allowed write paths |
-| `CCC_PROJECT_ROOT` | ccc-stop-handler.sh | Project root directory |
+| `CCC_PROJECT_ROOT` | ccc-stop-handler.sh, conformance hooks | Project root directory |
 | `CLAUDE_PLUGIN_ROOT` | style-injector.sh | Plugin installation directory |
 | `SDD_STRICT_MODE` | pre-tool-use.sh, post-tool-use.sh | Enable strict enforcement |
 | `SDD_LOG_DIR` | post-tool-use.sh, stop.sh | Directory for evidence logs |
-| `SDD_PROJECT_ROOT` | session-start.sh, stop.sh | Project root (legacy alias) |
+| `SDD_PROJECT_ROOT` | session-start.sh, stop.sh, circuit-breaker hooks | Project root (legacy alias) |
 
 ## Installation
 
 1. Install the CCC plugin — hooks are registered via `hooks/hooks.json` automatically
 2. Create `.ccc-preferences.yaml` in your project root to configure hook behavior
-3. Set `CCC_SPEC_PATH` if using conformance auditing
+3. Set `CCC_SPEC_PATH` if using conformance auditing (CIA-396)
 4. Set `CCC_ALLOWED_PATHS` if using write scope enforcement
 
 ## Troubleshooting
 
 | Symptom | Likely Cause | Fix |
 |---------|-------------|-----|
-| Hook blocks all writes | Circuit breaker is open | Delete `.ccc-circuit-breaker.json` or resolve the error loop |
+| Hook blocks all writes | Circuit breaker is open | Delete `.ccc-circuit-breaker.json` or use `/rewind` to recover from the error loop |
 | Hook doesn't fire | Script missing executable bit | `chmod +x` the script, verify path in hooks.json |
-| Session start slow | Too many prereq checks failing | Ensure `git`, `jq`, `yq` are installed |
-| False drift in conformance report | Write doesn't match any acceptance criterion keywords | Add `// ccc:suppress` comment to the file or broaden the spec's acceptance criteria |
-| Stop hook keeps re-entering session | ccc-stop-handler.sh driving task loop | Check `.ccc-state.json` for task progress; adjust iteration caps in preferences |
+| Session start slow | Too many prereq checks failing | Ensure `git`, `jq` are installed |
+| Stop hook keeps re-entering session | ccc-stop-handler.sh driving task loop | Check `.ccc-state.json` for task progress; adjust iteration caps in `.ccc-preferences.yaml` |
+| Style not injected | `yq` not installed or style.explanatory is `terse` | Install `yq` and set `style.explanatory` to `balanced`, `detailed`, or `educational` |

@@ -13,13 +13,50 @@ description: |
 
 Archive Claude Code Insights reports as structured Markdown and extract patterns to improve your CLAUDE.md and workflows.
 
-This is a methodology skill — it guides the agent through archiving and analysis using standard file tools (Read, Write, Edit, Grep, Glob). There is no runtime or database involved.
+This is a methodology skill — it guides the agent through archiving and analysis using standard file tools (Read, Write, Edit, Grep, Glob). The pipeline follows a graduated approach, scaling storage and analysis as the archive grows.
+
+> **Audit note:** Revised per CIA-522 audit findings to reflect the graduated 3-phase approach. SQLite is a future migration target, not an immediate requirement.
+
+## Graduated Storage Phases
+
+The insights pipeline scales with your archive size. Start simple, add structure only when the data justifies it.
+
+### Phase 0 — Flat Markdown (now)
+
+**Active from report 1.** This is the current implementation.
+
+- **Storage:** Flat markdown files in `~/.claude/insights/YYYY-MM-DD.md`
+- **Analysis:** Period-over-period deltas computed by reading and comparing archived markdown files directly
+- **Index:** None. The agent reads all archives via Glob + Read.
+- **Tooling:** Standard file tools only (Read, Write, Edit, Grep, Glob)
+
+No runtime, no database, no external dependencies.
+
+### Phase 1 — Pattern Index (report 10+)
+
+**Activates when 10+ archived reports exist.** Adds a lightweight summary index.
+
+- **Storage:** Same flat markdown files
+- **New artifact:** `~/.claude/insights/patterns.json` — a summary file tracking recurring patterns across reports
+- **Analysis:** Exact-match counting of friction points, CLAUDE.md suggestions, and feature recommendations across archived reports
+- **Migration:** The agent generates `patterns.json` by reading all existing archives; no data migration needed
+
+### Phase 2 — SQLite Migration (report 50+)
+
+**Future target when 50+ archived reports exist.** Full structured storage.
+
+- **Storage:** `~/.claude/insights/insights.db` (SQLite)
+- **Analysis:** SQL queries for trend analysis, cross-report correlation, and aggregation
+- **Migration:** One-time import from flat markdown archives into SQLite tables
+- **Tooling:** Requires SQLite CLI or library access
+
+Phase 2 is a future migration path, not a current requirement. Do not introduce SQLite dependencies until the archive reaches sufficient scale to justify the complexity.
 
 ## What This Skill Does
 
 1. **Archives** HTML Insights reports to `~/.claude/insights/YYYY-MM-DD.md` as structured Markdown.
 2. **Extracts** actionable patterns: friction points, CLAUDE.md suggestions, feature recommendations, workflow patterns.
-3. **Compares** current report against prior archived reports to identify improvement trends.
+3. **Compares** current report against prior archived reports to identify improvement trends (period-over-period deltas).
 
 ## Archive Format
 
@@ -90,7 +127,7 @@ When multiple archived reports exist in `~/.claude/insights/`, compare them by r
 - Is the ratio of fully-achieved outcomes improving?
 - Which CLAUDE.md suggestions were adopted and did friction decrease afterward?
 
-This comparison is done by the agent reading the archived Markdown files — no index or database is involved.
+In Phase 0, this comparison is done by the agent reading the archived Markdown files directly — no index or database is involved. In Phase 1+, the agent can consult `patterns.json` for precomputed counts.
 
 ## Prerequisites
 
