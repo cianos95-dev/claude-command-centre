@@ -242,10 +242,29 @@ Before concluding, assess context window usage and communicate the result:
 
 Write the handoff to the project's working directory or a session-specific file. Tell the human where it was saved.
 
+## Pre-Exit Checkpoint (Optional)
+
+Before executing the exit sequence, consider running `/ccc:checkpoint` if the session is ending mid-task or if context usage is high. The checkpoint command is a CCC-layer complement to `/compact` and `/resume`:
+
+- **`/ccc:checkpoint`** — Captures task state (progress, decisions, blockers, continuation prompt) into `.ccc-progress.md`, optionally snapshots git state, and updates the Linear issue in place. Use before splitting a session mid-task.
+- **Recommended order:** `/ccc:checkpoint` → `/compact` → (continue or end session)
+
+The checkpoint protocol (four steps, fail-forward) is defined in [references/checkpoint-protocol.md](references/checkpoint-protocol.md). The command is thin wrapper over this protocol.
+
+**When to checkpoint before exit:**
+- Context is at 60%+ and the task is incomplete
+- You are at a natural task boundary and want a clean handoff
+- The stop hook did not fire at the expected gate
+
+**When to skip checkpoint and go straight to exit:**
+- Session completed all planned tasks (use the exit sequence for status normalization)
+- Session was read-only / research only (no state to persist)
+
 ## Session Persistence
 
-Three mechanisms preserve session state across boundaries:
+Four mechanisms preserve session state across boundaries:
 
+- **`/ccc:checkpoint`** -- CCC-layer task state capture. Writes `.ccc-progress.md` with continuation prompt, optionally commits in-scope files, updates Linear issue in place. Use before context boundaries or session splits.
 - **`/compact`** -- Reduces context window usage by summarizing older conversation turns. Use proactively before hitting 70%.
 - **`/resume`** -- Continues a previous session with its full context. Useful for multi-session tasks.
 - **CLAUDE.md hierarchy** -- Global and project-level instruction files persist across all sessions automatically.
@@ -296,3 +315,4 @@ The session exit protocol touches several other skills. The boundaries are:
 - **context-management** -- Context budget protocol, session splitting, handoff files
 - **spec-workflow** -- Spec status label transitions during implementation
 - **execution-engine** -- Fresh context patterns for multi-session work
+- **checkpoint-protocol** (references/) -- Four-step checkpoint protocol (progress persistence, git snapshot, Linear upsert, continuation prompt); invoked by `/ccc:checkpoint` command and stop hook at gate boundaries

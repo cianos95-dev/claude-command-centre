@@ -68,6 +68,8 @@ Every task entering implementation should be tagged with exactly one execution m
 - After breaking change implementation, before merge
 - After data transformation logic, before running on production data
 
+**Session handoff at gates:** At each checkpoint gate, run `/ccc:checkpoint` to capture task state, persist progress to `.ccc-progress.md`, and update the Linear issue in place before pausing for review. This ensures the session can be resumed cleanly if the review spans a context boundary. See [commands/checkpoint.md](../../commands/checkpoint.md) and the [checkpoint protocol reference](../../skills/session-exit/references/checkpoint-protocol.md).
+
 **Examples:** Database migration, auth system changes, payment integration, API versioning, infrastructure provisioning, data backfill scripts.
 
 **Guard rail:** If a checkpoint reveals the approach is wrong, do not proceed. Revert to planning. Sunk cost is not a reason to continue a flawed approach.

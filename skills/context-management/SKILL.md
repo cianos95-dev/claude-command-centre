@@ -90,6 +90,58 @@ If compaction is imminent and cannot be avoided:
 
 > See [references/session-economics.md](references/session-economics.md) for the full session economics framework including context budget allocation table, checkpoint decision rules at 30/50/56/70%, authoring session detection, and subagent output caps.
 
+## Native Autocompact Integration
+
+Claude Code provides a native autocompact mechanism via `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`. When context usage reaches the configured percentage, Claude Code automatically triggers `/compact` to summarize older conversation turns and free context space. This is a **safety net**, not a replacement for CCC's advisory thresholds.
+
+### Threshold Relationship
+
+CCC thresholds and native autocompact are **complementary, not competing**:
+
+| Threshold | Mechanism | Behavior | Type |
+|-----------|-----------|----------|------|
+| **50%** | CCC (advisory) | Warn user, suggest checkpointing, tighten delegation | Proactive — human decides |
+| **70%** | CCC (blocking) | Insist on session split, write handoff file | Proactive — agent enforces |
+| **80%** | Native autocompact | Automatically triggers `/compact` | Reactive — safety net |
+
+The 10% gap between CCC's 70% "insist" threshold and the 80% autocompact trigger gives CCC time to fire its session-split protocol before autocompact kicks in. If CCC's warnings are heeded, autocompact never fires. If they are ignored (or if context grows faster than expected), autocompact catches it before the context window is exhausted.
+
+### Recommended Configuration
+
+Set `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80` in your shell environment:
+
+```bash
+# In ~/.zshrc or ~/.bashrc
+export CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80
+```
+
+**Why 80%, not lower:**
+- Below 70% would conflict with CCC's "insist on session split" — autocompact would fire before CCC has a chance to recommend a deliberate split with a handoff file
+- At 70% exactly, autocompact and CCC would race, producing unpredictable behavior
+- At 80%, CCC's 70% threshold fires first with structured session handoff; autocompact at 80% is a backstop for sessions that continue past the warning
+
+**Why 80%, not higher:**
+- The default (~95%) leaves almost no buffer before context exhaustion
+- At 90%+, there may not be enough context remaining for autocompact to produce a useful summary
+- 80% provides a generous 10% buffer above CCC's intervention point while still leaving 20% of the window for the compact operation itself
+
+### Session Start Checklist
+
+Verify this environment variable is set at the beginning of each session:
+
+```
+✓ CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80 (check: echo $CLAUDE_AUTOCOMPACT_PCT_OVERRIDE)
+```
+
+If unset, the native autocompact defaults to ~95%, which provides no meaningful safety net above CCC's thresholds. The session-start hook (`hooks/scripts/ccc-session-start.sh`) can validate this and warn if the variable is missing or misconfigured.
+
+### Interaction with `/compact` and `/resume`
+
+- **Manual `/compact`**: Always available. Use proactively before hitting any threshold.
+- **Autocompact at 80%**: Automatic. Summarizes older turns. May lose nuance but preserves session continuity.
+- **CCC session split at 70%**: Writes a structured handoff file with full context. The next session reads this file via `/resume` or `/ccc:go`.
+- **`/ccc:checkpoint`**: CCC-layer complement that captures task state, Linear statuses, and continuation prompt before splitting. See the session-exit skill for the full checkpoint protocol.
+
 ## Subagent Return Discipline
 
 Subagents must follow strict output constraints. Unbounded subagent returns defeat the purpose of delegation.
