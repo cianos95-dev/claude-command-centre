@@ -23,10 +23,10 @@ The naive approach (scan all Backlog/Todo issues, check each for blockers) cause
 ### Algorithm
 
 ```
-Pass 1: list_issues(status: "Done", limit: 50)
-  → Collect recently completed issues
+Pass 1: list_issues(status: "Done", limit: 50, orderBy: completedAt_DESC)
+  → Collect up to 50 recently completed issues (most recent first)
 
-Pass 2: For each Done issue:
+Pass 2: For each Done issue in order, up to 10 issues (Pass 2 budget):
   → get_issue(includeRelations: true)
   → Filter: does this issue have `blocks` relations?
   → Collect downstream issue IDs
@@ -79,7 +79,7 @@ Scan results are cached in session memory to avoid redundant API calls.
 |-----------|-------|
 | TTL | 30 minutes |
 | Scope | Session-scoped (not persisted across sessions) |
-| Key | Project ID + scan timestamp |
+| Key | Project ID (timestamp stored in cached value for TTL check) |
 | Invalidation | TTL expiry, `--force` flag, or project change |
 
 ### Cache Behavior
