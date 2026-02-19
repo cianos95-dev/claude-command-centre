@@ -436,3 +436,4 @@ The `issue-lifecycle` skill's project-hygiene protocol defines project artifacts
 - **hygiene** command -- Structural checklist and staleness detection integrate into hygiene output
 - **session-exit** -- Does NOT run staleness; may trigger auto-updates on artifact/decision events (I2)
 - **drift-prevention** -- Document updates follow the same fresh-markdown discipline as issue descriptions
+- **plan-promotion** -- Consumes safety rules (no round-tripping, pre-update validation) when promoting session plans to Linear Documents

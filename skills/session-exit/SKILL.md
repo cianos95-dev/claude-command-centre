@@ -112,6 +112,26 @@ If any issue statuses changed during the session, post a project update using th
 
 **When to skip:** Sessions that only performed read-only operations (research, exploration) with no status changes. The `project-status-update` skill enforces the "no empty updates" rule internally.
 
+### Step 4a: Suggest Plan Promotion
+
+If a session plan exists at `~/.claude/plans/` and has **not** been promoted (no `<!-- Promoted to Linear -->` marker in the file), suggest promotion before ending:
+
+```
+Unpromoted plan detected: ~/.claude/plans/<session-slug>.md
+Run `/ccc:plan --promote` to persist to Linear (accessible from Cowork and Linear UI).
+```
+
+**When to suggest:**
+- Plan file exists for the current session
+- Plan references a CIA-XXX issue (not a throwaway exploration)
+- Plan has not already been promoted (check for marker comment)
+
+**When to skip:**
+- No plan file exists
+- Plan already has `<!-- Promoted to Linear -->` marker
+- Session was `exec:quick` (quick-mode plans are typically disposable)
+- Cowork session (no file system to check)
+
 ### Step 5: Present Session Summary Tables
 
 Present the session summary to the human as the final output. This is the session's receipt -- it confirms what happened and provides linked references for follow-up.
@@ -249,6 +269,7 @@ The session exit protocol touches several other skills. The boundaries are:
 - **issue-lifecycle** -- Closure rules matrix, ownership model, and daily update format
 - **project-status-update** -- Invoked at Step 4 to post project/initiative updates; handles all posting logic
 - **milestone-management** -- Invoked at Step 5a for milestone health reporting after milestone-affecting sessions
+- **plan-promotion** -- Invoked at Step 4a to suggest promotion of unpromoted session plans
 - **context-management** -- Context budget protocol, session splitting, handoff files
 - **spec-workflow** -- Spec status label transitions during implementation
 - **execution-engine** -- Fresh context patterns for multi-session work

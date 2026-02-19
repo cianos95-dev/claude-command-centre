@@ -78,7 +78,19 @@ if grep -qP 'CIA-\d+' "$PLAN_FILE" 2>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Build warnings (if any)
+# 3. Check promotion status
+# ---------------------------------------------------------------------------
+
+PROMOTION_HINT=""
+# If plan references a CIA issue but hasn't been promoted to Linear
+if grep -qP 'CIA-\d+' "$PLAN_FILE" 2>/dev/null; then
+    if ! grep -q '<!-- Promoted to Linear' "$PLAN_FILE" 2>/dev/null; then
+        PROMOTION_HINT="Plan references a CIA issue but hasn't been promoted to Linear. Consider: /ccc:plan --promote to make it accessible from Cowork and Linear."
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# 4. Build warnings (if any)
 # ---------------------------------------------------------------------------
 
 # Strip trailing comma-space from missing sections
@@ -98,8 +110,16 @@ if [[ -n "$UNLINKED" ]]; then
     fi
 fi
 
+if [[ -n "$PROMOTION_HINT" ]]; then
+    if [[ -n "$WARNINGS" ]]; then
+        WARNINGS="${WARNINGS}\\n[CCC Plan Promotion] ${PROMOTION_HINT}"
+    else
+        WARNINGS="[CCC Plan Promotion] ${PROMOTION_HINT}"
+    fi
+fi
+
 # ---------------------------------------------------------------------------
-# 4. Output (only if warnings exist)
+# 5. Output (only if warnings exist)
 # ---------------------------------------------------------------------------
 
 if [[ -z "$WARNINGS" ]]; then
