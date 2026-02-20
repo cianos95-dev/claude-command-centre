@@ -81,21 +81,124 @@ else
   echo "[CCC] Not in a git repository. Git state checks skipped."
 fi
 
-# --- 4. MCP config check ---
-# Verify MCP config exists and suggest /mcp for troubleshooting
+# --- 4. Connector registration check (CIA-504) ---
+# Verify connector config presence (NOT connectivity) for active profile.
+# Uses config_check field from connectors.yaml. Quiet when healthy.
 
+CONNECTORS_YAML="${CLAUDE_PLUGIN_ROOT:-$PROJECT_ROOT}/connectors.yaml"
 MCP_CONFIG="${HOME}/.mcp.json"
-if [[ -f "$MCP_CONFIG" ]] && command -v jq &>/dev/null; then
-  MCP_COUNT=$(jq '.mcpServers | length' "$MCP_CONFIG" 2>/dev/null || echo 0)
-  if [[ "$MCP_COUNT" -gt 0 ]]; then
-    echo "[CCC] MCP config: $MCP_COUNT servers configured"
+CCC_PROFILE="${CCC_PROFILE:-core}"
+
+if [[ -f "$CONNECTORS_YAML" ]] && command -v yq &>/dev/null && command -v jq &>/dev/null; then
+  # Check schema version
+  SCHEMA_VER=$(yq '.schema_version' "$CONNECTORS_YAML" 2>/dev/null)
+  if [[ "$SCHEMA_VER" != "2" ]]; then
+    echo "[CCC] WARNING: connectors.yaml schema_version=$SCHEMA_VER (expected 2). Results may be unreliable."
+  fi
+
+  # Map profile to tiers
+  case "$CCC_PROFILE" in
+    core)      TIERS="required" ;;
+    standard)  TIERS="required recommended" ;;
+    full)      TIERS="required recommended optional" ;;
+    *)         TIERS="required" ;;
+  esac
+
+  MISSING_LIST=""
+  STATUS_LINE=""
+
+  # Iterate connectors matching profile tiers
+  CONNECTOR_COUNT=$(yq '.connectors | length' "$CONNECTORS_YAML" 2>/dev/null)
+  for (( i=0; i<CONNECTOR_COUNT; i++ )); do
+    TIER=$(yq ".connectors[$i].tier" "$CONNECTORS_YAML" 2>/dev/null)
+
+    # Skip if tier not in active profile
+    if ! echo "$TIERS" | grep -qw "$TIER"; then
+      continue
+    fi
+
+    NAME=$(yq ".connectors[$i].display" "$CONNECTORS_YAML" 2>/dev/null)
+    DEFAULT_IMPL=$(yq ".connectors[$i].default_impl // \"\"" "$CONNECTORS_YAML" 2>/dev/null)
+
+    # Skip connectors with no default implementation
+    if [[ -z "$DEFAULT_IMPL" || "$DEFAULT_IMPL" == "null" ]]; then
+      continue
+    fi
+
+    CONFIG_CHECK=$(yq ".connectors[$i].implementations.$DEFAULT_IMPL.config_check // \"\"" "$CONNECTORS_YAML" 2>/dev/null)
+
+    # Skip if no config_check defined
+    if [[ -z "$CONFIG_CHECK" || "$CONFIG_CHECK" == "null" ]]; then
+      continue
+    fi
+
+    # Evaluate config_check
+    FOUND=false
+    case "$CONFIG_CHECK" in
+      jq_path:*)
+        JQ_PATH="${CONFIG_CHECK#jq_path:}"
+        if [[ -f "$MCP_CONFIG" ]]; then
+          RESULT=$(jq -e "$JQ_PATH" "$MCP_CONFIG" 2>/dev/null)
+          if [[ $? -eq 0 && -n "$RESULT" && "$RESULT" != "null" ]]; then
+            FOUND=true
+          fi
+        fi
+        ;;
+      file_exists:*)
+        CHECK_PATH="${CONFIG_CHECK#file_exists:}"
+        if [[ -e "$PROJECT_ROOT/$CHECK_PATH" ]]; then
+          FOUND=true
+        fi
+        ;;
+      command_exists:*)
+        CMD="${CONFIG_CHECK#command_exists:}"
+        if command -v "$CMD" &>/dev/null; then
+          FOUND=true
+        fi
+        ;;
+      env_var:*)
+        VAR="${CONFIG_CHECK#env_var:}"
+        if [[ -n "${!VAR:-}" ]]; then
+          FOUND=true
+        fi
+        ;;
+    esac
+
+    if [[ "$FOUND" == "true" ]]; then
+      STATUS_LINE="${STATUS_LINE}${NAME} [OK]  "
+    else
+      STATUS_LINE="${STATUS_LINE}${NAME} [MISSING]  "
+      MISSING_LIST="${MISSING_LIST}${NAME}|"
+    fi
+  done
+
+  # Output: quiet when healthy
+  if [[ -z "$MISSING_LIST" ]]; then
+    : # All connectors registered — say nothing (quiet when healthy)
   else
-    echo "[CCC] WARNING: MCP config exists but has no servers defined."
+    echo "[CCC] Connectors: ${STATUS_LINE% }  (profile: $CCC_PROFILE)"
+    # Print install hints for missing connectors
+    IFS='|' read -ra MISSING_NAMES <<< "$MISSING_LIST"
+    for MNAME in "${MISSING_NAMES[@]}"; do
+      [[ -z "$MNAME" ]] && continue
+      echo "[CCC]   $MNAME: Run /mcp to inspect MCP server status."
+    done
+    echo "[CCC] Run /ccc:go for guided setup."
+  fi
+elif [[ ! -f "$CONNECTORS_YAML" ]]; then
+  # Fallback: basic MCP config check if no connectors.yaml
+  if [[ -f "$MCP_CONFIG" ]] && command -v jq &>/dev/null; then
+    MCP_COUNT=$(jq '.mcpServers | length' "$MCP_CONFIG" 2>/dev/null || echo 0)
+    if [[ "$MCP_COUNT" -gt 0 ]]; then
+      : # Quiet when healthy
+    else
+      echo "[CCC] WARNING: MCP config exists but has no servers defined."
+      echo "[CCC]   Run /mcp to inspect MCP server status."
+    fi
+  elif [[ ! -f "$MCP_CONFIG" ]]; then
+    echo "[CCC] NOTE: No ~/.mcp.json found. MCP servers not configured."
     echo "[CCC]   Run /mcp to inspect MCP server status."
   fi
-elif [[ ! -f "$MCP_CONFIG" ]]; then
-  echo "[CCC] NOTE: No ~/.mcp.json found. MCP servers not configured."
-  echo "[CCC]   Run /mcp to inspect MCP server status."
 fi
 
 # --- 5. Ownership scope ---
