@@ -2,7 +2,21 @@
 
 This plugin works best with the following data sources connected. Configure them in your global `~/.mcp.json` or through your organization's MCP setup.
 
-> **Note:** This plugin does NOT ship active MCP configs. Plugins expose skills, commands, and agents — not MCP servers. All MCP fragments shown below are **reference configurations** that you merge into your own `~/.mcp.json`. See [Troubleshooting](#troubleshooting) in README.md if you encounter MCP auth errors.
+> **Note:** This plugin ships a root-level `.mcp.json` with **HTTP-only** MCP endpoints for Cowork connector auto-discovery (Linear, GitHub, Firecrawl). These are safe alongside your global config. For stdio-based MCPs (Zotero, arXiv, S2, etc.), merge the reference fragments below into your global `~/.mcp.json` — do **not** add stdio configs to the plugin root. See [Troubleshooting](#troubleshooting) in README.md if you encounter MCP auth errors.
+
+## Platform Compatibility
+
+CCC works on both Claude Code and Cowork with different capability levels:
+
+| Capability | Claude Code | Cowork | Notes |
+|------------|:-----------:|:------:|-------|
+| Commands & skills | 100% (19 commands, 39+ skills) | ~85% | 3 commands need file I/O (`/index`, `/anchor`, `/insights`) |
+| Agents (parallel dispatch) | 100% (9 agents) | ~60% | Task tool parallel subagents are Code-only; serial works on Cowork |
+| Hooks (automated enforcement) | 100% (4 hooks) | Manual checklist | Hooks are bash scripts — Code-only. `platform-routing` skill provides fallback checklist. |
+| Stdio MCPs (research pipeline) | 100% | Not available | Zotero, arXiv, S2, OpenAlex require stdio transport |
+| HTTP MCPs (project tracker, source control) | 100% | 100% | Linear and GitHub work on both surfaces via HTTP |
+
+**Platform routing:** Use the `platform-routing` skill for detailed recommendations on which surface to use for each workflow. Spec drafting and triage are ideal on Cowork; adversarial review and implementation require Code.
 
 ## Required
 
