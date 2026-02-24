@@ -1,8 +1,9 @@
 .DS_Store
 node_modules/
 
-# MCP config — plugins don't ship MCP servers; users configure globally
-.mcp.json
+# User's global MCP config (not the plugin's .mcp.json which IS versioned)
+# Plugin root .mcp.json ships HTTP-only endpoints for Cowork connector discovery
+# per Anthropic's official knowledge-work-plugins pattern (Feb 2026)
 
 # Insights reports (archived to ~/.claude/insights/)
 *.html
