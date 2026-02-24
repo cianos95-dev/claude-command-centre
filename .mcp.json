@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "linear": {
+      "type": "url",
+      "url": "https://mcp.linear.app/mcp"
+    },
+    "github": {
+      "type": "url",
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "firecrawl": {
+      "type": "url",
+      "url": "https://mcp.firecrawl.dev/sse"
+    }
+  }
+}
