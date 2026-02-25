@@ -422,7 +422,7 @@ These are trigger-based updates, not staleness scans. They are lightweight and a
 
 ### With `project-cleanup` Skill
 
-The `project-cleanup` skill's Content Classification Matrix determines whether content should be an issue or a document. Once classified as a document, **this** skill governs the document's lifecycle. `project-cleanup` should reference [references/document-types.md](references/document-types.md) for type definitions rather than maintaining its own copy (CIA-540 carry-forward).
+The `project-cleanup` skill's Content Classification Matrix determines whether content should be an issue or a document. Once classified as a document, the `document-lifecycle` skill governs the document's lifecycle. `project-cleanup` should reference [references/document-types.md](references/document-types.md) for type definitions rather than maintaining its own copy (CIA-540 carry-forward).
 
 ### With `issue-lifecycle` Skill
 
