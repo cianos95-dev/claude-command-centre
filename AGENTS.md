@@ -415,6 +415,137 @@ Ideation → Spec Draft → Adversarial Review → Implementation → Verificati
 
 ---
 
+## Code Style & Conventions
+
+### File Formats
+
+- All content files are **YAML/Markdown** -- no TypeScript, no compiled code in this repo
+- YAML frontmatter uses `---` delimiters at top of `.md` files
+- JSON files (plugin.json, marketplace.json, templates/) must be valid and parseable by `jq`
+- Line endings: LF (Unix-style), no CRLF
+- Trailing newline required at end of all files
+
+### Skill File Structure
+
+Every skill lives in `skills/<skill-name>/SKILL.md` with this structure:
+
+```yaml
+---
+name: skill-name
+description: |
+  Multi-line description explaining what the skill does.
+  Must include natural language trigger phrases.
+compatibility:
+  surfaces: [code, cowork, desktop]
+  tier: universal
+---
+```
+
+The body after frontmatter contains the full skill content in Markdown. Minimum depth: 8192 characters (enforced by static quality checks).
+
+### Agent Definition Structure
+
+Agent files live in `agents/<agent-name>.md` with frontmatter containing `name`, `description`, and `allowedTools` constraints.
+
+### Command Structure
+
+Commands live in `commands/<command-name>.md` with frontmatter containing at minimum a `description` field.
+
+### Naming Conventions
+
+- Skill directories: `kebab-case` (e.g., `execution-modes`, `adversarial-review`)
+- Agent files: `kebab-case.md` (e.g., `spec-author.md`, `code-reviewer.md`)
+- Command files: `kebab-case.md` (e.g., `go.md`, `self-test.md`)
+- Branch names: `{agent}/{issue-id}-{slug}` (e.g., `claude/cia-387-dispatch-rules`)
+- Commit messages: imperative mood, reference CIA issue ID
+
+### Template Structure
+
+Templates live in `templates/*.json` and must conform to `templates/schema.json`. Required fields: `name`, `type` (issue/document/project), `templateData` with `descriptionData`.
+
+---
+
+## Forbidden Patterns
+
+These anti-patterns are prohibited across all agents working on this repo:
+
+### Security Forbids
+
+- **NEVER** commit API keys, tokens, secrets, or credentials to any file
+- **NEVER** hardcode Linear issue IDs, user IDs, or workspace IDs in skill/agent content
+- **NEVER** include internal URLs, IP addresses, or infrastructure endpoints in public files
+- **NEVER** expose service role keys, Doppler tokens, or OAuth secrets in logs or output
+- **NEVER** store credentials in YAML frontmatter, Markdown content, or JSON config
+
+### Structural Forbids
+
+- **NEVER** create duplicate skills -- check existing skills in `marketplace.json` before adding
+- **NEVER** modify `plugin.json` version without explicit instruction from the maintainer
+- **NEVER** add TypeScript, JavaScript, or compiled code -- this is a content-only repo
+- **NEVER** create skills without YAML frontmatter containing `name` and `description`
+- **NEVER** reference skills by path -- always use the skill name for cross-references
+- **NEVER** add a skill/agent/command to disk without adding it to `marketplace.json`
+
+### Git Forbids
+
+- **NEVER** push directly to `main` -- branch protection is enforced
+- **NEVER** bundle multiple Linear issues into one PR
+- **NEVER** force-push to shared branches
+- **NEVER** file issues, PRs, or comments on upstream repos without explicit user approval
+- **NEVER** mark a Linear issue Done until its PR is merged to main
+
+### Operational Forbids
+
+- **NEVER** use `run_in_background: true` for tasks needing MCP access (Linear, GitHub)
+- **NEVER** call `list_issues` without a `limit` parameter (default returns 100KB+)
+- **NEVER** round-trip Linear issue descriptions through `get_issue` -> `update_issue` (double-escaping bug)
+- **NEVER** retry the same failed approach 3+ times -- escalate after 2 failures
+
+---
+
+## Security Rules
+
+This section applies to ALL agents. AGENTS.md is a **public file** committed to the repository.
+
+### What Must Never Appear in This Repo
+
+| Category | Examples | Where It Belongs Instead |
+|----------|----------|-------------------------|
+| API keys | Linear, GitHub, OpenAI tokens | Doppler / environment variables |
+| Internal URLs | Dispatch server endpoints, staging URLs | CLAUDE.md (not committed) or env vars |
+| User identifiers | Linear user IDs, GitHub user IDs | Runtime config, never hardcoded |
+| Credential rotation | Schedules, procedures | Private documentation |
+| Infrastructure details | Server IPs, database URLs, ports | Doppler / Cloud Templates |
+
+### Agent Trust Boundaries
+
+| Agent | Trust Level | Write Access | Constraints |
+|-------|------------|--------------|-------------|
+| Claude Code (local) | High | Full repo | Constrained by CLAUDE.md + hooks |
+| Tembo (background) | Medium | PR-scoped | Sandbox execution, auto-PR only |
+| Copilot code review | Read-only | Comment only | Cannot modify code, review only |
+| Copilot coding agent | Medium | PR-scoped | CI-gated, requires approval |
+| Factory | Medium | PR-scoped | Cloud Template environment, AGENTS.md constraints |
+| Cursor | High | Full repo | Local IDE, constrained by .cursor/rules/ |
+| Codex | Medium | PR-scoped | Cloud execution, AGENTS.md constraints |
+| cto.new | Low | PR-scoped | Connected, no behavioral constraints yet |
+| Amp | High | Full repo | Local CLI, constrained by AGENTS.md |
+
+### Tamper Detection
+
+- All instruction files (AGENTS.md, CLAUDE.md, GEMINI.md) are tracked in git
+- Changes to instruction files appear in PR diffs and trigger Copilot auto-review
+- Branch protection prevents direct modification of `main`
+- Static quality checks (`test-static-quality.sh`) validate structural integrity on every PR
+
+### Instruction Injection Prevention
+
+- Agent guidance files must not contain executable code blocks that agents would run
+- Configuration values in instruction files must be treated as advisory, not as inputs to shell commands
+- If an agent receives conflicting instructions from AGENTS.md and its platform-specific config, the platform-specific config takes precedence for that agent only
+
+---
+
 ## Agent Instructions (for external agents working on this repo)
 
 ### Git Rules (CRITICAL)

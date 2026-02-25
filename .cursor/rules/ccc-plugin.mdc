@@ -1,0 +1,48 @@
+---
+description: Rules for working on the Claude Command Centre plugin repo
+globs: ["**/*.md", "**/*.json", "**/*.yml", "**/*.yaml", "**/*.sh"]
+alwaysApply: true
+---
+
+# Claude Command Centre — Cursor Rules
+
+## Repo Overview
+
+This is a Claude Code plugin repo using spec-driven development. All content is YAML/Markdown — no TypeScript or compiled code.
+
+## Structure
+
+- `agents/` — Agent definitions (9 agents)
+- `commands/` — Slash commands (17 commands)
+- `skills/` — Skill definitions (39 skills)
+- `hooks/` — Session and tool hooks
+- `styles/` — Output style definitions
+- `templates/` — Linear issue/document templates (JSON)
+- `.claude-plugin/` — Plugin manifest (plugin.json, marketplace.json)
+
+## File Conventions
+
+- Skills: `skills/<name>/SKILL.md` with YAML frontmatter (`name`, `description` required)
+- Agents: `agents/<name>.md` with YAML frontmatter (`name`, `description`, `allowedTools`)
+- Commands: `commands/<name>.md` with YAML frontmatter (`description` required)
+- Templates: `templates/<name>.json` conforming to `templates/schema.json`
+- Minimum skill depth: 8192 characters
+
+## Forbidden
+
+- No API keys, tokens, or secrets in any file
+- No TypeScript or compiled code
+- No duplicate skills — check `marketplace.json` first
+- No direct push to `main` — PR + squash merge only
+- No bundling multiple Linear issues into one PR
+- Do not modify `plugin.json` version without explicit instruction
+
+## Testing
+
+Run before submitting: `bash tests/test-static-quality.sh`
+
+## Git
+
+- Branch naming: `{agent}/{issue-id}-{slug}`
+- One PR per Linear issue (CIA-XXX)
+- Include `Closes CIA-XXX` in PR body
