@@ -151,7 +151,6 @@ jobs:
           check_tier "tier_2_evaluation" "T2"
 
           # Summary
-          local total_new
           total_new=$(jq 'length' "$RESULTS")
           echo "total_new=$total_new" >> "$GITHUB_OUTPUT"
           echo ""
