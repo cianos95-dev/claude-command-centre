@@ -420,9 +420,9 @@ Session-exit does **NOT** run staleness detection. However, session-exit may tri
 
 These are trigger-based updates, not staleness scans. They are lightweight and appropriate for session-exit context. Decision Log writes always require user confirmation, even at session-exit.
 
-### With `project-cleanup` Skill
+### With `issue-lifecycle` Maintenance Section
 
-The `project-cleanup` skill's Content Classification Matrix determines whether content should be an issue or a document. Once classified as a document, the `document-lifecycle` skill governs the document's lifecycle. `project-cleanup` should reference [references/document-types.md](references/document-types.md) for type definitions rather than maintaining its own copy (CIA-540 carry-forward).
+The `issue-lifecycle` skill's Maintenance section (absorbed from project-cleanup) contains the Content Classification Matrix that determines whether content should be an issue or a document. Once classified as a document, the `document-lifecycle` skill governs the document's lifecycle. The maintenance protocol references [references/document-types.md](references/document-types.md) for type definitions rather than maintaining its own copy (CIA-540 carry-forward).
 
 ### With `issue-lifecycle` Skill
 
@@ -434,7 +434,7 @@ The `issue-lifecycle` skill's project-hygiene protocol defines project artifacts
 
 ## Cross-Skill References
 
-- **project-cleanup** -- Content Classification Matrix references document-types.md for classification (I1, CIA-540)
+- **issue-lifecycle** (Maintenance section) -- Content Classification Matrix references document-types.md for classification (I1, CIA-540)
 - **issue-lifecycle** -- Project hygiene protocol aligns document artifact cadence
 - **hygiene** command -- Structural checklist and staleness detection integrate into hygiene output
 - **session-exit** -- Does NOT run staleness; may trigger auto-updates on artifact/decision events (I2)
