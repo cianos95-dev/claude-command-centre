@@ -6,7 +6,7 @@ on:
   workflow_dispatch:          # On-demand trigger
     inputs:
       dry_run:
-        description: 'Dry run (no Linear updates)'
+        description: 'Dry run (no Linear updates or state writes)'
         type: boolean
         default: false
       tier:
@@ -16,15 +16,16 @@ on:
         options: [all, T1, T2]
 
 permissions:
-  contents: read
+  contents: write  # Required for state branch updates
 
 env:
-  STATE_GIST_ID: ${{ secrets.DEPS_STATE_GIST_ID }}
   LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
   LINEAR_TEAM_ID: ${{ secrets.LINEAR_TEAM_ID }}
   LINEAR_RELEASE_LOG_DOC_ID: ${{ secrets.LINEAR_RELEASE_LOG_DOC_ID }}
   LINEAR_DEPS_LABEL_ID: ${{ secrets.LINEAR_DEPS_LABEL_ID }}
   LINEAR_URGENT_LABEL_ID: ${{ secrets.LINEAR_URGENT_LABEL_ID }}
+  STATE_BRANCH: deps-state
+  STATE_FILE: state.json
 
 jobs:
   check-releases:
@@ -37,17 +38,21 @@ jobs:
           sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
 
-      - name: Load state from Gist
+      - name: Load state from repo branch
         id: load-state
-        env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          if [ -n "$STATE_GIST_ID" ]; then
-            gh api gists/$STATE_GIST_ID --jq '.files["deps-state.json"].content' > /tmp/state.json 2>/dev/null || echo '{}' > /tmp/state.json
-          else
-            echo '{}' > /tmp/state.json
-          fi
+          # Read state.json from the deps-state branch via API
+          gh api repos/${{ github.repository }}/contents/$STATE_FILE?ref=$STATE_BRANCH \
+            --jq '.content' 2>/dev/null | base64 -d > /tmp/state.json 2>/dev/null || echo '{}' > /tmp/state.json
+
+          # Also capture the file SHA for later update
+          STATE_SHA=$(gh api repos/${{ github.repository }}/contents/$STATE_FILE?ref=$STATE_BRANCH \
+            --jq '.sha' 2>/dev/null || echo "")
+          echo "state_sha=$STATE_SHA" >> "$GITHUB_OUTPUT"
+
           echo "Loaded state for $(jq 'length' /tmp/state.json) repos"
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Check Atom feeds for new releases
         id: check
@@ -157,15 +162,24 @@ jobs:
           echo "=== Summary: $total_new new releases ==="
           jq -r '.[] | "  \(.tier) \(.change_type): \(.repo) \(.old_version) → \(.new_version)"' "$RESULTS"
 
-      - name: Update state Gist
-        if: env.STATE_GIST_ID != '' && !inputs.dry_run
+      - name: Update state on repo branch
+        if: "!inputs.dry_run"
         env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          # Update the Gist with new state
-          jq -Rs '{files: {"deps-state.json": {content: .}}}' /tmp/state.json > /tmp/gist-payload.json
-          gh api gists/$STATE_GIST_ID -X PATCH --input /tmp/gist-payload.json > /dev/null
-          echo "State Gist updated"
+          # Update state.json on the deps-state branch via contents API
+          CONTENT=$(cat /tmp/state.json | base64 -w 0)
+          STATE_SHA="${{ steps.load-state.outputs.state_sha }}"
+
+          gh api repos/${{ github.repository }}/contents/$STATE_FILE \
+            -X PUT \
+            -f message="chore: update dependency state $(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -f content="$CONTENT" \
+            -f branch="$STATE_BRANCH" \
+            -f sha="$STATE_SHA" \
+            --jq '.content.sha' > /dev/null
+
+          echo "State updated on $STATE_BRANCH branch ($(jq 'length' /tmp/state.json) repos tracked)"
 
       - name: Create Linear issues (T1 majors + security)
         if: steps.check.outputs.total_new != '0' && !inputs.dry_run
