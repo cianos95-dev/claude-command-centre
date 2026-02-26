@@ -155,7 +155,7 @@ Build the update markdown following the template in the issue-lifecycle skill (S
 ## Step 5: Dedup Check
 
 **For project updates (Tier 2):**
-- Query existing same-day updates via GraphQL (see `references/graphql-project-updates.md`)
+- Query existing same-day updates via GraphQL (see `references/linear-graphql-patterns.md` § "Project Status Updates")
 - If found: will amend existing update via `projectUpdateUpdate`
 - If not found: will create new update via `projectUpdateCreate`
 

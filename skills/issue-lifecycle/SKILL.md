@@ -136,7 +136,7 @@ Post automated status updates for projects and initiatives in Linear using a two
 
 > See [references/status-updates.md](references/status-updates.md) for the full posting protocol, sensitivity filtering rules, and error handling matrix.
 
-> See [references/graphql-project-updates.md](references/graphql-project-updates.md) for GraphQL mutation signatures and auth.
+> See [references/linear-graphql-patterns.md](../../references/linear-graphql-patterns.md) § "Project Status Updates" for GraphQL mutation signatures and auth.
 
 ---
 
@@ -154,7 +154,7 @@ Manage issue dependency relations safely. The Linear MCP's `update_issue` with `
 
 > See [references/dependency-protocol.md](references/dependency-protocol.md) for the full `safeUpdateRelations` protocol, input validation, confirmation protocol, detection patterns, and visualization specs.
 
-> See [references/graphql-relations.md](references/graphql-relations.md) for GraphQL fallback mutation signatures.
+> See [references/linear-graphql-patterns.md](../../references/linear-graphql-patterns.md) § "Issue Relations" for GraphQL fallback mutation signatures.
 
 ---
 

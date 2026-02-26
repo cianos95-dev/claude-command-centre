@@ -20,7 +20,7 @@ Post automated status updates for projects and initiatives in Linear. Uses a two
 
 **Auth:** `$LINEAR_API_KEY` (personal `lin_api_*` token). The OAuth agent token returns 401 for GraphQL project updates.
 
-See `graphql-project-updates.md` for mutation signatures and curl examples.
+See `references/linear-graphql-patterns.md` § "Project Status Updates" for mutation signatures and curl examples.
 
 ## When to Post
 

@@ -97,7 +97,7 @@ MCP-native via `safeUpdateRelations` is the primary path. GraphQL is only for:
 
 Auth: `$LINEAR_API_KEY` (personal token). Never inline tokens.
 
-See `graphql-relations.md` for mutation signatures and examples.
+See `references/linear-graphql-patterns.md` § "Issue Relations" for mutation signatures and examples.
 
 ## Integration Points
 

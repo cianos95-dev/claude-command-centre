@@ -289,5 +289,5 @@ No dependency signals detected in CIA-502's description.
 ## Cross-Reference
 
 - **Skill:** `skills/issue-lifecycle/SKILL.md` (Dependencies section) — `safeUpdateRelations` wrapper, `detectDependencies` utility, DO NOT rule (C1)
-- **GraphQL reference:** `skills/issue-lifecycle/references/graphql-relations.md` — fallback mutations
+- **GraphQL reference:** `references/linear-graphql-patterns.md` § "Issue Relations" — fallback mutations
 - **Related commands:** `/ccc:decompose` (auto-relations), `/ccc:go --next` (consumes dependency data), `/ccc:hygiene` (dependency health audits)
