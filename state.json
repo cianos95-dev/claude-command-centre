@@ -1,5 +1,5 @@
 {
-  "vercel/next.js": "16.2.0-canary.64",
+  "vercel/next.js": "16.2.0-canary.65",
   "facebook/react": "19.2.4 (January 26th, 2026)",
   "tailwindlabs/tailwindcss": "4.2.1",
   "microsoft/TypeScript": "TypeScript 6.0 Beta",
@@ -14,7 +14,7 @@
   "fradser/mcp-server-apple-events": "1.3.0",
   "wonderwhy-er/DesktopCommanderMCP": "0.2.37",
   "czlonkowski/n8n-mcp": "Release v2.35.5",
-  "anthropics/claude-code": "2.1.61",
+  "anthropics/claude-code": "2.1.62",
   "anthropics/anthropic-sdk-python": "0.84.0",
   "anthropics/anthropic-sdk-typescript": "ertex-sdk: v0.14.4",
   "modelcontextprotocol/typescript-sdk": "1.27.1",
