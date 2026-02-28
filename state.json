@@ -3,7 +3,7 @@
   "facebook/react": "19.2.4 (January 26th, 2026)",
   "tailwindlabs/tailwindcss": "4.2.1",
   "microsoft/TypeScript": "TypeScript 6.0 Beta",
-  "vercel/turborepo": "Turborepo v2.8.13-canary.7",
+  "vercel/turborepo": "2.8.13-canary.8",
   "eslint/eslint": "10.0.2",
   "vercel/ai": "@ai-sdk/vue@3.0.104",
   "assistant-ui/assistant-ui": "@assistant-ui/tap@0.3.0",
@@ -26,7 +26,7 @@
   "oksure/openalex-research-mcp": "0.2.2",
   "huangxinping/huggingface-daily-paper-mcp": "0.1.4",
   "dexhunter/kaggle-mcp": "0.1.1",
-  "BerriAI/litellm": "1.81.6.rc.6",
+  "BerriAI/litellm": "1.81.12-stable.2",
   "statelyai/xstate": "@xstate/react@6.1.0",
   "langfuse/langfuse": "3.155.1",
   "googleapis/genai-toolbox": "0.27.0"
